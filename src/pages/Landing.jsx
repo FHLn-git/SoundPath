@@ -25,6 +25,7 @@ const Landing = () => {
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [plans, setPlans] = useState([])
+  const [billingInterval, setBillingInterval] = useState('month') // 'month' or 'year' (matches SignUp.jsx)
   const loginModalRef = useRef(null)
 
   // Fetch organization branding if slug is provided
@@ -472,12 +473,49 @@ const Landing = () => {
 
           {plans.length > 0 && (
             <>
+              {/* Billing Interval Toggle */}
+              <div className="flex items-center justify-center gap-4 mb-8">
+                <span className={`text-sm font-medium transition-colors ${billingInterval === 'month' ? 'text-white' : 'text-gray-500'}`}>
+                  Monthly
+                </span>
+                <button
+                  onClick={() => setBillingInterval(billingInterval === 'month' ? 'year' : 'month')}
+                  className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-neon-purple focus:ring-offset-2 focus:ring-offset-gray-950 ${
+                    billingInterval === 'year' ? 'bg-gradient-to-r from-neon-purple to-recording-red' : 'bg-gray-700'
+                  }`}
+                  aria-label="Toggle billing interval"
+                >
+                  <span
+                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                      billingInterval === 'year' ? 'translate-x-9' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+                <span className={`text-sm font-medium transition-colors ${billingInterval === 'year' ? 'text-white' : 'text-gray-500'}`}>
+                  Yearly
+                </span>
+                {billingInterval === 'year' && (
+                  <span className="px-3 py-1 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-semibold rounded-full">
+                    Save up to 17%
+                  </span>
+                )}
+              </div>
+
               {/* Main Plans Grid: Free, Agent, Starter, Pro */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto mb-12">
                 {plans
                   .filter(plan => plan.id !== 'enterprise')
                   .map((plan, index) => {
-                    const price = plan.price_monthly
+                    const monthlyPrice = plan.price_monthly || 0
+                    const yearlyPrice = plan.price_yearly || 0
+                    const price = billingInterval === 'year' ? yearlyPrice : monthlyPrice
+                    const monthlyEquivalent = billingInterval === 'year' && yearlyPrice > 0 ? yearlyPrice / 12 : monthlyPrice
+                    const savings = billingInterval === 'year' && monthlyPrice > 0 && yearlyPrice > 0 
+                      ? Math.round(((monthlyPrice * 12 - yearlyPrice) / (monthlyPrice * 12)) * 100)
+                      : 0
+                    const savingsAmount = billingInterval === 'year' && monthlyPrice > 0 && yearlyPrice > 0
+                      ? Math.round(monthlyPrice * 12 - yearlyPrice)
+                      : 0
                     const isPopular = plan.id === 'starter'
                     
                     return (
@@ -504,12 +542,41 @@ const Landing = () => {
                           <h3 className="text-2xl font-bold text-white mb-2">
                             {plan.name}
                           </h3>
-                          <div className="flex items-baseline justify-center gap-2">
-                            <span className="text-4xl font-bold text-white">
-                              {plan.id === 'free' ? 'Free' : `$${price.toFixed(2)}`}
-                            </span>
-                            {plan.id !== 'free' && (
-                              <span className="text-gray-400">/month</span>
+                          <div className="flex flex-col items-center justify-center gap-1">
+                            <div className="flex items-baseline justify-center gap-2">
+                              <span className="text-4xl font-bold text-white">
+                                {plan.id === 'free' ? 'Free' : `$${price.toFixed(2)}`}
+                              </span>
+                              {plan.id !== 'free' && (
+                                <span className="text-gray-400">
+                                  /{billingInterval === 'year' ? 'year' : 'month'}
+                                </span>
+                              )}
+                            </div>
+                            {billingInterval === 'year' && plan.id !== 'free' && yearlyPrice > 0 && (
+                              <>
+                                <div className="text-sm text-gray-500 line-through">
+                                  ${(monthlyPrice * 12).toFixed(2)}/year
+                                </div>
+                                <div className="flex items-center gap-2 mt-1">
+                                  {plan.id === 'pro' ? (
+                                    <span className="px-2 py-0.5 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-semibold rounded">
+                                      Save $200 per year!
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <span className="text-sm text-gray-400">
+                                        ${monthlyEquivalent.toFixed(2)}/month
+                                      </span>
+                                      {savings > 0 && (
+                                        <span className="px-2 py-0.5 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-semibold rounded">
+                                          Save {savings}%
+                                        </span>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                              </>
                             )}
                           </div>
                           <p className="text-gray-400 text-sm mt-2">
@@ -524,7 +591,12 @@ const Landing = () => {
                             Learn More
                           </button>
                           <button
-                            onClick={() => navigate('/signup')}
+                            onClick={() => {
+                              if (plan.id !== 'free') {
+                                sessionStorage.setItem('pendingBillingInterval', billingInterval)
+                              }
+                              navigate('/signup')
+                            }}
                             className="flex-1 py-3 rounded-lg font-semibold transition-all bg-gradient-to-r from-neon-purple to-recording-red text-white hover:opacity-90"
                           >
                             Get Started

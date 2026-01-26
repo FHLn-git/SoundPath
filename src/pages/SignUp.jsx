@@ -22,6 +22,15 @@ const SignUp = () => {
   const [toast, setToast] = useState({ isVisible: false, message: '', type: 'error' })
   const [emailError, setEmailError] = useState('')
 
+  // Load billing interval from sessionStorage if set from Landing page
+  useEffect(() => {
+    const savedInterval = sessionStorage.getItem('pendingBillingInterval')
+    if (savedInterval && (savedInterval === 'month' || savedInterval === 'year')) {
+      setBillingInterval(savedInterval)
+      sessionStorage.removeItem('pendingBillingInterval')
+    }
+  }, [])
+
   // Load plans
   useEffect(() => {
     const loadPlans = async () => {
