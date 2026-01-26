@@ -265,8 +265,9 @@ export const AuthProvider = ({ children }) => {
         return { hasMemberships: false }
       }
 
-      // Agent-Centric: Do NOT auto-select organization on login
+      // DATABASE SESSION AUDIT: Agent-Centric initialization for ALL users (not just admin)
       // User starts in Personal view (activeOrgId is null) and can access Personal Inbox/Rolodex
+      // This ensures Personal Office state is correctly initialized for non-admin users
       // User can then select a Label workspace from launchpad if they have memberships
       setActiveOrgId(null)
       setActiveMembership(null)
@@ -276,7 +277,9 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Exception loading memberships:', error)
       
-      // Fallback: Use legacy organization_id from staffProfile
+      // LAYOUT UNIFICATION: Legacy fallback - but still start in Personal view
+      // Only use legacy organization_id if memberships completely fail AND user has legacy org
+      // Even then, we should start in Personal view and let user choose
       if (staffProfile?.organization_id) {
         const legacyOrgId = staffProfile.organization_id
         const legacyMembership = {
@@ -298,8 +301,12 @@ export const AuthProvider = ({ children }) => {
           is_active: true,
         }
         setMemberships([legacyMembership])
-        await switchOrganization(legacyOrgId)
-        return
+        // LAYOUT UNIFICATION: Start in Personal view even with legacy org
+        // User can switch to label workspace from launchpad if needed
+        setActiveOrgId(null)
+        setActiveMembership(null)
+        setLoading(false)
+        return { hasMemberships: true }
       }
       
       setMemberships([])
@@ -309,6 +316,14 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Clear workspace - set to Personal view (activeOrgId = null)
+  const clearWorkspace = () => {
+    setActiveOrgId(null)
+    setActiveMembership(null)
+    localStorage.removeItem('active_org_id')
+    return { error: null }
+  }
+
   // Switch active organization
   const switchOrganization = async (orgId) => {
     if (!supabase || !staffProfile) {
@@ -316,8 +331,13 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      // If SystemAdmin and orgId is null, allow global view
-      if (orgId === null && staffProfile.role === 'SystemAdmin') {
+      // If orgId is null, clear workspace (Personal view)
+      if (orgId === null) {
+        return clearWorkspace()
+      }
+
+      // If SystemAdmin and orgId is 'GLOBAL', allow global view
+      if (orgId === 'GLOBAL' && staffProfile.role === 'SystemAdmin') {
         setActiveOrgId(null)
         setActiveMembership(null)
         localStorage.setItem('active_org_id', 'GLOBAL')
@@ -361,11 +381,13 @@ export const AuthProvider = ({ children }) => {
       // Note: We can't check if user exists client-side (supabase.auth.admin is server-only)
       // Instead, we'll try to sign up and handle the error if the user already exists
       // Create auth user
+      // Use production URL from env or fallback to current origin
+      const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.toLowerCase().trim(),
         password,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: `${siteUrl}/?confirmed=true`,
           data: {
             name: name,
           },
@@ -648,6 +670,7 @@ export const AuthProvider = ({ children }) => {
     activeOrgId,
     activeMembership,
     switchOrganization,
+    clearWorkspace, // Export for clearing workspace to Personal view
     loadMemberships, // Export for refreshing memberships
     // Agent-Centric: In Personal view, user is effectively Owner
     isOwner: activeOrgId === null ? true : (activeMembership?.role === 'Owner'),

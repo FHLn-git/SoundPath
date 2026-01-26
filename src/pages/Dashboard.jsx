@@ -25,13 +25,29 @@ const Dashboard = () => {
     getCompanyHealth,
     moveTrack,
   } = useApp()
-  const { isOwner, staffProfile, memberships, activeOrgId, isSystemAdmin } = useAuth()
+  const { isOwner, staffProfile, memberships, activeOrgId, isSystemAdmin, clearWorkspace } = useAuth()
   const { hasFeature } = useBilling()
   
   const activeOrg = memberships?.find(m => m.organization_id === activeOrgId) || null
   const isPersonalView = activeOrgId === null
   const dashboardTitle = isPersonalView ? 'Personal Dashboard' : (activeOrg?.organization_name || 'Dashboard')
   const location = useLocation()
+
+  // ROUTING LOGIC AUDIT: Ensure Dashboard shows Personal view when appropriate
+  // If user navigated from Personal Office (localStorage cleared), force Personal view
+  useEffect(() => {
+    // Check if we're on /dashboard route
+    if (location.pathname === '/dashboard') {
+      const storedOrgId = localStorage.getItem('active_org_id')
+      
+      // If localStorage has no active_org_id but activeOrgId state is set,
+      // it means user navigated from Personal Office - clear the state
+      if (!storedOrgId && activeOrgId !== null && activeOrgId !== 'GLOBAL') {
+        // User came from Personal Office - ensure we show Personal view
+        clearWorkspace()
+      }
+    }
+  }, [location.pathname, activeOrgId, clearWorkspace])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [companyHealth, setCompanyHealth] = useState(null)
   const [showUpgradeOverlay, setShowUpgradeOverlay] = useState(false)
@@ -477,22 +493,22 @@ const Dashboard = () => {
               </span>
             </div>
 
-            {/* Crate Tabs - Quad-Inbox UI */}
-            <div className="flex items-center gap-1 mb-2 bg-gray-900/50 border border-gray-800 rounded-lg p-1">
+            {/* Crate Tabs - Quad-Inbox UI - Scrollable on mobile */}
+            <div className="flex items-center gap-1 mb-2 bg-gray-900/50 border border-gray-800 rounded-lg p-1 overflow-x-auto scrollbar-hide md:overflow-x-visible">
               <button
                 onClick={() => setActiveCrate('submissions')}
-                className={`flex-1 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
                   activeCrate === 'submissions'
                     ? 'bg-gray-800 text-white'
                     : 'text-gray-400 hover:text-gray-300'
                 }`}
               >
                 <Radio size={12} />
-                <span>SUBMISSIONS ({submissionsTracks.length})</span>
+                <span className="whitespace-nowrap">SUBMISSIONS ({submissionsTracks.length})</span>
               </button>
               <button
                 onClick={() => setActiveCrate('network')}
-                className={`flex-1 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 relative ${
+                className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 relative touch-target ${
                   activeCrate === 'network'
                     ? 'bg-gray-800 text-white'
                     : 'text-gray-400 hover:text-gray-300'
@@ -500,32 +516,32 @@ const Dashboard = () => {
                 disabled={!hasNetworkAccess}
               >
                 <Network size={12} />
-                <span>NETWORK ({networkTracks.length})</span>
+                <span className="whitespace-nowrap">NETWORK ({networkTracks.length})</span>
                 {!hasNetworkAccess && (
                   <Crown size={10} className="text-yellow-400 ml-1" />
                 )}
               </button>
               <button
                 onClick={() => setActiveCrate('crate_a')}
-                className={`flex-1 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
                   activeCrate === 'crate_a'
                     ? 'bg-gray-800 text-white'
                     : 'text-gray-400 hover:text-gray-300'
                 }`}
               >
                 <Package size={12} />
-                <span>CRATE 1 ({crateATracks.length})</span>
+                <span className="whitespace-nowrap">CRATE 1 ({crateATracks.length})</span>
               </button>
               <button
                 onClick={() => setActiveCrate('crate_b')}
-                className={`flex-1 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
                   activeCrate === 'crate_b'
                     ? 'bg-gray-800 text-white'
                     : 'text-gray-400 hover:text-gray-300'
                 }`}
               >
                 <Package2 size={12} />
-                <span>CRATE 2 ({crateBTracks.length})</span>
+                <span className="whitespace-nowrap">CRATE 2 ({crateBTracks.length})</span>
               </button>
             </div>
 

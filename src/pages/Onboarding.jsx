@@ -189,11 +189,13 @@ const Onboarding = () => {
       // Step 1: Create auth user
       // Note: Supabase may send a confirmation email, which can hit rate limits
       // If email confirmation is disabled in Supabase settings, the user will be created immediately
+      // Use production URL from env or fallback to current origin
+      const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: ownerEmail,
         password: ownerPassword,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: `${siteUrl}/?confirmed=true`,
           data: {
             name: ownerName,
             label_name: labelName,

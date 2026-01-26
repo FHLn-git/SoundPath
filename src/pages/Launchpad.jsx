@@ -17,7 +17,7 @@ import UsageWarningBanner from '../components/UsageWarningBanner'
 
 const Launchpad = () => {
   const navigate = useNavigate()
-  const { staffProfile, memberships, switchOrganization, activeOrgId, user, signOut, isSystemAdmin } = useAuth()
+  const { staffProfile, memberships, switchOrganization, clearWorkspace, activeOrgId, user, signOut, isSystemAdmin } = useAuth()
   const { hasFeature } = useBilling()
   const { tracks, loadTracks } = useApp()
   const [searchQuery, setSearchQuery] = useState('')
@@ -61,15 +61,13 @@ const Launchpad = () => {
   // Global Close Watch state
   const [globalCloseWatchTracks, setGlobalCloseWatchTracks] = useState([])
 
-  // CLEANUP: Clear activeOrgId on mount to ensure Personal Inbox and Personal Rolodex load correctly
-  // Personal Inbox requires organization_id to be null in the database query
+  // LAUNCHPAD RESET: Clear activeOrgId on mount to ensure Launchpad is a neutral 'DMZ'
+  // Launchpad should be the neutral zone where no specific label is active
   useEffect(() => {
     if (activeOrgId !== null && activeOrgId !== 'GLOBAL') {
       // Clear the active organization when landing on launchpad
-      // This ensures Personal Inbox (organization_id IS NULL) loads correctly
-      localStorage.removeItem('active_org_id')
-      // Note: We can't directly set activeOrgId here, but loadMemberships already clears it
-      // This is a safety check to ensure localStorage is also cleared
+      // This ensures Launchpad is a neutral workspace selector
+      clearWorkspace()
     }
   }, []) // Run once on mount
 
@@ -1740,7 +1738,18 @@ const Launchpad = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-gradient-to-br from-purple-900/30 to-blue-900/30 rounded-lg p-3 hover:border-purple-500/60 transition-all cursor-pointer group backdrop-blur-sm h-full flex flex-col border-2 border-purple-500/40"
-                onClick={() => navigate('/personal-office')}
+                onClick={async () => {
+                  // WORKSPACE CLEARANCE: Explicitly clear activeOrgId before navigating to Personal Office
+                  // This ensures the user goes to their Personal workspace, not the previous Label
+                  clearWorkspace()
+                  
+                  // LOCAL STORAGE CLEANUP: Overwrite any persisted workspace state
+                  localStorage.removeItem('active_org_id')
+                  
+                  // Navigate to dashboard (Personal Office redirects to /dashboard)
+                  // The Dashboard component will show Personal view since activeOrgId is now null
+                  navigate('/dashboard')
+                }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -2032,51 +2041,51 @@ const Launchpad = () => {
 
             {hasPersonalInboxAccess && (
               <>
-                {/* Crate Tabs */}
-                <div className="flex items-center gap-1 mb-2 bg-gray-900/50 border border-gray-800 rounded-lg p-1 flex-shrink-0">
+                {/* Crate Tabs - Scrollable on mobile */}
+                <div className="flex items-center gap-1 mb-2 bg-gray-900/50 border border-gray-800 rounded-lg p-1 flex-shrink-0 overflow-x-auto scrollbar-hide md:overflow-x-visible">
                 <button
                   onClick={() => setActiveCrate('submissions')}
-                  className={`flex-1 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                  className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
                     activeCrate === 'submissions'
                       ? 'bg-gray-800 text-white'
                       : 'text-gray-400 hover:text-gray-300'
                   }`}
                 >
                   <Radio size={12} />
-                  <span>Submissions ({submissionsTracks.length})</span>
+                  <span className="whitespace-nowrap">Submissions ({submissionsTracks.length})</span>
                 </button>
                 <button
                   onClick={() => setActiveCrate('network')}
-                  className={`flex-1 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                  className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
                     activeCrate === 'network'
                       ? 'bg-gray-800 text-white'
                       : 'text-gray-400 hover:text-gray-300'
                   }`}
                 >
                   <Users size={12} />
-                  <span>Network ({networkTracks.length})</span>
+                  <span className="whitespace-nowrap">Network ({networkTracks.length})</span>
                 </button>
                 <button
                   onClick={() => setActiveCrate('crate_a')}
-                  className={`flex-1 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                  className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
                     activeCrate === 'crate_a'
                       ? 'bg-gray-800 text-white'
                       : 'text-gray-400 hover:text-gray-300'
                   }`}
                 >
                   <Package size={12} />
-                  <span>Crate A ({crateATracks.length})</span>
+                  <span className="whitespace-nowrap">Crate A ({crateATracks.length})</span>
                 </button>
                 <button
                   onClick={() => setActiveCrate('crate_b')}
-                  className={`flex-1 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                  className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
                     activeCrate === 'crate_b'
                       ? 'bg-gray-800 text-white'
                       : 'text-gray-400 hover:text-gray-300'
                   }`}
                 >
                   <Package2 size={12} />
-                  <span>Crate B ({crateBTracks.length})</span>
+                  <span className="whitespace-nowrap">Crate B ({crateBTracks.length})</span>
                 </button>
                 </div>
 

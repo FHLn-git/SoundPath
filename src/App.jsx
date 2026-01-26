@@ -5,6 +5,7 @@ import { AppProvider, useApp } from './context/AppContext'
 import { BillingProvider } from './context/BillingContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import Sidebar from './components/Sidebar'
+import MobileLayout from './components/MobileLayout'
 import { Loader2 } from 'lucide-react'
 import Diagnostics from './components/Diagnostics'
 
@@ -217,14 +218,9 @@ function AppContent() {
               ) : activeOrgId !== null ? (
                 <Navigate to="/dashboard" />
               ) : (
-                <div className="flex min-h-screen bg-gray-950">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <div className="max-w-[1600px] ml-0 p-10">
-                      <PersonalPitched />
-                    </div>
-                  </main>
-                </div>
+                <MobileLayout showBottomNav={true}>
+                  <PersonalPitched />
+                </MobileLayout>
               )
             } />
             <Route path="/personal/signed" element={
@@ -233,14 +229,9 @@ function AppContent() {
               ) : activeOrgId !== null ? (
                 <Navigate to="/dashboard" />
               ) : (
-                <div className="flex min-h-screen bg-gray-950">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <div className="max-w-[1600px] ml-0 p-10">
-                      <PersonalSigned />
-                    </div>
-                  </main>
-                </div>
+                <MobileLayout showBottomNav={true}>
+                  <PersonalSigned />
+                </MobileLayout>
               )
             } />
             
@@ -248,16 +239,9 @@ function AppContent() {
               (!memberships || memberships.length === 0) ? (
                 <Navigate to="/welcome" />
               ) : (
-                // Allow dashboard in both personal view (activeOrgId === null) and label workspace
-                // Dashboard component handles both cases internally
-                <div className="flex min-h-screen bg-gray-950">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <div className="max-w-[1600px] ml-0 p-10">
-                      <Dashboard />
-                    </div>
-                  </main>
-                </div>
+                <MobileLayout showBottomNav={true}>
+                  <Dashboard />
+                </MobileLayout>
               )
             } />
             <Route path="/phase/:phaseId" element={
@@ -266,178 +250,108 @@ function AppContent() {
               ) : activeOrgId === null ? (
                 <Navigate to="/launchpad" />
               ) : (
-                <div className="flex min-h-screen bg-gray-950">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <div className="max-w-[1600px] ml-0 p-10">
-                      <PhaseDetailView />
-                    </div>
-                  </main>
-                </div>
+                <MobileLayout>
+                  <PhaseDetailView />
+                </MobileLayout>
               )
             } />
             <Route path="/artists" element={
               memberships?.length === 0 ? (
                 <Navigate to="/welcome" />
               ) : (
-                <div className="flex min-h-screen bg-gray-950">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <div className="max-w-[1600px] ml-0 p-10">
-                      <ArtistDirectory />
-                    </div>
-                  </main>
-                </div>
+                <MobileLayout showBottomNav={true}>
+                  <ArtistDirectory />
+                </MobileLayout>
               )
             } />
             <Route path="/admin" element={
               memberships?.length === 0 ? (
                 <Navigate to="/welcome" />
               ) : (
-                <div className="flex min-h-screen bg-gray-950">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <div className="max-w-[1600px] ml-0 p-10">
-                      <StaffAdmin />
-                    </div>
-                  </main>
-                </div>
+                <MobileLayout>
+                  <StaffAdmin />
+                </MobileLayout>
               )
             } />
             <Route path="/admin/staff" element={
               memberships?.length === 0 ? (
                 <Navigate to="/welcome" />
               ) : (
-                <div className="flex min-h-screen bg-gray-950">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <div className="max-w-[1600px] ml-0 p-10">
-                      <StaffManagement />
-                    </div>
-                  </main>
-                </div>
+                <MobileLayout>
+                  <StaffManagement />
+                </MobileLayout>
               )
             } />
             <Route path="/calendar" element={
               memberships?.length === 0 ? (
                 <Navigate to="/welcome" />
               ) : (
-                <div className="flex min-h-screen bg-gray-950">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <div className="max-w-[1600px] ml-0 p-10">
-                      <Calendar />
-                    </div>
-                  </main>
-                </div>
+                <MobileLayout>
+                  <Calendar />
+                </MobileLayout>
               )
             } />
             <Route path="/upcoming" element={
               memberships?.length === 0 ? (
                 <Navigate to="/welcome" />
               ) : (
-                <div className="flex min-h-screen bg-gray-950">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <div className="max-w-[1600px] ml-0 p-10">
-                      <Upcoming />
-                    </div>
-                  </main>
-                </div>
+                <MobileLayout>
+                  <Upcoming />
+                </MobileLayout>
               )
             } />
             <Route path="/vault" element={
               memberships?.length === 0 ? (
                 <Navigate to="/welcome" />
               ) : (
-                <div className="flex min-h-screen bg-gray-950">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <div className="max-w-[1600px] ml-0 p-10">
-                      <Vault />
-                    </div>
-                  </main>
-                </div>
+                <MobileLayout>
+                  <Vault />
+                </MobileLayout>
               )
             } />
             <Route path="/billing" element={
-              <div className="flex min-h-screen bg-gray-950">
-                <Sidebar />
-                <main className="flex-1 ml-64">
-                  <div className="max-w-[1600px] ml-0 p-10">
-                    <Billing />
-                  </div>
-                </main>
-              </div>
+              <MobileLayout>
+                <Billing />
+              </MobileLayout>
             } />
             <Route path="/api-keys" element={
               memberships?.length === 0 ? (
                 <Navigate to="/welcome" />
               ) : (
-                <div className="flex min-h-screen bg-gray-950">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <div className="max-w-[1600px] ml-0 p-10">
-                      <ApiKeys />
-                    </div>
-                  </main>
-                </div>
+                <MobileLayout>
+                  <ApiKeys />
+                </MobileLayout>
               )
             } />
             <Route path="/webhooks" element={
               memberships?.length === 0 ? (
                 <Navigate to="/welcome" />
               ) : (
-                <div className="flex min-h-screen bg-gray-950">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <div className="max-w-[1600px] ml-0 p-10">
-                      <Webhooks />
-                    </div>
-                  </main>
-                </div>
+                <MobileLayout>
+                  <Webhooks />
+                </MobileLayout>
               )
             } />
             <Route path="/data-export" element={
-              <div className="flex min-h-screen bg-gray-950">
-                <Sidebar />
-                <main className="flex-1 ml-64">
-                  <div className="max-w-[1600px] ml-0 p-10">
-                    <DataExport />
-                  </div>
-                </main>
-              </div>
+              <MobileLayout>
+                <DataExport />
+              </MobileLayout>
             } />
             <Route path="/delete-account" element={
-              <div className="flex min-h-screen bg-gray-950">
-                <Sidebar />
-                <main className="flex-1 ml-64">
-                  <div className="max-w-[1600px] ml-0 p-10">
-                    <DeleteAccount />
-                  </div>
-                </main>
-              </div>
+              <MobileLayout>
+                <DeleteAccount />
+              </MobileLayout>
             } />
             <Route path="/security" element={
-              <div className="flex min-h-screen bg-gray-950">
-                <Sidebar />
-                <main className="flex-1 ml-64">
-                  <div className="max-w-[1600px] ml-0 p-10">
-                    <SecuritySettings />
-                  </div>
-                </main>
-              </div>
+              <MobileLayout>
+                <SecuritySettings />
+              </MobileLayout>
             } />
             <Route path="/health" element={<HealthCheck />} />
             <Route path="/populate" element={
-                <div className="flex min-h-screen bg-gray-950">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <div className="max-w-[1600px] ml-0 p-10">
-                      <PopulateTestData />
-                    </div>
-                  </main>
-                </div>
+                <MobileLayout>
+                  <PopulateTestData />
+                </MobileLayout>
             } />
             <Route path="/god-mode" element={
               staffProfile?.role === 'SystemAdmin' ? (
