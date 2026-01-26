@@ -1,0 +1,485 @@
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import { AppProvider, useApp } from './context/AppContext'
+import { BillingProvider } from './context/BillingContext'
+import ErrorBoundary from './components/ErrorBoundary'
+import Sidebar from './components/Sidebar'
+import { Loader2 } from 'lucide-react'
+import Diagnostics from './components/Diagnostics'
+
+// Lazy load pages for better performance
+const Landing = lazy(() => import('./pages/Landing'))
+const SignUp = lazy(() => import('./pages/SignUp'))
+const Welcome = lazy(() => import('./pages/Welcome'))
+const Onboarding = lazy(() => import('./pages/Onboarding'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Launchpad = lazy(() => import('./pages/Launchpad'))
+const PersonalOffice = lazy(() => import('./pages/PersonalOffice'))
+const PersonalOfficeSubmitted = lazy(() => import('./pages/PersonalOfficeSubmitted'))
+const PersonalOfficeSigned = lazy(() => import('./pages/PersonalOfficeSigned'))
+const PersonalPitched = lazy(() => import('./pages/PersonalPitched'))
+const PersonalSigned = lazy(() => import('./pages/PersonalSigned'))
+const ArtistDirectory = lazy(() => import('./pages/ArtistDirectory'))
+const StaffAdmin = lazy(() => import('./pages/StaffAdmin'))
+const StaffManagement = lazy(() => import('./pages/StaffManagement'))
+const PhaseDetailView = lazy(() => import('./pages/PhaseDetailView'))
+const Calendar = lazy(() => import('./pages/Calendar'))
+const Upcoming = lazy(() => import('./pages/Upcoming'))
+const Vault = lazy(() => import('./pages/Vault'))
+const PopulateTestData = lazy(() => import('./pages/PopulateTestData'))
+const GlobalPulse = lazy(() => import('./pages/GlobalPulse'))
+const Billing = lazy(() => import('./pages/Billing'))
+const PlanInfo = lazy(() => import('./pages/PlanInfo'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const ApiKeys = lazy(() => import('./pages/ApiKeys'))
+const Webhooks = lazy(() => import('./pages/Webhooks'))
+const PublicForm = lazy(() => import('./components/PublicForm'))
+const NotFound = lazy(() => import('./pages/NotFound'))
+const TermsOfService = lazy(() => import('./pages/TermsOfService'))
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'))
+const DataExport = lazy(() => import('./pages/DataExport'))
+const DeleteAccount = lazy(() => import('./pages/DeleteAccount'))
+const HelpCenter = lazy(() => import('./pages/HelpCenter'))
+const FAQ = lazy(() => import('./pages/FAQ'))
+const Contact = lazy(() => import('./pages/Contact'))
+const SecuritySettings = lazy(() => import('./pages/SecuritySettings'))
+const HealthCheck = lazy(() => import('./pages/HealthCheck'))
+const EmailTest = lazy(() => import('./pages/EmailTest'))
+const SupportWidget = lazy(() => import('./components/SupportWidget'))
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex min-h-screen bg-gray-950 items-center justify-center">
+    <div className="flex flex-col items-center gap-4">
+      <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
+      <p className="text-gray-400">Loading...</p>
+    </div>
+  </div>
+)
+
+function AppContent() {
+  const { loading: authLoading, user, staffProfile, memberships, activeOrgId } = useAuth()
+  const { loading: appLoading } = useApp()
+  const [hasPersonalInbox, setHasPersonalInbox] = useState(false)
+  const [checkingPersonalInbox, setCheckingPersonalInbox] = useState(true)
+
+  // Determine default route - Agent-Centric: route to launchpad if activeOrgId is null
+  // Use useMemo to prevent route from changing during renders
+  const defaultRoute = useMemo(() => {
+    if (!memberships || memberships.length === 0) {
+      return '/welcome'
+    }
+    
+    // Agent-Centric: If no active organization, user is in Personal view -> launchpad
+    // If activeOrgId is set, they're in a Label workspace -> dashboard
+    if (activeOrgId === null) {
+      return '/launchpad'
+    }
+    
+    // If activeOrgId is set, they're in a Label workspace
+    return '/dashboard'
+  }, [memberships, activeOrgId])
+
+  // Add timeout fallback to prevent infinite loading
+  const [showTimeoutMessage, setShowTimeoutMessage] = useState(false)
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (authLoading || appLoading) {
+        setShowTimeoutMessage(true)
+        console.error('⚠️ Loading timeout - check console for errors')
+      }
+    }, 10000) // 10 second timeout
+
+    return () => clearTimeout(timeout)
+  }, [authLoading, appLoading])
+
+  // Check if user has personal inbox tracks
+  useEffect(() => {
+    const checkPersonalInbox = async () => {
+      if (!user || !staffProfile || !memberships || memberships.length === 0) {
+        setHasPersonalInbox(false)
+        setCheckingPersonalInbox(false)
+        return
+      }
+
+      try {
+        const { supabase } = await import('./lib/supabaseClient')
+        if (!supabase) {
+          setHasPersonalInbox(false)
+          setCheckingPersonalInbox(false)
+          return
+        }
+
+        const { count, error } = await supabase
+          .from('tracks')
+          .select('*', { count: 'exact', head: true })
+          .eq('recipient_user_id', staffProfile.id)
+          .is('organization_id', null)
+          .eq('archived', false)
+
+        if (error) {
+          console.error('Error checking personal inbox:', error)
+          setHasPersonalInbox(false)
+        } else {
+          setHasPersonalInbox((count || 0) > 0)
+        }
+      } catch (error) {
+        console.error('Error checking personal inbox:', error)
+        setHasPersonalInbox(false)
+      } finally {
+        setCheckingPersonalInbox(false)
+      }
+    }
+
+    if (!authLoading && !appLoading && user && staffProfile) {
+      checkPersonalInbox()
+    }
+  }, [user, staffProfile, memberships, authLoading, appLoading])
+
+  // Show login if not authenticated
+  if (authLoading || appLoading) {
+    return (
+      <div className="flex min-h-screen bg-gray-950 items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
+          <p className="text-gray-400">Loading SoundPath...</p>
+          {showTimeoutMessage && (
+            <>
+              <div className="mt-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg max-w-md">
+                <p className="text-red-400 text-sm font-semibold mb-2">Loading timeout detected</p>
+                <p className="text-gray-300 text-xs">
+                  Check the browser console (F12) for errors. Common issues:
+                </p>
+                <ul className="text-gray-400 text-xs mt-2 list-disc list-inside">
+                  <li>Supabase credentials not configured (.env file missing)</li>
+                  <li>Database connection error</li>
+                  <li>RLS policies blocking access</li>
+                </ul>
+              </div>
+              <Diagnostics />
+            </>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <ErrorBoundary>
+      <Router>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={!user || !staffProfile ? <Landing /> : <Navigate to={defaultRoute} replace />} />
+            <Route path="/signup" element={!user || !staffProfile ? <SignUp /> : <Navigate to={defaultRoute} replace />} />
+            <Route path="/onboarding" element={!user || !staffProfile ? <Onboarding /> : <Navigate to={defaultRoute} replace />} />
+            <Route path="/submit/:targetType/:targetSlug" element={<PublicForm />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/help" element={<HelpCenter />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/test-email" element={<EmailTest />} />
+            <Route path="/plan/:planId" element={<PlanInfo />} />
+        
+        {/* Protected Routes */}
+        {user && staffProfile ? (
+          <>
+            {/* Welcome page for users without memberships */}
+            <Route path="/welcome" element={
+              memberships?.length === 0 ? (
+                <Welcome />
+              ) : (
+                <Navigate to="/launchpad" />
+              )
+            } />
+            
+            {/* Launchpad - Universal A&R Launchpad (No Sidebar - Lobby View) */}
+            <Route path="/launchpad" element={
+              memberships?.length === 0 ? (
+                <Navigate to="/welcome" />
+              ) : (
+                <Launchpad />
+              )
+            } />
+            
+            {/* Redirect old Personal Office routes to Dashboard */}
+            <Route path="/personal-office" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/personal-office/submitted" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/personal-office/signed" element={<Navigate to="/personal/signed" replace />} />
+            
+            {/* Personal Workspace Routes */}
+            <Route path="/personal/pitched" element={
+              (!memberships || memberships.length === 0) ? (
+                <Navigate to="/welcome" />
+              ) : activeOrgId !== null ? (
+                <Navigate to="/dashboard" />
+              ) : (
+                <div className="flex min-h-screen bg-gray-950">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <div className="max-w-[1600px] ml-0 p-10">
+                      <PersonalPitched />
+                    </div>
+                  </main>
+                </div>
+              )
+            } />
+            <Route path="/personal/signed" element={
+              (!memberships || memberships.length === 0) ? (
+                <Navigate to="/welcome" />
+              ) : activeOrgId !== null ? (
+                <Navigate to="/dashboard" />
+              ) : (
+                <div className="flex min-h-screen bg-gray-950">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <div className="max-w-[1600px] ml-0 p-10">
+                      <PersonalSigned />
+                    </div>
+                  </main>
+                </div>
+              )
+            } />
+            
+            <Route path="/dashboard" element={
+              (!memberships || memberships.length === 0) ? (
+                <Navigate to="/welcome" />
+              ) : (
+                // Allow dashboard in both personal view (activeOrgId === null) and label workspace
+                // Dashboard component handles both cases internally
+                <div className="flex min-h-screen bg-gray-950">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <div className="max-w-[1600px] ml-0 p-10">
+                      <Dashboard />
+                    </div>
+                  </main>
+                </div>
+              )
+            } />
+            <Route path="/phase/:phaseId" element={
+              memberships?.length === 0 ? (
+                <Navigate to="/welcome" />
+              ) : activeOrgId === null ? (
+                <Navigate to="/launchpad" />
+              ) : (
+                <div className="flex min-h-screen bg-gray-950">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <div className="max-w-[1600px] ml-0 p-10">
+                      <PhaseDetailView />
+                    </div>
+                  </main>
+                </div>
+              )
+            } />
+            <Route path="/artists" element={
+              memberships?.length === 0 ? (
+                <Navigate to="/welcome" />
+              ) : (
+                <div className="flex min-h-screen bg-gray-950">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <div className="max-w-[1600px] ml-0 p-10">
+                      <ArtistDirectory />
+                    </div>
+                  </main>
+                </div>
+              )
+            } />
+            <Route path="/admin" element={
+              memberships?.length === 0 ? (
+                <Navigate to="/welcome" />
+              ) : (
+                <div className="flex min-h-screen bg-gray-950">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <div className="max-w-[1600px] ml-0 p-10">
+                      <StaffAdmin />
+                    </div>
+                  </main>
+                </div>
+              )
+            } />
+            <Route path="/admin/staff" element={
+              memberships?.length === 0 ? (
+                <Navigate to="/welcome" />
+              ) : (
+                <div className="flex min-h-screen bg-gray-950">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <div className="max-w-[1600px] ml-0 p-10">
+                      <StaffManagement />
+                    </div>
+                  </main>
+                </div>
+              )
+            } />
+            <Route path="/calendar" element={
+              memberships?.length === 0 ? (
+                <Navigate to="/welcome" />
+              ) : (
+                <div className="flex min-h-screen bg-gray-950">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <div className="max-w-[1600px] ml-0 p-10">
+                      <Calendar />
+                    </div>
+                  </main>
+                </div>
+              )
+            } />
+            <Route path="/upcoming" element={
+              memberships?.length === 0 ? (
+                <Navigate to="/welcome" />
+              ) : (
+                <div className="flex min-h-screen bg-gray-950">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <div className="max-w-[1600px] ml-0 p-10">
+                      <Upcoming />
+                    </div>
+                  </main>
+                </div>
+              )
+            } />
+            <Route path="/vault" element={
+              memberships?.length === 0 ? (
+                <Navigate to="/welcome" />
+              ) : (
+                <div className="flex min-h-screen bg-gray-950">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <div className="max-w-[1600px] ml-0 p-10">
+                      <Vault />
+                    </div>
+                  </main>
+                </div>
+              )
+            } />
+            <Route path="/billing" element={
+              <div className="flex min-h-screen bg-gray-950">
+                <Sidebar />
+                <main className="flex-1 ml-64">
+                  <div className="max-w-[1600px] ml-0 p-10">
+                    <Billing />
+                  </div>
+                </main>
+              </div>
+            } />
+            <Route path="/api-keys" element={
+              memberships?.length === 0 ? (
+                <Navigate to="/welcome" />
+              ) : (
+                <div className="flex min-h-screen bg-gray-950">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <div className="max-w-[1600px] ml-0 p-10">
+                      <ApiKeys />
+                    </div>
+                  </main>
+                </div>
+              )
+            } />
+            <Route path="/webhooks" element={
+              memberships?.length === 0 ? (
+                <Navigate to="/welcome" />
+              ) : (
+                <div className="flex min-h-screen bg-gray-950">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <div className="max-w-[1600px] ml-0 p-10">
+                      <Webhooks />
+                    </div>
+                  </main>
+                </div>
+              )
+            } />
+            <Route path="/data-export" element={
+              <div className="flex min-h-screen bg-gray-950">
+                <Sidebar />
+                <main className="flex-1 ml-64">
+                  <div className="max-w-[1600px] ml-0 p-10">
+                    <DataExport />
+                  </div>
+                </main>
+              </div>
+            } />
+            <Route path="/delete-account" element={
+              <div className="flex min-h-screen bg-gray-950">
+                <Sidebar />
+                <main className="flex-1 ml-64">
+                  <div className="max-w-[1600px] ml-0 p-10">
+                    <DeleteAccount />
+                  </div>
+                </main>
+              </div>
+            } />
+            <Route path="/security" element={
+              <div className="flex min-h-screen bg-gray-950">
+                <Sidebar />
+                <main className="flex-1 ml-64">
+                  <div className="max-w-[1600px] ml-0 p-10">
+                    <SecuritySettings />
+                  </div>
+                </main>
+              </div>
+            } />
+            <Route path="/health" element={<HealthCheck />} />
+            <Route path="/populate" element={
+                <div className="flex min-h-screen bg-gray-950">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <div className="max-w-[1600px] ml-0 p-10">
+                      <PopulateTestData />
+                    </div>
+                  </main>
+                </div>
+            } />
+            <Route path="/god-mode" element={
+              staffProfile?.role === 'SystemAdmin' ? (
+                <GlobalPulse />
+              ) : (
+                <Navigate to="/launchpad" />
+              )
+            } />
+            <Route path="/admin/dashboard" element={
+              staffProfile?.role === 'SystemAdmin' ? (
+                <AdminDashboard />
+              ) : (
+                <Navigate to="/launchpad" />
+              )
+            } />
+            <Route path="*" element={<NotFound />} />
+          </>
+        ) : (
+          <Route path="*" element={<Navigate to="/" />} />
+        )}
+          </Routes>
+        </Suspense>
+      </Router>
+    </ErrorBoundary>
+  )
+}
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppProvider>
+          <BillingProvider>
+            <Suspense fallback={null}>
+              <SupportWidget />
+            </Suspense>
+            <AppContent />
+          </BillingProvider>
+        </AppProvider>
+      </AuthProvider>
+    </ErrorBoundary>
+  )
+}
+
+export default App
