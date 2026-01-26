@@ -75,7 +75,18 @@ const Landing = () => {
 
   // Show success messages and open login modal if needed
   useEffect(() => {
-    if (message === 'account_created') {
+    // Check for email confirmation success
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('confirmed') === 'true') {
+      setToast({
+        isVisible: true,
+        message: 'Email confirmed successfully! You can now sign in.',
+        type: 'success',
+      })
+      setShowLoginModal(true)
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname)
+    } else if (message === 'account_created') {
       setToast({
         isVisible: true,
         message: 'Account created! Please check your email to confirm your account, then sign in.',
@@ -89,10 +100,10 @@ const Landing = () => {
         type: 'success',
       })
       setShowLoginModal(true)
-    } else if (message === 'confirm-email') {
+    } else if (message === 'confirm-email' || message === 'confirm_email') {
       setToast({
         isVisible: true,
-        message: 'Please check your email and click the confirmation link to activate your account.',
+        message: 'Confirm email to login',
         type: 'success',
       })
       setShowLoginModal(true)
@@ -767,10 +778,10 @@ const Landing = () => {
                   <p className="text-gray-400">Sign in to your {labelName} account</p>
                 </div>
 
-                {message === 'confirm-email' && (
+                {(message === 'confirm-email' || message === 'confirm_email') && (
                   <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/50 rounded-lg">
                     <p className="text-blue-400 text-sm">
-                      <strong>✓ Label Created!</strong> Please check your email and click the confirmation link to activate your account.
+                      <strong>✓ Account Created!</strong> Please check your email and click the confirmation link to activate your account, then sign in below.
                     </p>
                   </div>
                 )}
@@ -888,6 +899,7 @@ const Landing = () => {
         message={toast.message}
         type={toast.type}
         onClose={() => setToast({ ...toast, isVisible: false })}
+        duration={message === 'confirm-email' || message === 'confirm_email' ? 15000 : 4000}
       />
     </div>
   )

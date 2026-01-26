@@ -2,15 +2,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useEffect } from 'react'
 
-const Toast = ({ message, isVisible, onClose, type = 'error' }) => {
+const Toast = ({ message, isVisible, onClose, type = 'error', duration = 4000 }) => {
   useEffect(() => {
     if (isVisible) {
       const timer = setTimeout(() => {
         onClose()
-      }, 4000)
+      }, duration)
       return () => clearTimeout(timer)
     }
-  }, [isVisible, onClose])
+  }, [isVisible, onClose, duration])
 
   return (
     <AnimatePresence>

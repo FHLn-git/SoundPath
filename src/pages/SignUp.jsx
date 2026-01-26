@@ -170,9 +170,7 @@ const SignUp = () => {
             type: 'warning',
           })
           // Still redirect to login - user can try signing in
-          setTimeout(() => {
-            navigate('/?message=account_created')
-          }, 2000)
+          navigate('/?message=confirm_email')
         } else {
           setError(signUpError.message || 'Failed to create account')
           setToast({
@@ -182,29 +180,16 @@ const SignUp = () => {
           })
         }
       } else {
-        setToast({
-          isVisible: true,
-          message: 'Account created successfully!',
-          type: 'success',
-        })
-        
-        // If a paid plan was selected, redirect to checkout
+        // If a paid plan was selected, store plan selection for after login
         if (selectedPlanId && selectedPlanId !== 'free') {
-          // Store plan selection in sessionStorage for after login
           sessionStorage.setItem('pendingSubscription', JSON.stringify({
             planId: selectedPlanId,
             billingInterval: billingInterval
           }))
-          // Redirect to login, then they'll be redirected to checkout
-          setTimeout(() => {
-            navigate('/?message=account_created&subscribe=true')
-          }, 1500)
-        } else {
-          // Free plan or no plan selected - just redirect to login
-          setTimeout(() => {
-            navigate('/?message=account_created')
-          }, 1500)
         }
+        
+        // Redirect immediately to login page with confirm email message
+        navigate('/?message=confirm_email')
       }
     } catch (err) {
       setError(err.message || 'An error occurred during sign up')
