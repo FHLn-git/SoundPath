@@ -494,11 +494,6 @@ const Landing = () => {
                 <span className={`text-sm font-medium transition-colors ${billingInterval === 'year' ? 'text-white' : 'text-gray-500'}`}>
                   Yearly
                 </span>
-                {billingInterval === 'year' && (
-                  <span className="px-3 py-1 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-semibold rounded-full">
-                    Save up to 17%
-                  </span>
-                )}
               </div>
 
               {/* Main Plans Grid: Free, Agent, Starter, Pro */}
@@ -564,16 +559,9 @@ const Landing = () => {
                                       Save $200 per year!
                                     </span>
                                   ) : (
-                                    <>
-                                      <span className="text-sm text-gray-400">
-                                        ${monthlyEquivalent.toFixed(2)}/month
-                                      </span>
-                                      {savings > 0 && (
-                                        <span className="px-2 py-0.5 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-semibold rounded">
-                                          Save {savings}%
-                                        </span>
-                                      )}
-                                    </>
+                                    <span className="text-sm text-gray-400">
+                                      ${monthlyEquivalent.toFixed(2)}/month
+                                    </span>
                                   )}
                                 </div>
                               </>
