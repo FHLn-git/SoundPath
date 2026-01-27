@@ -12,7 +12,6 @@ import Diagnostics from './components/Diagnostics'
 // Lazy load pages for better performance
 const Landing = lazy(() => import('./pages/Landing'))
 const SignUp = lazy(() => import('./pages/SignUp'))
-const Welcome = lazy(() => import('./pages/Welcome'))
 const Onboarding = lazy(() => import('./pages/Onboarding'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Launchpad = lazy(() => import('./pages/Launchpad'))
@@ -69,7 +68,7 @@ function AppContent() {
   // Use useMemo to prevent route from changing during renders
   const defaultRoute = useMemo(() => {
     if (!memberships || memberships.length === 0) {
-      return '/welcome'
+      return '/launchpad'
     }
     
     // Agent-Centric: If no active organization, user is in Personal view -> launchpad
@@ -188,22 +187,9 @@ function AppContent() {
         {/* Protected Routes */}
         {user && staffProfile ? (
           <>
-            {/* Welcome page for users without memberships */}
-            <Route path="/welcome" element={
-              memberships?.length === 0 ? (
-                <Welcome />
-              ) : (
-                <Navigate to="/launchpad" />
-              )
-            } />
-            
             {/* Launchpad - Universal A&R Launchpad (No Sidebar - Lobby View) */}
             <Route path="/launchpad" element={
-              memberships?.length === 0 ? (
-                <Navigate to="/welcome" />
-              ) : (
-                <Launchpad />
-              )
+              <Launchpad />
             } />
             
             {/* Redirect old Personal Office routes to Dashboard */}
@@ -214,7 +200,7 @@ function AppContent() {
             {/* Personal Workspace Routes */}
             <Route path="/personal/pitched" element={
               (!memberships || memberships.length === 0) ? (
-                <Navigate to="/welcome" />
+                <Navigate to="/launchpad" />
               ) : activeOrgId !== null ? (
                 <Navigate to="/dashboard" />
               ) : (
@@ -225,7 +211,7 @@ function AppContent() {
             } />
             <Route path="/personal/signed" element={
               (!memberships || memberships.length === 0) ? (
-                <Navigate to="/welcome" />
+                <Navigate to="/launchpad" />
               ) : activeOrgId !== null ? (
                 <Navigate to="/dashboard" />
               ) : (
@@ -237,7 +223,7 @@ function AppContent() {
             
             <Route path="/dashboard" element={
               (!memberships || memberships.length === 0) ? (
-                <Navigate to="/welcome" />
+                <Navigate to="/launchpad" />
               ) : (
                 <MobileLayout showBottomNav={true}>
                   <Dashboard />
@@ -246,7 +232,7 @@ function AppContent() {
             } />
             <Route path="/phase/:phaseId" element={
               memberships?.length === 0 ? (
-                <Navigate to="/welcome" />
+                <Navigate to="/launchpad" />
               ) : activeOrgId === null ? (
                 <Navigate to="/launchpad" />
               ) : (
@@ -257,7 +243,7 @@ function AppContent() {
             } />
             <Route path="/artists" element={
               memberships?.length === 0 ? (
-                <Navigate to="/welcome" />
+                <Navigate to="/launchpad" />
               ) : (
                 <MobileLayout showBottomNav={true}>
                   <ArtistDirectory />
@@ -266,7 +252,7 @@ function AppContent() {
             } />
             <Route path="/admin" element={
               memberships?.length === 0 ? (
-                <Navigate to="/welcome" />
+                <Navigate to="/launchpad" />
               ) : (
                 <MobileLayout>
                   <StaffAdmin />
@@ -275,7 +261,7 @@ function AppContent() {
             } />
             <Route path="/admin/staff" element={
               memberships?.length === 0 ? (
-                <Navigate to="/welcome" />
+                <Navigate to="/launchpad" />
               ) : (
                 <MobileLayout>
                   <StaffManagement />
@@ -284,7 +270,7 @@ function AppContent() {
             } />
             <Route path="/calendar" element={
               memberships?.length === 0 ? (
-                <Navigate to="/welcome" />
+                <Navigate to="/launchpad" />
               ) : (
                 <MobileLayout>
                   <Calendar />
@@ -293,7 +279,7 @@ function AppContent() {
             } />
             <Route path="/upcoming" element={
               memberships?.length === 0 ? (
-                <Navigate to="/welcome" />
+                <Navigate to="/launchpad" />
               ) : (
                 <MobileLayout>
                   <Upcoming />
@@ -302,7 +288,7 @@ function AppContent() {
             } />
             <Route path="/vault" element={
               memberships?.length === 0 ? (
-                <Navigate to="/welcome" />
+                <Navigate to="/launchpad" />
               ) : (
                 <MobileLayout>
                   <Vault />
@@ -316,7 +302,7 @@ function AppContent() {
             } />
             <Route path="/api-keys" element={
               memberships?.length === 0 ? (
-                <Navigate to="/welcome" />
+                <Navigate to="/launchpad" />
               ) : (
                 <MobileLayout>
                   <ApiKeys />
@@ -325,7 +311,7 @@ function AppContent() {
             } />
             <Route path="/webhooks" element={
               memberships?.length === 0 ? (
-                <Navigate to="/welcome" />
+                <Navigate to="/launchpad" />
               ) : (
                 <MobileLayout>
                   <Webhooks />

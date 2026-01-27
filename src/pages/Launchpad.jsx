@@ -1474,16 +1474,6 @@ const Launchpad = () => {
     )
   }
 
-  if (!memberships || memberships.length === 0) {
-    return (
-      <div className="flex items-center justify-center bg-gray-950 p-4">
-        <div className="text-center">
-          <p className="text-gray-400">No labels found. Redirecting...</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col">
       <div className="w-full px-4 sm:px-6 lg:px-10 flex-shrink-0">
@@ -1557,7 +1547,7 @@ const Launchpad = () => {
         )}
         
         {/* Debug info - remove in production */}
-        {process.env.NODE_ENV === 'development' && (
+        {import.meta.env.DEV && (
           <div className="mb-2 text-xs text-gray-600">
             Invites loading: {invitesLoading ? 'Yes' : 'No'} | Found: {pendingInvites.length}
           </div>
@@ -1603,6 +1593,41 @@ const Launchpad = () => {
             </motion.button>
           </div>
         </div>
+
+        {/* No-memberships onboarding (Welcome page removed) */}
+        {(!memberships || memberships.length === 0) && (
+          <div className="mb-4">
+            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+              <h2 className="text-xl font-bold text-white mb-2">
+                Welcome{staffProfile?.name ? `, ${staffProfile.name}` : ''}. Create your first label.
+              </h2>
+              <p className="text-gray-400 text-sm mb-4">
+                You’re signed in, but you don’t belong to any labels yet. Create one now, or accept an invite if you have one.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setShowCreateLabelModal(true)}
+                  className="px-5 py-3 bg-gradient-to-r from-neon-purple to-recording-red rounded-lg text-white font-semibold transition-all"
+                >
+                  Create a Label
+                </button>
+                <button
+                  onClick={() => {
+                    setToast({
+                      isVisible: true,
+                      message:
+                        'Invite code entry is coming soon. If you were invited by email, it will appear here automatically.',
+                      type: 'info',
+                    })
+                  }}
+                  className="px-5 py-3 bg-gray-900/50 hover:bg-gray-900/70 border border-gray-800 rounded-lg text-gray-300 font-semibold transition-all"
+                >
+                  Enter Invite Code
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Layout: Sidebar + Content */}
         <div className="flex flex-col lg:flex-row gap-2 items-start w-full">

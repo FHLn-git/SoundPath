@@ -135,7 +135,7 @@ const Landing = () => {
       }
       
       if (!memberships || memberships.length === 0) {
-        navigate('/welcome', { replace: true })
+        navigate('/launchpad', { replace: true })
       } else {
         navigate('/launchpad', { replace: true })
       }
@@ -233,7 +233,7 @@ const Landing = () => {
         setTimeout(() => {
           if (user) {
             if (!staffProfile) {
-              navigate('/welcome')
+              navigate('/launchpad')
             }
           }
         }, 2000)
