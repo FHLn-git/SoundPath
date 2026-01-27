@@ -10,6 +10,25 @@ function json(res, status, body) {
   return res.end(JSON.stringify(body))
 }
 
+function normalizeBaseUrl(value) {
+  const raw = (value || '').toString().trim()
+  if (!raw) return ''
+  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw.replace(/\/+$/, '')
+  // allow passing just "soundpath.app" or "www.foo.com"
+  return `https://${raw.replace(/^\/+/, '')}`.replace(/\/+$/, '')
+}
+
+function toAbsoluteUrl(maybeUrl, base) {
+  const raw = (maybeUrl || '').toString().trim()
+  if (!raw) return ''
+  // already absolute
+  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw
+  // relative path
+  if (raw.startsWith('/')) return `${base}${raw}`
+  // unknown format: treat as relative-ish
+  return `${base}/${raw}`.replace(/\/{2,}/g, '/').replace(':/', '://')
+}
+
 async function readJsonBody(req) {
   if (req.body && typeof req.body === 'object') return req.body
   const chunks = []
@@ -74,13 +93,27 @@ export default async function handler(req, res) {
 
     const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' })
 
-    const siteBase = (process.env.SITE_URL || process.env.VITE_SITE_URL || req.headers.origin || '')
-      .toString()
-      .replace(/\/+$/, '')
+    const proto = (req.headers['x-forwarded-proto'] || 'https').toString()
+    const host = (req.headers.host || '').toString()
+    const inferredBase = host ? `${proto}://${host}` : ''
 
-    const success_url =
-      (body.success_url || `${siteBase}/launchpad?session_id={CHECKOUT_SESSION_ID}`).toString()
-    const cancel_url = (body.cancel_url || `${siteBase}/signup?checkout=cancelled`).toString()
+    const siteBase =
+      normalizeBaseUrl(process.env.SITE_URL) ||
+      normalizeBaseUrl(process.env.VITE_SITE_URL) ||
+      normalizeBaseUrl(req.headers.origin) ||
+      normalizeBaseUrl(inferredBase)
+
+    if (!siteBase) {
+      return json(res, 500, {
+        error: 'SITE_URL is not configured (must include https://)',
+      })
+    }
+
+    const success_url = toAbsoluteUrl(
+      body.success_url || `/launchpad?session_id={CHECKOUT_SESSION_ID}`,
+      siteBase
+    )
+    const cancel_url = toAbsoluteUrl(body.cancel_url || `/signup?checkout=cancelled`, siteBase)
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
