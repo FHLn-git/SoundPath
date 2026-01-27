@@ -1,9 +1,12 @@
-const Stripe = require('stripe')
+import Stripe from 'stripe'
+import { createClient } from '@supabase/supabase-js'
 
 function json(res, status, body) {
   res.statusCode = status
   res.setHeader('Content-Type', 'application/json')
   res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Headers', 'content-type')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   return res.end(JSON.stringify(body))
 }
 
@@ -16,13 +19,9 @@ async function readJsonBody(req) {
   return JSON.parse(raw)
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
-    res.statusCode = 200
-    res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Access-Control-Allow-Headers', 'content-type')
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-    return res.end('ok')
+    return json(res, 200, { ok: true })
   }
 
   if (req.method !== 'POST') {
@@ -54,7 +53,6 @@ module.exports = async function handler(req, res) {
       return json(res, 500, { error: 'Supabase admin credentials not configured' })
     }
 
-    const { createClient } = await import('@supabase/supabase-js')
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     const { data: plan, error: planError } = await supabase

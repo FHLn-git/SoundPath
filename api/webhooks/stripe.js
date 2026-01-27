@@ -1,4 +1,5 @@
-const Stripe = require('stripe')
+import Stripe from 'stripe'
+import { createClient } from '@supabase/supabase-js'
 
 function json(res, status, body) {
   res.statusCode = status
@@ -12,7 +13,7 @@ async function readRawBody(req) {
   return Buffer.concat(chunks)
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
 
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY
@@ -44,7 +45,8 @@ module.exports = async function handler(req, res) {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object
 
-      const authUserId = session.client_reference_id || (session.metadata && session.metadata.auth_user_id)
+      const authUserId =
+        session.client_reference_id || (session.metadata && session.metadata.auth_user_id)
       const tier = session.metadata && session.metadata.tier
       const stripeSubscriptionId = session.subscription || null
 
@@ -56,7 +58,6 @@ module.exports = async function handler(req, res) {
         return json(res, 200, { received: true, ignored: true })
       }
 
-      const { createClient } = await import('@supabase/supabase-js')
       const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
       const { error } = await supabase
@@ -70,8 +71,6 @@ module.exports = async function handler(req, res) {
 
       if (error) {
         console.error('Failed updating staff_members after checkout:', error)
-        // Return 200 so Stripe doesn’t retry forever if the row doesn't exist yet;
-        // user can still "Finish Upgrading" and webhook may succeed later once profile exists.
         return json(res, 200, { received: true, updated: false })
       }
     }
