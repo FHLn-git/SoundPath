@@ -152,7 +152,7 @@ const UsageWarningBanner = () => {
             <div className="flex-1">
               <h3 className="text-red-400 font-semibold mb-1">Approaching Usage Limit</h3>
               <p className="text-gray-300 text-sm mb-2">
-                You're within 10% of your plan limits:
+                You are within 10% of your plan limits:
               </p>
               <ul className="text-sm text-gray-400 space-y-1 mb-3">
                 {warnings.map((warning) => (

@@ -23,6 +23,8 @@ const Landing = () => {
   const message = searchParams.get('message')
   const [organizationBranding, setOrganizationBranding] = useState(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
+  const [showPasswordReset, setShowPasswordReset] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [plans, setPlans] = useState([])
   const [billingInterval, setBillingInterval] = useState('month') // 'month' or 'year' (matches SignUp.jsx)
@@ -158,6 +160,53 @@ const Landing = () => {
       document.body.style.overflow = 'unset'
     }
   }, [showLoginModal])
+
+  // Reset modal state when closing
+  useEffect(() => {
+    if (!showLoginModal) {
+      setShowPasswordReset(false)
+      setResetLoading(false)
+    }
+  }, [showLoginModal])
+
+  const sendPasswordReset = async () => {
+    if (!supabase) {
+      setToast({ isVisible: true, message: 'Auth is not configured.', type: 'error' })
+      return
+    }
+
+    const normalizedEmail = email.toLowerCase().trim()
+    if (!normalizedEmail) {
+      setToast({ isVisible: true, message: 'Enter your email first.', type: 'error' })
+      return
+    }
+
+    setResetLoading(true)
+    try {
+      await supabase.functions.invoke('password-reset', {
+        body: {
+          email: normalizedEmail,
+          redirect_to: `${window.location.origin}/reset-password`,
+        },
+      })
+
+      // Enumeration-safe UX: same message regardless of account existence.
+      setToast({
+        isVisible: true,
+        message: 'If an account exists for that email, we sent a password reset link.',
+        type: 'success',
+      })
+      setShowPasswordReset(false)
+    } catch (err) {
+      setToast({
+        isVisible: true,
+        message: err.message || 'Failed to send reset email. Please try again.',
+        type: 'error',
+      })
+    } finally {
+      setResetLoading(false)
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -901,6 +950,15 @@ const Landing = () => {
                         placeholder="••••••••"
                       />
                     </div>
+                    <div className="mt-2 flex items-center justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswordReset(true)}
+                        className="text-sm text-gray-400 hover:text-white transition-colors"
+                      >
+                        Forgot / change password?
+                      </button>
+                    </div>
                   </div>
 
                   {error && (
@@ -932,6 +990,38 @@ const Landing = () => {
                     )}
                   </motion.button>
                 </form>
+
+                <AnimatePresence>
+                  {showPasswordReset && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="mt-6 p-4 bg-gray-950/40 border border-gray-800 rounded-lg"
+                    >
+                      <p className="text-sm text-gray-300 mb-3">
+                        We’ll email you a secure link to reset your password.
+                      </p>
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={sendPasswordReset}
+                          disabled={resetLoading}
+                          className="flex-1 py-2 rounded-lg font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-neon-purple to-recording-red"
+                        >
+                          {resetLoading ? 'Sending…' : 'Send reset email'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowPasswordReset(false)}
+                          className="px-4 py-2 rounded-lg font-semibold text-gray-300 border border-gray-700 hover:border-gray-600 hover:text-white transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <div className="mt-6 text-center">
                   <p className="text-gray-500 text-sm">

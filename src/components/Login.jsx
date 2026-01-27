@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { LogIn, Loader2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabaseClient'
 import Toast from './Toast'
 
 const Login = () => {
@@ -9,6 +10,7 @@ const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resetting, setResetting] = useState(false)
   const [toast, setToast] = useState({ isVisible: false, message: '', type: 'error' })
 
   const handleSubmit = async (e) => {
@@ -26,6 +28,42 @@ const Login = () => {
     }
 
     setLoading(false)
+  }
+
+  const sendPasswordReset = async () => {
+    if (!supabase) {
+      setToast({ isVisible: true, message: 'Auth is not configured.', type: 'error' })
+      return
+    }
+
+    const normalizedEmail = email.toLowerCase().trim()
+    if (!normalizedEmail) {
+      setToast({ isVisible: true, message: 'Enter your email first.', type: 'error' })
+      return
+    }
+
+    setResetting(true)
+    try {
+      await supabase.functions.invoke('password-reset', {
+        body: {
+          email: normalizedEmail,
+          redirect_to: `${window.location.origin}/reset-password`,
+        },
+      })
+      setToast({
+        isVisible: true,
+        message: 'If an account exists for that email, we sent a password reset link.',
+        type: 'success',
+      })
+    } catch (error) {
+      setToast({
+        isVisible: true,
+        message: error.message || 'Failed to send reset email',
+        type: 'error',
+      })
+    } finally {
+      setResetting(false)
+    }
   }
 
   return (
@@ -69,6 +107,16 @@ const Login = () => {
               className="w-full px-4 py-2 bg-gray-900/50 border border-neon-purple/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple font-mono"
               placeholder="••••••••"
             />
+            <div className="mt-2 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={sendPasswordReset}
+                disabled={resetting}
+                className="text-sm text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+              >
+                {resetting ? 'Sending reset…' : 'Forgot / change password?'}
+              </button>
+            </div>
           </div>
 
           <motion.button

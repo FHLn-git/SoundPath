@@ -8,23 +8,27 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 // Send email via Resend API (through Supabase Edge Function)
 export const sendEmail = async ({ to, subject, html, text }) => {
-  // Debug: Check if environment variables are set
-  console.log('📧 Email Service - SUPABASE_URL:', SUPABASE_URL ? SUPABASE_URL.substring(0, 30) + '...' : 'NOT SET')
-  console.log('📧 Email Service - SUPABASE_ANON_KEY:', SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.substring(0, 20) + '...' : 'NOT SET')
-  
   // Try to use Resend via Edge Function first
   if (SUPABASE_URL && SUPABASE_ANON_KEY) {
     try {
-      const edgeFunctionUrl = `${SUPABASE_URL}/functions/v1/send-email`
-      console.log('📧 Attempting to send email via edge function:', edgeFunctionUrl)
-      console.log('📧 Authorization header:', SUPABASE_ANON_KEY ? `Bearer ${SUPABASE_ANON_KEY.substring(0, 20)}...` : 'MISSING')
-      
+      const { data: { session } } = await supabase.auth.getSession()
+      const accessToken = session?.access_token
+      if (!accessToken) {
+        return {
+          success: false,
+          error: 'Not authenticated. Please sign in and try again.',
+          resendError: true,
+        }
+      }
+
+      let errorData = null
       const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'apikey': SUPABASE_ANON_KEY, // Some Supabase functions also need apikey header
+          // Supabase Edge Functions require apikey (anon) + Authorization (user JWT)
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           to,
@@ -34,24 +38,20 @@ export const sendEmail = async ({ to, subject, html, text }) => {
         }),
       })
 
-      console.log('📧 Edge function response status:', response.status)
-
       if (!response.ok) {
         let errorMessage = 'Failed to send email'
         try {
-          const errorData = await response.json()
+          errorData = await response.json()
           errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`
-          console.error('📧 Edge function error:', errorData)
         } catch (e) {
           errorMessage = `HTTP ${response.status}: ${response.statusText}`
-          console.error('📧 Edge function error (no JSON):', errorMessage)
         }
         // Return error instead of throwing
         return {
           success: false,
           error: errorMessage,
           resendError: true,
-          details: errorData.details || null
+          details: errorData?.details || null
         }
       }
 

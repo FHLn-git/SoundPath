@@ -1,3 +1,4 @@
+/* eslint-env node */
 // Script to populate the database with 100 test submissions
 // Run with: node populate-test-data.js
 // Make sure your .env file has VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY

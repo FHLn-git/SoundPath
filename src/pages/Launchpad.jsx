@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
   Building2, Search, ArrowRight, Inbox, 
@@ -17,7 +17,8 @@ import UsageWarningBanner from '../components/UsageWarningBanner'
 
 const Launchpad = () => {
   const navigate = useNavigate()
-  const { staffProfile, memberships, switchOrganization, clearWorkspace, activeOrgId, user, signOut, isSystemAdmin } = useAuth()
+  const [searchParams] = useSearchParams()
+  const { staffProfile, memberships, switchOrganization, clearWorkspace, activeOrgId, user, signOut, isSystemAdmin, refreshStaffProfile } = useAuth()
   const { hasFeature } = useBilling()
   const { tracks, loadTracks } = useApp()
   const [searchQuery, setSearchQuery] = useState('')
@@ -40,6 +41,7 @@ const Launchpad = () => {
   const [invitesLoading, setInvitesLoading] = useState(false)
   const [hasPersonalInboxAccess, setHasPersonalInboxAccess] = useState(false)
   const [showUpgradeOverlay, setShowUpgradeOverlay] = useState(false)
+  const [upgradeRedirecting, setUpgradeRedirecting] = useState(false)
   
   // Quad-Inbox state
   const [activeCrate, setActiveCrate] = useState('submissions') // 'submissions', 'network', 'crate_a', 'crate_b'
@@ -70,6 +72,48 @@ const Launchpad = () => {
       clearWorkspace()
     }
   }, []) // Run once on mount
+
+  // Post-checkout sync: if user returns with session_id, refresh tier until unlocked
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id')
+    if (!sessionId) return
+    if (!supabase || !user || !staffProfile) return
+
+    let cancelled = false
+    const startedAt = Date.now()
+
+    const poll = async () => {
+      if (cancelled) return
+      await refreshStaffProfile?.()
+
+      // Stop early if tier has changed from free
+      if (staffProfile?.tier && staffProfile.tier !== 'free') {
+        window.history.replaceState({}, '', '/launchpad')
+        return
+      }
+
+      // Timeout after ~25s (webhook can be slightly delayed)
+      if (Date.now() - startedAt > 25000) {
+        window.history.replaceState({}, '', '/launchpad')
+        return
+      }
+
+      setTimeout(poll, 2500)
+    }
+
+    setToast({
+      isVisible: true,
+      message: 'Payment received — finalizing your access…',
+      type: 'info',
+    })
+
+    poll()
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   // Load upcoming events across all labels for next 7 days
   useEffect(() => {
@@ -485,6 +529,43 @@ const Launchpad = () => {
       }
     }
   }, [user, staffProfile])
+
+  const pendingTier = user?.user_metadata?.pending_tier
+  const pendingBillingInterval = user?.user_metadata?.pending_billing_interval || 'month'
+  const canFinishUpgrading =
+    staffProfile?.tier === 'free' && ['agent', 'starter', 'pro'].includes(pendingTier)
+
+  const handleFinishUpgrading = async () => {
+    if (!user?.id || !canFinishUpgrading) return
+    setUpgradeRedirecting(true)
+    try {
+      const resp = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user.id,
+          tier: pendingTier,
+          billing_interval: pendingBillingInterval,
+        }),
+      })
+
+      const payload = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        throw new Error(payload?.error || 'Failed to start checkout. Please try again.')
+      }
+      if (!payload?.url) {
+        throw new Error('Checkout URL missing. Please try again.')
+      }
+      window.location.href = payload.url
+    } catch (e) {
+      setToast({
+        isVisible: true,
+        message: e?.message || 'Failed to start checkout. Please try again.',
+        type: 'error',
+      })
+      setUpgradeRedirecting(false)
+    }
+  }
 
   // Check personal inbox access
   // CRITICAL: System admins must have full access to all features, bypassing all restrictions
@@ -2021,14 +2102,31 @@ const Launchpad = () => {
                   <p className="text-gray-400 mb-6">
                     Personal Inbox is available on Agent tier and above. Upgrade to access direct artist submissions, organize tracks in custom crates, and network with other A&R professionals.
                   </p>
-                  <button
-                    onClick={() => {
-                      setShowUpgradeOverlay(true)
-                    }}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg text-white font-semibold transition-all mb-3"
-                  >
-                    View Plans
-                  </button>
+                  {canFinishUpgrading ? (
+                    <button
+                      onClick={handleFinishUpgrading}
+                      disabled={upgradeRedirecting}
+                      className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg text-white font-semibold transition-all mb-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-full"
+                    >
+                      {upgradeRedirecting ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Redirecting to secure payment...</span>
+                        </>
+                      ) : (
+                        <span>Finish Upgrading</span>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setShowUpgradeOverlay(true)
+                      }}
+                      className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg text-white font-semibold transition-all mb-3"
+                    >
+                      View Plans
+                    </button>
+                  )}
                   <button
                     onClick={() => navigate('/billing')}
                     className="block w-full text-sm text-gray-400 hover:text-gray-300 transition-colors"
@@ -2228,6 +2326,9 @@ const Launchpad = () => {
         onClose={() => setShowUpgradeOverlay(false)}
         featureName="Personal Inbox"
         planName="Agent"
+        showFinishUpgrading={canFinishUpgrading}
+        onFinishUpgrading={handleFinishUpgrading}
+        finishUpgradingLoading={upgradeRedirecting}
       />
 
       {/* Send to Peer Modal */}

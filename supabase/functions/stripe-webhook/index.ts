@@ -49,6 +49,12 @@ serve(async (req) => {
 
     // Handle different event types
     switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session
+        await handleCheckoutSessionCompleted(session, stripe, supabase)
+        break
+      }
+
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription
@@ -153,6 +159,49 @@ async function handleSubscriptionUpdate(
     await supabase
       .from('subscriptions')
       .insert(subscriptionData)
+  }
+}
+
+// Handle signup checkout completion (personal tier purchase)
+async function handleCheckoutSessionCompleted(
+  session: Stripe.Checkout.Session,
+  stripe: Stripe,
+  supabase: any
+) {
+  try {
+    // Only act on sessions that carry our metadata
+    let authUserId = (session.metadata as any)?.auth_user_id as string | undefined
+    let tier = (session.metadata as any)?.tier as string | undefined
+
+    // Fallback: read metadata from subscription if needed
+    if ((!authUserId || !tier) && session.mode === 'subscription' && session.subscription) {
+      const subscriptionId = session.subscription as string
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+      authUserId = authUserId || (subscription.metadata as any)?.auth_user_id
+      tier = tier || (subscription.metadata as any)?.tier
+    }
+
+    if (!authUserId || !tier) {
+      return
+    }
+
+    if (!['agent', 'starter', 'pro'].includes(tier)) {
+      console.warn('Ignoring unknown tier:', tier)
+      return
+    }
+
+    // Update tier on staff_members (this is what capacity + gating uses)
+    const { error } = await supabase
+      .from('staff_members')
+      .update({ tier, updated_at: new Date().toISOString() })
+      .eq('auth_user_id', authUserId)
+
+    if (error) {
+      console.error('Failed updating staff_members.tier:', error)
+      return
+    }
+  } catch (e) {
+    console.error('Error handling checkout.session.completed:', e)
   }
 }
 

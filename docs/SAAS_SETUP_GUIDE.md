@@ -38,23 +38,21 @@ You need an email service to send team invites and notifications.
    - This allows you to send real emails to actual recipients
    - See "Domain Verification" section below for details
 
-4. **Add to your `.env` file:**
-   - Open your project root folder
-   - Create or edit the `.env` file (same folder as `package.json`)
-   - Add these lines:
-   ```env
-   VITE_RESEND_API_KEY=re_your_api_key_here
-   VITE_RESEND_FROM_EMAIL=onboarding@resend.dev
-   ```
-   - Replace `re_your_api_key_here` with the actual key you copied
-   - For testing: Use `onboarding@resend.dev` (works immediately)
-   - For production: Use `noreply@yourdomain.com` (after verifying domain)
+4. **Put the Resend key in Supabase (server-side only):**
+  - **Supabase Auth emails (confirmations, password resets):**
+    - Supabase Dashboard → **Auth** → **SMTP Settings**
+    - Enable Custom SMTP
+    - **SMTP Password**: your Resend API key (`re_...`)
+  - **App-triggered emails (invites/notifications via Edge Function):**
+    - Supabase Dashboard → **Edge Functions** → **Secrets**
+    - Add/update:
+      - `RESEND_API_KEY` = your Resend API key (`re_...`)
+      - `RESEND_FROM_EMAIL` = `onboarding@resend.dev` (testing) or `noreply@yourdomain.com` (production)
 
-5. **Restart your dev server:**
-   ```bash
-   # Stop the server (Ctrl+C), then:
-   npm run dev
-   ```
+5. **Deploy Edge Functions (if needed):**
+  - If you use the Supabase CLI, deploy `send-email` (and `password-reset` if used):
+  - `supabase functions deploy send-email`
+  - `supabase functions deploy password-reset`
 
 ### Domain Verification (For Production)
 
@@ -77,12 +75,10 @@ If you want to send real emails to actual recipients, you need to verify your ow
    - Once DNS records are added, Resend will verify automatically
    - You'll see a green checkmark when verified
 
-4. **Update `.env`:**
-   ```env
-   VITE_RESEND_FROM_EMAIL=noreply@yourdomain.com
-   ```
-   - Replace `yourdomain.com` with your actual verified domain
-   - You can use any email address on your domain (e.g., `noreply@`, `hello@`, `support@`)
+4. **Update the sender address (server-side):**
+  - Supabase Dashboard → **Edge Functions** → **Secrets**
+  - Set `RESEND_FROM_EMAIL` to: `noreply@yourdomain.com`
+  - Replace `yourdomain.com` with your verified domain
 
 ### Option B: Skip Email for Now (Testing Only)
 
@@ -296,32 +292,31 @@ VALUES (
 Here's what your complete `.env` file should look like:
 
 ```env
+# Public app config (safe; these are used by the browser)
+VITE_SITE_URL=http://localhost:5173
+
 # Supabase (you should already have these)
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your_anon_key_here
 
-# Email Service (Resend)
-VITE_RESEND_API_KEY=re_your_resend_api_key_here
-VITE_RESEND_FROM_EMAIL=onboarding@resend.dev
-
-# Stripe (Test Mode)
+# Stripe (public key used by the browser)
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
-STRIPE_SECRET_KEY=sk_test_your_secret_key_here
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
 ```
 
 **Important Notes:**
 - Never commit `.env` to git (it's already in `.gitignore`)
 - Use test keys for development
 - Switch to live keys only when going to production
-- The `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` don't have `VITE_` prefix because they're server-side only
+- Real secrets are **server-side only**:
+  - Resend: configure in Supabase (Auth SMTP + Edge Function secrets)
+  - Stripe secret + webhook secret: configure in Vercel (and/or Supabase Edge secrets if using Edge billing)
 
 ---
 
 ## 🎯 Quick Start Checklist
 
 - [ ] Run `saas-schema.sql` in Supabase (✅ Already done!)
-- [ ] Sign up for Resend and add API key to `.env`
+- [ ] Sign up for Resend and configure Supabase SMTP + Edge Function secrets
 - [ ] Test email invites
 - [ ] Sign up for Stripe (optional for now)
 - [ ] Create Stripe products and get price IDs

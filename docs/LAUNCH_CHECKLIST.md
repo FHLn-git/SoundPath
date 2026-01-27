@@ -37,11 +37,13 @@
 - [ ] Configure environment variables in Vercel:
   - [ ] `VITE_SUPABASE_URL`
   - [ ] `VITE_SUPABASE_ANON_KEY`
-  - [ ] `VITE_RESEND_API_KEY`
+  - [ ] `VITE_SITE_URL`
   - [ ] `VITE_STRIPE_PUBLISHABLE_KEY` (after Stripe setup)
 - [ ] Set up Supabase secrets for Edge Functions:
   - [ ] `SUPABASE_URL`
   - [ ] `SUPABASE_SERVICE_ROLE_KEY`
+  - [ ] `RESEND_API_KEY` (Resend key, for app emails)
+  - [ ] `RESEND_FROM_EMAIL` (Sender address, for app emails)
   - [ ] `STRIPE_SECRET_KEY` (after Stripe setup)
   - [ ] `STRIPE_WEBHOOK_SECRET` (after Stripe setup)
 - [ ] Deploy to staging environment
@@ -211,7 +213,6 @@
 ```
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_anon_key
-VITE_RESEND_API_KEY=your_resend_key
 VITE_STRIPE_PUBLISHABLE_KEY=your_stripe_key
 VITE_SUPPORT_PROVIDER=crisp
 VITE_SUPPORT_API_KEY=your_crisp_key
@@ -223,6 +224,8 @@ VITE_ANALYTICS_API_KEY=your_posthog_key
 ```
 SUPABASE_URL=your_supabase_url
 SUPABASE_SERVICE_ROLE_KEY=your_service_key
+RESEND_API_KEY=your_resend_key
+RESEND_FROM_EMAIL=noreply@yourdomain.com
 STRIPE_SECRET_KEY=your_stripe_secret
 STRIPE_WEBHOOK_SECRET=your_webhook_secret
 ```

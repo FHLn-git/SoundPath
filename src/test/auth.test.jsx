@@ -11,22 +11,29 @@ vi.mock('../lib/supabaseClient', () => ({
       signInWithPassword: vi.fn(),
       signOut: vi.fn(),
       onAuthStateChange: vi.fn(() => ({
-        data: { subscription: { unsubscribe: vi.fn() } }
+        data: { subscription: { unsubscribe: vi.fn() } },
       })),
     },
     from: vi.fn(() => ({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ data: null, error: null }))
-        }))
-      }))
+          single: vi.fn(() => Promise.resolve({ data: null, error: null })),
+        })),
+      })),
     })),
   },
 }))
 
 describe('Authentication', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
+
+    // Ensure AuthProvider's initial session load works
+    const { supabase } = await import('../lib/supabaseClient')
+    supabase.auth.getSession.mockResolvedValue({
+      data: { session: null },
+      error: null,
+    })
   })
 
   it('should initialize auth context', async () => {
@@ -59,3 +66,4 @@ describe('Authentication', () => {
     expect(true).toBe(true) // Placeholder
   })
 })
+

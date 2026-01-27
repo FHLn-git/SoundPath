@@ -99,7 +99,7 @@ function ErrorFallback({ error, errorInfo }) {
           </button>
         </div>
 
-        {process.env.NODE_ENV === 'development' && errorInfo && (
+        {import.meta.env.DEV && errorInfo && (
           <div className="mt-6">
             <button
               onClick={() => setShowDetails(!showDetails)}

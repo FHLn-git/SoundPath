@@ -2,7 +2,15 @@ import { X, Sparkles, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const UpgradeOverlay = ({ isOpen, onClose, featureName = 'Personal Inbox', planName = 'Agent' }) => {
+const UpgradeOverlay = ({
+  isOpen,
+  onClose,
+  featureName = 'Personal Inbox',
+  planName = 'Agent',
+  showFinishUpgrading = false,
+  onFinishUpgrading,
+  finishUpgradingLoading = false,
+}) => {
   const navigate = useNavigate()
 
   if (!isOpen) return null
@@ -64,12 +72,17 @@ const UpgradeOverlay = ({ isOpen, onClose, featureName = 'Personal Inbox', planN
             </button>
             <button
               onClick={() => {
+                if (showFinishUpgrading && typeof onFinishUpgrading === 'function') {
+                  onFinishUpgrading()
+                  return
+                }
                 navigate('/billing')
                 onClose()
               }}
-              className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg text-white font-semibold transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25"
+              disabled={showFinishUpgrading && finishUpgradingLoading}
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg text-white font-semibold transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              View Plans
+              {showFinishUpgrading ? (finishUpgradingLoading ? 'Redirecting…' : 'Finish Upgrading') : 'View Plans'}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

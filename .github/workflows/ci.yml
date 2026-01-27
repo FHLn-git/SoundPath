@@ -12,6 +12,69 @@ jobs:
     
     steps:
     - uses: actions/checkout@v3
+
+    - name: Secret leak scan (repo)
+      run: |
+        python3 - <<'PY'
+        import os, re, sys
+
+        # Scan tracked files only (checkout already did this)
+        deny = [
+          re.compile(r"sk_(?:live|test)_[0-9A-Za-z]{20,}"),
+          re.compile(r"whsec_[0-9A-Za-z]{20,}"),
+          # Resend keys often contain underscores; block long values only.
+          re.compile(r"re_[0-9A-Za-z_]{20,}"),
+        ]
+        ignore_substrings = ["your_", "xxxxx", "example", "dummy"]
+        ignore_dirs = {".git", "node_modules", "dist", "build", ".vercel", ".supabase"}
+
+        def should_skip_path(path: str) -> bool:
+          parts = set(path.split(os.sep))
+          return bool(parts & ignore_dirs)
+
+        hits = []
+
+        for root, dirs, files in os.walk("."):
+          # mutate dirs in-place to prune
+          dirs[:] = [d for d in dirs if d not in ignore_dirs]
+          for fn in files:
+            path = os.path.join(root, fn)
+            if should_skip_path(path):
+              continue
+            # Skip common binary-ish files by extension
+            if any(path.endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".gif", ".webp", ".pdf", ".zip", ".mp4", ".mov"]):
+              continue
+            try:
+              with open(path, "rb") as f:
+                raw = f.read()
+              # crude binary check
+              if b"\x00" in raw[:2048]:
+                continue
+              text = raw.decode("utf-8", errors="ignore")
+            except Exception:
+              continue
+
+            for i, line in enumerate(text.splitlines(), start=1):
+              for rx in deny:
+                m = rx.search(line)
+                if not m:
+                  continue
+                val = m.group(0)
+                lowered = val.lower()
+                if any(s in lowered for s in ignore_substrings):
+                  continue
+                hits.append(f"{path}:{i}: {val}")
+
+        if hits:
+          print("❌ Potential secrets found:")
+          for h in hits[:50]:
+            print(h)
+          if len(hits) > 50:
+            print(f"... and {len(hits) - 50} more")
+          sys.exit(1)
+
+        print("✅ Secret scan passed")
+        PY
     
     - name: Setup Node.js
       uses: actions/setup-node@v3

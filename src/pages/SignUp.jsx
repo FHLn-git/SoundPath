@@ -167,37 +167,56 @@ const SignUp = () => {
     }
 
     try {
-      const { error: signUpError } = await signUp(name, email, password)
+      const isPaidTier = selectedPlanId && selectedPlanId !== 'free'
+      const { data: signUpData, error: signUpError } = await signUp(name, email, password, {
+        pendingTier: isPaidTier ? selectedPlanId : undefined,
+        pendingBillingInterval: isPaidTier ? billingInterval : undefined,
+      })
 
       if (signUpError) {
-        // Handle partial success (account created but profile setup failed)
-        if (signUpError.partialSuccess) {
-          setError(signUpError.message || 'Account created but setup incomplete')
-          setToast({
-            isVisible: true,
-            message: signUpError.message || 'Account created but setup incomplete. You may need to contact support.',
-            type: 'warning',
-          })
-          // Still redirect to login - user can try signing in
-          navigate('/?message=confirm_email')
-        } else {
-          setError(signUpError.message || 'Failed to create account')
-          setToast({
-            isVisible: true,
-            message: signUpError.message || 'Failed to create account',
-            type: 'error',
-          })
-        }
+        setError(signUpError.message || 'Failed to create account')
+        setToast({
+          isVisible: true,
+          message: signUpError.message || 'Failed to create account',
+          type: 'error',
+        })
       } else {
-        // If a paid plan was selected, store plan selection for after login
-        if (selectedPlanId && selectedPlanId !== 'free') {
-          sessionStorage.setItem('pendingSubscription', JSON.stringify({
-            planId: selectedPlanId,
-            billingInterval: billingInterval
-          }))
+        // Paid plan: go to Stripe Checkout immediately (no email-confirm wait, no auto-login)
+        if (isPaidTier) {
+          const authUserId = signUpData?.user?.id
+          if (!authUserId) {
+            throw new Error('Account created but missing user id. Please try again.')
+          }
+
+          setToast({
+            isVisible: true,
+            message: 'Redirecting to secure checkout…',
+            type: 'info',
+          })
+
+          const resp = await fetch('/api/create-checkout-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              user_id: authUserId,
+              tier: selectedPlanId,
+              billing_interval: billingInterval,
+            }),
+          })
+
+          const payload = await resp.json().catch(() => ({}))
+          if (!resp.ok) {
+            throw new Error(payload?.error || 'Failed to start checkout. Please try again.')
+          }
+          if (!payload?.url) {
+            throw new Error('Checkout URL missing. Please try again.')
+          }
+
+          window.location.href = payload.url
+          return
         }
-        
-        // Redirect immediately to login page with confirm email message
+
+        // Free plan: proceed to confirm-email/login flow
         navigate('/?message=confirm_email')
       }
     } catch (err) {
@@ -494,11 +513,19 @@ const SignUp = () => {
               {isLoading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Creating account...</span>
+                  <span>
+                    {selectedPlanId && selectedPlanId !== 'free'
+                      ? 'Redirecting to secure payment...'
+                      : 'Creating account...'}
+                  </span>
                 </>
               ) : (
                 <>
-                  <span>Create Account</span>
+                  <span>
+                    {selectedPlanId && selectedPlanId !== 'free'
+                      ? 'Proceed to Secure Payment'
+                      : 'Create Account'}
+                  </span>
                   <ArrowRight size={18} />
                 </>
               )}

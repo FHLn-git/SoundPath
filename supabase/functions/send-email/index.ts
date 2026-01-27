@@ -3,6 +3,7 @@
 // This prevents exposing the API key in client-side code
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,7 +17,6 @@ serve(async (req) => {
   }
 
   try {
-    // Verify Authorization header is present (Supabase requires this)
     const authHeader = req.headers.get('Authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new Response(
@@ -24,6 +24,38 @@ serve(async (req) => {
           success: false,
           error: 'Missing or invalid Authorization header' 
         }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Verify the JWT belongs to a valid user (prevents unauthenticated abuse)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseAnonKey =
+      Deno.env.get('SUPABASE_ANON_KEY') ||
+      Deno.env.get('ANON_KEY') ||
+      Deno.env.get('SUPABASE_ANON_PUBLIC_KEY')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
+    if (!supabaseUrl || (!supabaseAnonKey && !supabaseServiceKey)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Supabase auth verification not configured (missing SUPABASE_URL and key)',
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const verificationKey = supabaseAnonKey || supabaseServiceKey!
+    const supabaseAuth = createClient(supabaseUrl, verificationKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
+
+    const jwt = authHeader.replace(/^Bearer\s+/i, '').trim()
+    const { data: userData, error: userError } = await supabaseAuth.auth.getUser(jwt)
+    if (userError || !userData?.user?.id) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Not authenticated' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }

@@ -155,14 +155,17 @@ Complete SaaS schema including:
 ### 2. Environment Variables
 Add to `.env`:
 ```env
-# Email Service (Resend)
-VITE_RESEND_API_KEY=re_xxxxxxxxxxxxx
-VITE_RESEND_FROM_EMAIL=noreply@studioos.app
+# Public client config
+VITE_SITE_URL=http://localhost:5173
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
 
-# Stripe (when ready)
+# Stripe (public key in client)
 VITE_STRIPE_PUBLISHABLE_KEY=pk_xxxxxxxxxxxxx
-STRIPE_SECRET_KEY=sk_xxxxxxxxxxxxx
-STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxx
+
+# Server-only secrets (set in dashboards, not in .env):
+# - Vercel: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL, SITE_URL
+# - Supabase Edge secrets: RESEND_API_KEY, RESEND_FROM_EMAIL (and optionally STRIPE_* if using Edge billing)
 ```
 
 ### 3. Update App.jsx

@@ -19,6 +19,7 @@ export const AuthProvider = ({ children }) => {
   const [activeMembership, setActiveMembership] = useState(null)
   const [loading, setLoading] = useState(true)
   const [session, setSession] = useState(null)
+  const [staffRealtimeChannel, setStaffRealtimeChannel] = useState(null)
 
   // Load user session on mount
   useEffect(() => {
@@ -206,6 +207,58 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Expose a safe refresh helper for post-checkout sync
+  const refreshStaffProfile = async () => {
+    if (!user?.id) return { error: { message: 'Not authenticated' } }
+    await loadStaffProfile(user.id)
+    return { error: null }
+  }
+
+  // Real-time: keep staff profile synced (tier unlocks immediately after webhook)
+  useEffect(() => {
+    if (!supabase || !user?.id) return
+
+    // Clean up any prior channel
+    if (staffRealtimeChannel) {
+      try {
+        supabase.removeChannel(staffRealtimeChannel)
+      } catch (_e) {
+        // ignore
+      }
+      setStaffRealtimeChannel(null)
+    }
+
+    // Subscribe to updates on this user's staff_members row
+    const channel = supabase
+      .channel(`staff-members-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'staff_members',
+          filter: `auth_user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload?.new) {
+            setStaffProfile((prev) => ({ ...(prev || {}), ...(payload.new || {}) }))
+          }
+        }
+      )
+      .subscribe()
+
+    setStaffRealtimeChannel(channel)
+
+    return () => {
+      try {
+        supabase.removeChannel(channel)
+      } catch (_e) {
+        // ignore
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
+
   // Load user memberships
   const loadMemberships = async (staffId) => {
     if (!supabase || !staffId) {
@@ -372,16 +425,17 @@ export const AuthProvider = ({ children }) => {
   }
 
   // Sign up with name, email and password
-  const signUp = async (name, email, password) => {
+  // Optional: pass pendingTier + pendingBillingInterval so the user can "Finish Upgrading" later
+  const signUp = async (name, email, password, options = {}) => {
     if (!supabase) {
       return { error: { message: 'Supabase not configured' } }
     }
 
     try {
-      // Note: We can't check if user exists client-side (supabase.auth.admin is server-only)
-      // Instead, we'll try to sign up and handle the error if the user already exists
-      // Create auth user
-      // Use production URL from env or fallback to current origin
+      const pendingTier = options?.pendingTier
+      const pendingBillingInterval = options?.pendingBillingInterval
+
+      // Create auth user first (no DB writes here; email confirmation may mean no session yet)
       const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.toLowerCase().trim(),
@@ -390,6 +444,8 @@ export const AuthProvider = ({ children }) => {
           emailRedirectTo: `${siteUrl}/?confirmed=true`,
           data: {
             name: name,
+            ...(pendingTier ? { pending_tier: pendingTier } : {}),
+            ...(pendingBillingInterval ? { pending_billing_interval: pendingBillingInterval } : {}),
           },
         },
       })
@@ -405,70 +461,6 @@ export const AuthProvider = ({ children }) => {
       if (!authData.user) {
         return { error: { message: 'Failed to create user account' } }
       }
-
-      // Create staff_members record (universal profile) - CRITICAL: Must succeed
-      // Note: organization_id is NULL for new signups (they'll join organizations via memberships)
-      const staffId = `staff_${authData.user.id.substring(0, 8)}_${Date.now()}`
-      let staffError = null
-      let retryCount = 0
-      const maxRetries = 3
-
-      while (retryCount < maxRetries) {
-        const { error: insertError } = await supabase
-          .from('staff_members')
-          .insert({
-            id: staffId,
-            name: name,
-            role: 'Scout', // Default role, will be updated when they join/create a label
-            auth_user_id: authData.user.id,
-            organization_id: null, // NULL is allowed - organization membership via memberships table
-          })
-
-        if (!insertError) {
-          break // Success
-        }
-
-        staffError = insertError
-        
-        // If it's a duplicate key error, try to find existing record
-        if (insertError.code === '23505' || insertError.message?.includes('duplicate')) {
-          console.warn('Staff member might already exist, checking...')
-          const { data: existingStaff } = await supabase
-            .from('staff_members')
-            .select('id, auth_user_id')
-            .eq('auth_user_id', authData.user.id)
-            .single()
-          
-          if (existingStaff) {
-            console.log('Found existing staff member, using it')
-            staffError = null
-            break
-          }
-        }
-
-        retryCount++
-        if (retryCount < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, 500 * retryCount)) // Exponential backoff
-        }
-      }
-
-      if (staffError) {
-        console.error('❌ CRITICAL: Failed to create staff profile after retries:', staffError)
-        // This is critical - without staff_members, user can't log in
-        // Return error but don't fail completely - user can contact support
-        return { 
-          error: { 
-            message: 'Account created but profile setup failed. Please contact support or try signing in - your account may still work.',
-            details: staffError.message 
-          },
-          partialSuccess: true
-        }
-      }
-
-      // Load profile and check memberships (non-blocking)
-      loadStaffProfile(authData.user.id).catch(err => {
-        console.error('Error loading staff profile after signup (non-critical):', err)
-      })
 
       return { data: authData, error: null }
     } catch (error) {
@@ -672,6 +664,7 @@ export const AuthProvider = ({ children }) => {
     switchOrganization,
     clearWorkspace, // Export for clearing workspace to Personal view
     loadMemberships, // Export for refreshing memberships
+    refreshStaffProfile,
     // Agent-Centric: In Personal view, user is effectively Owner
     isOwner: activeOrgId === null ? true : (activeMembership?.role === 'Owner'),
     isManager: activeOrgId === null ? false : (activeMembership?.role === 'Manager'),

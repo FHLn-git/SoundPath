@@ -4,10 +4,10 @@
 
 ### For Testing (Right Now):
 ```
-VITE_RESEND_FROM_EMAIL=onboarding@resend.dev
+RESEND_FROM_EMAIL=onboarding@resend.dev
 ```
 
-**This works immediately** - no setup needed! Just use this in your `.env` file.
+**This works immediately** - no setup needed! Set it in Supabase Edge Function secrets as `RESEND_FROM_EMAIL`.
 
 ---
 
@@ -27,9 +27,10 @@ Resend doesn't work like Gmail where you create an email account. Instead:
 **Email Address:** `onboarding@resend.dev`
 
 **How to Use:**
-1. Just add this to your `.env`:
+1. Set this server-side in Supabase:
+   - Supabase Dashboard → **Edge Functions** → **Secrets**
    ```env
-   VITE_RESEND_FROM_EMAIL=onboarding@resend.dev
+   RESEND_FROM_EMAIL=onboarding@resend.dev
    ```
 2. That's it! No verification needed.
 
@@ -86,10 +87,10 @@ Once verified, you can use **any email address** on your domain:
 
 ```env
 # Examples (all work once domain is verified):
-VITE_RESEND_FROM_EMAIL=noreply@yourdomain.com
-VITE_RESEND_FROM_EMAIL=hello@yourdomain.com
-VITE_RESEND_FROM_EMAIL=support@yourdomain.com
-VITE_RESEND_FROM_EMAIL=team@yourdomain.com
+RESEND_FROM_EMAIL=noreply@yourdomain.com
+RESEND_FROM_EMAIL=hello@yourdomain.com
+RESEND_FROM_EMAIL=support@yourdomain.com
+RESEND_FROM_EMAIL=team@yourdomain.com
 ```
 
 **You don't need to "create" these addresses** - they just work once your domain is verified!
@@ -121,7 +122,7 @@ VITE_RESEND_FROM_EMAIL=team@yourdomain.com
 
 1. **Start with Test Domain:**
    ```env
-   VITE_RESEND_FROM_EMAIL=onboarding@resend.dev
+   RESEND_FROM_EMAIL=onboarding@resend.dev
    ```
    - Get your app working
    - Test email functionality
@@ -136,12 +137,14 @@ VITE_RESEND_FROM_EMAIL=team@yourdomain.com
 ## Example `.env` File
 
 ```env
-# For Testing (works immediately):
-VITE_RESEND_API_KEY=re_abc123xyz
-VITE_RESEND_FROM_EMAIL=onboarding@resend.dev
+# Public app config (safe to commit in .env.example; keep real values local)
+VITE_SITE_URL=http://localhost:5173
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
 
-# For Production (after domain verification):
-# VITE_RESEND_FROM_EMAIL=noreply@studioos.app
+# Resend keys are SERVER-SIDE ONLY:
+# - Supabase Auth → SMTP Settings → SMTP Password = Resend API key (re_...)
+# - Supabase Edge Functions → Secrets: RESEND_API_KEY and RESEND_FROM_EMAIL
 ```
 
 ---

@@ -297,7 +297,7 @@ const PublicForm = () => {
             transition={{ delay: 0.4 }}
             className="text-sm text-gray-500"
           >
-            We'll review your track and get back to you soon.
+            We will review your track and get back to you soon.
           </motion.div>
         </motion.div>
       </div>

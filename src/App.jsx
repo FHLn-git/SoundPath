@@ -45,8 +45,8 @@ const HelpCenter = lazy(() => import('./pages/HelpCenter'))
 const FAQ = lazy(() => import('./pages/FAQ'))
 const Contact = lazy(() => import('./pages/Contact'))
 const SecuritySettings = lazy(() => import('./pages/SecuritySettings'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const HealthCheck = lazy(() => import('./pages/HealthCheck'))
-const EmailTest = lazy(() => import('./pages/EmailTest'))
 const SupportWidget = lazy(() => import('./components/SupportWidget'))
 
 // Loading fallback component
@@ -182,7 +182,7 @@ function AppContent() {
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/contact" element={<Contact />} />
-            <Route path="/test-email" element={<EmailTest />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/plan/:planId" element={<PlanInfo />} />
         
         {/* Protected Routes */}

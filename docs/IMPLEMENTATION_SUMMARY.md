@@ -187,9 +187,14 @@ Add these to your `.env` file:
 # Error Tracking (Optional - for Sentry)
 VITE_SENTRY_DSN=your_sentry_dsn_here
 
-# Email Service (Already configured)
-VITE_RESEND_API_KEY=your_resend_key
-VITE_RESEND_FROM_EMAIL=noreply@studioos.app
+# Public client config
+VITE_SITE_URL=http://localhost:5173
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+
+# Email sending keys are server-side only:
+# - Supabase Auth SMTP Password = Resend API key
+# - Supabase Edge secrets: RESEND_API_KEY, RESEND_FROM_EMAIL
 ```
 
 ---

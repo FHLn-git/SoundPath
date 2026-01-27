@@ -139,16 +139,26 @@ export const BillingProvider = ({ children }) => {
     // In that case, we check the free plan or user's personal subscription
     if (!supabase) return false
     
-    // If activeOrgId is null and it's a personal feature, check free plan
+    // If activeOrgId is null and it's a personal feature, check the user's tier plan
     if (!activeOrgId && (featureKey === 'personal_inbox' || featureKey === 'network')) {
       try {
-        const { data: freePlan } = await supabase
-          .from('plans')
-          .select('features')
-          .eq('id', 'free')
-          .single()
-        
-        if (freePlan?.features) {
+        const tierPlanId = staffProfile?.tier || 'free'
+
+        // Prefer already-loaded plans
+        const planRow = plans?.find(p => p.id === tierPlanId)
+        let features = planRow?.features
+
+        // Fallback: fetch if not loaded
+        if (!features) {
+          const { data: fetched } = await supabase
+            .from('plans')
+            .select('features')
+            .eq('id', tierPlanId)
+            .single()
+          features = fetched?.features
+        }
+
+        if (features) {
           const featureMap = {
             'api_access': 'has_api_access',
             'webhooks': 'has_webhooks',
@@ -162,7 +172,7 @@ export const BillingProvider = ({ children }) => {
             'network': 'has_network',
           }
           const planFeatureKey = featureMap[featureKey] || `has_${featureKey}`
-          return freePlan.features[planFeatureKey] === true
+          return features[planFeatureKey] === true
         }
         return false
       } catch (error) {

@@ -75,7 +75,9 @@ serve(async (req) => {
     }
 
     // Get request body
+    const body = await req.json()
     const {
+      // Org subscription flow (existing)
       organization_id,
       plan_id,
       price_id,
@@ -84,18 +86,42 @@ serve(async (req) => {
       customer_id,
       success_url,
       cancel_url,
-    } = await req.json()
 
-    if (!organization_id || !plan_id || !price_id) {
+      // Signup checkout flow (new)
+      user_id,
+      tier,
+    } = body || {}
+
+    const isSignupCheckout =
+      !organization_id &&
+      !!user_id &&
+      !!price_id &&
+      (tier === 'agent' || tier === 'starter' || tier === 'pro')
+
+    if (!isSignupCheckout && (!organization_id || !plan_id || !price_id)) {
       return new Response(
         JSON.stringify({ error: 'Missing required parameters' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Verify user has permission to create checkout session for this organization
-    // Only check permissions if we were able to verify the user
-    if (user) {
+    // Verify caller + permissions
+    // - Org flow: permission check (existing)
+    // - Signup flow: must be authenticated as that user_id
+    if (isSignupCheckout) {
+      if (!user) {
+        return new Response(
+          JSON.stringify({ error: 'Not authenticated' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+      if (user.id !== user_id) {
+        return new Response(
+          JSON.stringify({ error: 'Forbidden' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    } else if (user) {
       // Get staff profile
       const { data: staffProfile } = await supabase
         .from('staff_members')
@@ -151,6 +177,87 @@ serve(async (req) => {
       // If user verification was skipped, log a warning but allow the request
       // Supabase platform-level JWT validation should have already occurred
       console.warn('User verification skipped - proceeding without permission check')
+    }
+
+    // Validate price_id format (should start with 'price_')
+    if (typeof price_id !== 'string' || !price_id.startsWith('price_')) {
+      console.error('Invalid price_id format:', price_id)
+      return new Response(
+        JSON.stringify({ error: `Invalid price ID format. Expected price_*, got: ${price_id}` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // SIGNUP CHECKOUT FLOW (Personal tier purchase)
+    if (isSignupCheckout) {
+      // Determine email for customer
+      const emailForCustomer = user?.email || customer_email
+
+      // Get or create Stripe customer (best-effort: reuse existing by email)
+      let stripeCustomerId = customer_id
+      if (!stripeCustomerId) {
+        try {
+          if (emailForCustomer) {
+            const existing = await stripe.customers.list({ email: emailForCustomer, limit: 1 })
+            if (existing.data?.length) {
+              stripeCustomerId = existing.data[0].id
+            }
+          }
+        } catch (_e) {
+          // ignore and fallback to create
+        }
+      }
+
+      if (!stripeCustomerId) {
+        const customer = await stripe.customers.create({
+          email: emailForCustomer,
+          metadata: {
+            auth_user_id: user_id,
+          },
+        })
+        stripeCustomerId = customer.id
+      }
+
+      const siteBase =
+        (Deno.env.get('SITE_URL') || Deno.env.get('VITE_SITE_URL') || req.headers.get('origin') || 'https://soundpath.app')
+          .replace(/\/+$/, '')
+
+      const session = await stripe.checkout.sessions.create({
+        customer: stripeCustomerId,
+        payment_method_types: ['card'],
+        allow_promotion_codes: true,
+        line_items: [
+          {
+            price: price_id,
+            quantity: 1,
+          },
+        ],
+        mode: 'subscription',
+        // Store tier + user linkage for webhook
+        subscription_data: {
+          metadata: {
+            auth_user_id: user_id,
+            tier: tier,
+            flow: 'signup',
+          },
+        },
+        client_reference_id: user_id,
+        success_url: success_url || `${siteBase}/launchpad?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: cancel_url || `${siteBase}/signup`,
+        metadata: {
+          auth_user_id: user_id,
+          tier: tier,
+          flow: 'signup',
+        },
+      })
+
+      return new Response(
+        JSON.stringify({
+          session_id: session.id,
+          session_url: session.url,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     // Get or create Stripe customer
@@ -213,15 +320,6 @@ serve(async (req) => {
       )
     }
 
-    // Validate price_id format (should start with 'price_')
-    if (!price_id.startsWith('price_')) {
-      console.error('Invalid price_id format:', price_id)
-      return new Response(
-        JSON.stringify({ error: `Invalid price ID format. Expected price_*, got: ${price_id}` }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
     // Prepare subscription data with trial days if applicable
     const subscriptionData: any = {
       metadata: {
@@ -254,6 +352,8 @@ serve(async (req) => {
       customer: stripeCustomerId,
       payment_method_types: ['card'],
       payment_method_collection: paymentMethodCollection,
+      // Shows a promo code entry box on Stripe Checkout (Coupons / Promotion Codes)
+      allow_promotion_codes: true,
       line_items: [
         {
           price: price_id,

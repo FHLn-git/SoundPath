@@ -87,54 +87,7 @@ If you want to test directly without going through the UI:
 
 ## Method 3: Check Email Service Directly
 
-Test if Resend API is accessible:
-
-1. **Open browser console** (F12 → Console tab)
-
-2. **Check if API key is loaded:**
-   ```javascript
-   console.log('Resend API Key:', import.meta.env.VITE_RESEND_API_KEY ? 'Set' : 'Missing');
-   console.log('From Email:', import.meta.env.VITE_RESEND_FROM_EMAIL);
-   ```
-
-3. **Test API call directly:**
-   ```javascript
-   async function testResendAPI() {
-     const apiKey = import.meta.env.VITE_RESEND_API_KEY;
-     if (!apiKey) {
-       console.error('❌ VITE_RESEND_API_KEY not found in .env');
-       return;
-     }
-     
-     try {
-       const response = await fetch('https://api.resend.com/emails', {
-         method: 'POST',
-         headers: {
-           'Content-Type': 'application/json',
-           'Authorization': `Bearer ${apiKey}`,
-         },
-         body: JSON.stringify({
-           from: import.meta.env.VITE_RESEND_FROM_EMAIL || 'onboarding@resend.dev',
-           to: 'your-email@example.com', // Your real email
-           subject: 'Test from SoundPath',
-           html: '<h1>Test</h1><p>Email is working!</p>',
-         }),
-       });
-       
-       const data = await response.json();
-       console.log('Response:', response.status, data);
-       
-       if (response.ok) {
-         console.log('✅ Email sent successfully!');
-       } else {
-         console.error('❌ Email failed:', data);
-       }
-     } catch (error) {
-       console.error('❌ Error:', error);
-     }
-   }
-   testResendAPI();
-   ```
+For security, **Resend API keys are never used in the browser**.\n\nTo verify email delivery:\n- Check **Supabase Edge Function logs** for `send-email`\n- Check **Resend Dashboard** logs (`resend.com/emails`)\n\nConfiguration checklist in Supabase:\n- **Auth → SMTP Settings** uses Resend (controls confirmation + password reset emails)\n- **Edge Functions → Secrets** contains:\n  - `RESEND_API_KEY`\n  - `RESEND_FROM_EMAIL`
 
 ---
 
@@ -158,10 +111,8 @@ Test if Resend API is accessible:
 
 ### ❌ Common Issues:
 
-1. **"API key not found" error:**
-   - Check `.env` file exists in project root
-   - Check key name is exactly `VITE_RESEND_API_KEY`
-   - Restart dev server after adding to `.env`
+1. **"RESEND_API_KEY not configured" error:**
+   - Supabase Dashboard → **Edge Functions → Secrets** → add `RESEND_API_KEY`
 
 2. **"Invalid API key" error:**
    - Check you copied the full key (starts with `re_`)
@@ -169,8 +120,7 @@ Test if Resend API is accessible:
    - Verify key in Resend dashboard
 
 3. **"Invalid from address" error:**
-   - Make sure `VITE_RESEND_FROM_EMAIL=onboarding@resend.dev`
-   - Check for typos
+   - Supabase Dashboard → **Edge Functions → Secrets** → set `RESEND_FROM_EMAIL`
 
 4. **Email not arriving:**
    - Check spam folder
@@ -187,9 +137,8 @@ Test if Resend API is accessible:
 
 ## Quick Checklist
 
-- [ ] `.env` file has `VITE_RESEND_API_KEY` set
-- [ ] `.env` file has `VITE_RESEND_FROM_EMAIL=onboarding@resend.dev`
-- [ ] Dev server restarted after adding to `.env`
+- [ ] Supabase Edge secrets include `RESEND_API_KEY`
+- [ ] Supabase Edge secrets include `RESEND_FROM_EMAIL`
 - [ ] Logged in as Owner role
 - [ ] Tried sending invite
 - [ ] Checked browser console for errors
@@ -263,7 +212,7 @@ Once email is working:
 1. ✅ Test with real team invites
 2. ✅ Test with different email providers (Gmail, Outlook, etc.)
 3. ✅ For production: Verify your own domain in Resend
-4. ✅ Update `VITE_RESEND_FROM_EMAIL` to your domain email
+4. ✅ Update `RESEND_FROM_EMAIL` in Supabase Edge Function secrets to your domain email
 
 ---
 
