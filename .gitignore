@@ -9,6 +9,12 @@ build/
 .env
 .env.local
 .env.production
+.env.*
+!.env.example
+
+# Scratch / private notes (never commit)
+workshop
+workshop.*
 
 # IDE
 .vscode/
