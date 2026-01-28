@@ -1,12 +1,11 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LayoutDashboard, Users, Shield, Archive, Calendar, CalendarRange, Rocket, Key, HelpCircle, Webhook, Inbox, Send, Trophy, Crown, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, Users, Shield, Archive, Calendar, CalendarRange, Rocket, Key, HelpCircle, Webhook, Inbox, Send, Trophy, Crown, X, ChevronLeft, ChevronRight, Zap } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
 import { useBilling } from '../context/BillingContext'
 import { useState, useEffect, useMemo } from 'react'
 import { useMobile } from '../hooks/useMobile'
-import SoundPathLogo from './SoundPathLogo'
 
 const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
   const { tracks, getUpcomingCount, connectionStatus } = useApp()
@@ -159,84 +158,91 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
     <>
       {/* SoundPath Header */}
       <div className={`border-b border-gray-800 ${collapsed ? 'p-3' : 'p-4 md:p-6'}`}>
-        <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between mb-2'} relative`}>
-          <SoundPathLogo
-            collapsed={collapsed}
-            className="select-none"
-            textClassName={collapsed ? '' : 'text-[18px] md:text-[20px]'}
-          />
-
-          {/* Right-side controls (expanded) */}
-          {!collapsed && (
-            <div className="flex items-center gap-2">
-              {/* Close button on mobile */}
-              {isMobile && onClose && (
-                <button
-                  onClick={onClose}
-                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors touch-target"
-                  aria-label="Close menu"
-                >
-                  <X size={20} className="text-gray-400" />
-                </button>
-              )}
-
-              {/* Connection Status Indicator */}
-              <div
-                className="relative"
-                onMouseEnter={() => setShowConnectionTooltip(true)}
-                onMouseLeave={() => setShowConnectionTooltip(false)}
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between mb-2'}`}>
+          {collapsed ? (
+            // Collapsed: Show only icon
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-neon-purple to-recording-red">
+              <Zap size={20} className="text-white" />
+            </div>
+          ) : (
+            // Expanded: Show full logo
+            <>
+              <motion.h1 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xl md:text-2xl font-bold text-white"
               >
-                <div
-                  className={`w-2.5 h-2.5 rounded-full ${getConnectionColor()} ${getConnectionPulse()} shadow-lg cursor-help transition-all`}
-                  title={
-                    connectionStatus.status === 'connected'
-                      ? 'Connected to Supabase'
-                      : connectionStatus.status === 'error'
-                      ? `Connection Error: ${connectionStatus.message || 'Unknown'}`
-                      : 'Checking connection...'
-                  }
-                />
-                {/* Tooltip */}
-                {showConnectionTooltip && connectionStatus.message && (
-                  <div className="absolute right-0 top-6 w-48 p-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-gray-300 z-50 shadow-xl">
-                    <div className="font-semibold mb-1">
-                      {connectionStatus.status === 'connected' ? '✓ Connected' : '✗ Error'}
-                    </div>
-                    <div className="text-gray-400">{connectionStatus.message}</div>
+                SoundPath
+              </motion.h1>
+              <div className="flex items-center gap-2">
+                {/* Close button on mobile */}
+                {isMobile && onClose && (
+                  <button
+                    onClick={onClose}
+                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors touch-target"
+                    aria-label="Close menu"
+                  >
+                    <X size={20} className="text-gray-400" />
+                  </button>
+                )}
+                {/* Connection Status Indicator - Only show in expanded or as tooltip in collapsed */}
+                {!collapsed && (
+                  <div
+                    className="relative"
+                    onMouseEnter={() => setShowConnectionTooltip(true)}
+                    onMouseLeave={() => setShowConnectionTooltip(false)}
+                  >
+                    <div
+                      className={`w-2.5 h-2.5 rounded-full ${getConnectionColor()} ${getConnectionPulse()} shadow-lg cursor-help transition-all`}
+                      title={
+                        connectionStatus.status === 'connected'
+                          ? 'Connected to Supabase'
+                          : connectionStatus.status === 'error'
+                          ? `Connection Error: ${connectionStatus.message || 'Unknown'}`
+                          : 'Checking connection...'
+                      }
+                    />
+                    {/* Tooltip */}
+                    {showConnectionTooltip && connectionStatus.message && (
+                      <div className="absolute right-0 top-6 w-48 p-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-gray-300 z-50 shadow-xl">
+                        <div className="font-semibold mb-1">
+                          {connectionStatus.status === 'connected' ? '✓ Connected' : '✗ Error'}
+                        </div>
+                        <div className="text-gray-400">{connectionStatus.message}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {/* Connection indicator in collapsed state - show as small dot in header */}
+                {collapsed && (
+                  <div
+                    className="relative"
+                    onMouseEnter={() => setShowConnectionTooltip(true)}
+                    onMouseLeave={() => setShowConnectionTooltip(false)}
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full ${getConnectionColor()} ${getConnectionPulse()} shadow-lg cursor-help transition-all`}
+                    />
+                    {/* Tooltip */}
+                    {showConnectionTooltip && (
+                      <motion.div
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="absolute left-full ml-2 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white whitespace-nowrap z-50 shadow-xl pointer-events-none"
+                      >
+                        <div className="font-semibold mb-1">
+                          {connectionStatus.status === 'connected' ? '✓ Connected' : connectionStatus.status === 'error' ? '✗ Error' : 'Checking...'}
+                        </div>
+                        {connectionStatus.message && (
+                          <div className="text-gray-400">{connectionStatus.message}</div>
+                        )}
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 border-l border-b border-gray-700 rotate-45" />
+                      </motion.div>
+                    )}
                   </div>
                 )}
               </div>
-            </div>
-          )}
-
-          {/* Collapsed: connection dot floats in header corner */}
-          {collapsed && (
-            <div
-              className="absolute right-0 top-0"
-              onMouseEnter={() => setShowConnectionTooltip(true)}
-              onMouseLeave={() => setShowConnectionTooltip(false)}
-            >
-              <div className={`w-2 h-2 rounded-full ${getConnectionColor()} ${getConnectionPulse()} shadow-lg`} />
-              {showConnectionTooltip && (
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="absolute right-full mr-2 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white whitespace-nowrap z-50 shadow-xl pointer-events-none"
-                >
-                  <div className="font-semibold mb-1">
-                    {connectionStatus.status === 'connected'
-                      ? '✓ Connected'
-                      : connectionStatus.status === 'error'
-                      ? '✗ Error'
-                      : 'Checking...'}
-                  </div>
-                  {connectionStatus.message && (
-                    <div className="text-gray-400">{connectionStatus.message}</div>
-                  )}
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 w-2 h-2 bg-gray-900 border-r border-t border-gray-700 rotate-45" />
-                </motion.div>
-              )}
-            </div>
+            </>
           )}
         </div>
         {!collapsed && (

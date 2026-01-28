@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { 
   Settings, X, User, Lock, Link as LinkIcon, Users, 
-  Copy, Check, Shield, Mail, Save, AlertCircle, CreditCard
+  Copy, Check, Shield, Mail, Save, AlertCircle, CreditCard, Bell
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
@@ -26,6 +26,119 @@ const GlobalSettings = ({ isOpen, onClose }) => {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [pushSupported, setPushSupported] = useState(false)
+  const [pushPermission, setPushPermission] = useState('default') // default | granted | denied
+  const [pushSubscribed, setPushSubscribed] = useState(false)
+  const [isSavingPush, setIsSavingPush] = useState(false)
+
+  const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
+
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+    const rawData = window.atob(base64)
+    const outputArray = new Uint8Array(rawData.length)
+    for (let i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i)
+    return outputArray
+  }
+
+  const refreshPushStatus = async () => {
+    try {
+      const supported = typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window
+      setPushSupported(supported)
+      setPushPermission(typeof Notification !== 'undefined' ? Notification.permission : 'default')
+      if (!supported) {
+        setPushSubscribed(false)
+        return
+      }
+      const reg = await navigator.serviceWorker.getRegistration()
+      const sub = reg ? await reg.pushManager.getSubscription() : null
+      setPushSubscribed(Boolean(sub))
+    } catch (_e) {
+      setPushSubscribed(false)
+    }
+  }
+
+  const enablePush = async () => {
+    if (!supabase || !user?.id) return
+    if (!vapidPublicKey) {
+      setToast({ isVisible: true, message: 'Missing VITE_VAPID_PUBLIC_KEY', type: 'error' })
+      return
+    }
+    setIsSavingPush(true)
+    try {
+      const supported = 'serviceWorker' in navigator && 'PushManager' in window
+      if (!supported) throw new Error('Push not supported in this browser')
+
+      const permission = await Notification.requestPermission()
+      setPushPermission(permission)
+      if (permission !== 'granted') throw new Error('Notification permission not granted')
+
+      const reg = await navigator.serviceWorker.register('/sw.js')
+      const existing = await reg.pushManager.getSubscription()
+      const sub =
+        existing ||
+        (await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        }))
+
+      const jsonSub = sub.toJSON()
+      const endpoint = jsonSub?.endpoint
+      const p256dh = jsonSub?.keys?.p256dh
+      const auth = jsonSub?.keys?.auth
+      if (!endpoint || !p256dh || !auth) throw new Error('Invalid push subscription')
+
+      const { error } = await supabase
+        .from('push_subscriptions')
+        .upsert(
+          {
+            auth_user_id: user.id,
+            endpoint,
+            p256dh,
+            auth,
+            user_agent: navigator.userAgent,
+            active: true,
+          },
+          { onConflict: 'endpoint' }
+        )
+
+      if (error) throw error
+
+      setToast({ isVisible: true, message: 'Browser notifications enabled', type: 'success' })
+      await refreshPushStatus()
+    } catch (error) {
+      console.error('Enable push error:', error)
+      setToast({ isVisible: true, message: error.message || 'Failed to enable notifications', type: 'error' })
+    } finally {
+      setIsSavingPush(false)
+    }
+  }
+
+  const disablePush = async () => {
+    if (!supabase || !user?.id) return
+    setIsSavingPush(true)
+    try {
+      const reg = await navigator.serviceWorker.getRegistration()
+      const sub = reg ? await reg.pushManager.getSubscription() : null
+      if (sub) {
+        const endpoint = sub.endpoint
+        await sub.unsubscribe()
+        await supabase
+          .from('push_subscriptions')
+          .update({ active: false })
+          .eq('auth_user_id', user.id)
+          .eq('endpoint', endpoint)
+      }
+      setToast({ isVisible: true, message: 'Browser notifications disabled', type: 'success' })
+      await refreshPushStatus()
+    } catch (error) {
+      console.error('Disable push error:', error)
+      setToast({ isVisible: true, message: error.message || 'Failed to disable notifications', type: 'error' })
+    } finally {
+      setIsSavingPush(false)
+    }
+  }
 
   // Load user slug for personal submission portal
   useEffect(() => {
@@ -70,6 +183,7 @@ const GlobalSettings = ({ isOpen, onClose }) => {
     if (isOpen) {
       fetchUserSlug()
       loadConnections()
+      refreshPushStatus()
     }
   }, [isOpen, staffProfile?.id, staffProfile?.name])
 
@@ -639,6 +753,67 @@ const GlobalSettings = ({ isOpen, onClose }) => {
                         </div>
                       )
                     })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Browser Notifications (Web Push) */}
+            <div className="bg-gray-900/30 rounded-lg p-6 border border-gray-800">
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <Bell size={18} className="text-gray-400" />
+                Browser Notifications
+              </h3>
+              <p className="text-gray-400 text-sm mb-4">
+                Enable desktop notifications (Web Push). High-frequency alerts are off by default; only enable what you need.
+              </p>
+
+              {!pushSupported ? (
+                <p className="text-gray-500 text-sm">This browser does not support Web Push.</p>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-white font-semibold text-sm">Status</p>
+                      <p className="text-gray-500 text-xs font-mono">
+                        permission={pushPermission} • subscribed={pushSubscribed ? 'true' : 'false'}
+                      </p>
+                    </div>
+                    <motion.button
+                      type="button"
+                      onClick={refreshPushStatus}
+                      className="px-3 py-2 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded-lg text-gray-200 text-xs font-semibold transition-all"
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      Refresh
+                    </motion.button>
+                  </div>
+
+                  <div className="flex gap-3">
+                    {!pushSubscribed ? (
+                      <motion.button
+                        type="button"
+                        onClick={enablePush}
+                        disabled={isSavingPush}
+                        className="flex-1 px-4 py-2 bg-gray-800/50 hover:bg-gray-800 border border-purple-500/50 rounded-lg text-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        whileHover={!isSavingPush ? { scale: 1.02 } : {}}
+                        whileTap={!isSavingPush ? { scale: 0.98 } : {}}
+                      >
+                        {isSavingPush ? 'Enabling…' : 'Enable Notifications'}
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        type="button"
+                        onClick={disablePush}
+                        disabled={isSavingPush}
+                        className="flex-1 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 rounded-lg text-red-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        whileHover={!isSavingPush ? { scale: 1.02 } : {}}
+                        whileTap={!isSavingPush ? { scale: 0.98 } : {}}
+                      >
+                        {isSavingPush ? 'Disabling…' : 'Disable Notifications'}
+                      </motion.button>
+                    )}
                   </div>
                 </div>
               )}

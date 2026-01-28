@@ -229,9 +229,6 @@ serve(async (req) => {
         )
       }
 
-      // Trigger webhook if configured
-      await triggerWebhook(organizationId, 'track.created', data, supabase)
-
       return new Response(
         JSON.stringify(data),
         { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -278,9 +275,6 @@ serve(async (req) => {
         )
       }
 
-      // Trigger webhook
-      await triggerWebhook(organizationId, 'track.updated', data, supabase)
-
       return new Response(
         JSON.stringify(data),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -321,9 +315,6 @@ serve(async (req) => {
         )
       }
 
-      // Trigger webhook
-      await triggerWebhook(organizationId, 'track.deleted', { id: trackId }, supabase)
-
       return new Response(
         JSON.stringify({ message: 'Track deleted successfully' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -341,29 +332,3 @@ serve(async (req) => {
     )
   }
 })
-
-// Helper function to trigger webhooks
-async function triggerWebhook(organizationId: string, eventType: string, payload: any, supabase: any) {
-  const { data: webhooks } = await supabase
-    .from('webhooks')
-    .select('*')
-    .eq('organization_id', organizationId)
-    .eq('active', true)
-    .contains('events', [eventType])
-
-  if (!webhooks || webhooks.length === 0) return
-
-  for (const webhook of webhooks) {
-    // Queue webhook delivery
-    await supabase
-      .from('webhook_deliveries')
-      .insert({
-        webhook_id: webhook.id,
-        event_type: eventType,
-        payload: payload,
-        status: 'pending',
-        attempt_number: 1,
-        next_retry_at: new Date().toISOString()
-      })
-  }
-}

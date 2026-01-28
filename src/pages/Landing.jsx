@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
-  Mail, Lock, ArrowRight, X, Menu, 
+  Zap, Mail, Lock, ArrowRight, X, Menu, 
   BarChart3, Users, Shield, Workflow, Clock, 
   CheckCircle2, Star, ChevronRight, Check
 } from 'lucide-react'
@@ -10,7 +10,6 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 import Toast from '../components/Toast'
 import { AlphaOnlyTag, AlphaPricingContainer, AlphaStatusBanner } from '../components/AlphaPricing'
-import SoundPathLogo from '../components/SoundPathLogo'
 
 const Landing = () => {
   const [email, setEmail] = useState('')
@@ -304,12 +303,10 @@ const Landing = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <SoundPathLogo
-                name={labelName}
-                showAlpha
-                markClassName="w-9 h-9"
-                textClassName="text-[16px]"
-              />
+              <div className="p-2 bg-gradient-to-br from-neon-purple to-recording-red rounded-lg">
+                <Zap size={20} className="text-white" />
+              </div>
+              <span className="text-xl font-bold text-white">{labelName}</span>
             </div>
 
             {/* Desktop Navigation */}
@@ -770,12 +767,10 @@ const Landing = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <SoundPathLogo
-                  name={labelName}
-                  showAlpha
-                  markClassName="w-9 h-9"
-                  textClassName="text-[16px]"
-                />
+                <div className="p-2 bg-gradient-to-br from-neon-purple to-recording-red rounded-lg">
+                  <Zap size={20} className="text-white" />
+                </div>
+                <span className="text-xl font-bold text-white">{labelName}</span>
               </div>
               <p className="text-gray-400 text-sm">
                 The A&R Command Center for modern labels.
@@ -888,12 +883,8 @@ const Landing = () => {
                 </button>
 
                 <div className="text-center mb-6">
-                  <div className="mb-4 flex justify-center">
-                    <SoundPathLogo
-                      collapsed
-                      showAlpha={false}
-                      markClassName="w-16 h-16 rounded-full border-white/[0.10]"
-                    />
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-neon-purple to-recording-red mb-4">
+                    <Zap size={32} className="text-white" />
                   </div>
                   <h2
                     className="text-3xl font-bold mb-2"

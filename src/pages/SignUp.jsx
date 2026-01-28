@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Mail, Lock, User, ArrowRight, Check } from 'lucide-react'
+import { Zap, Mail, Lock, User, ArrowRight, Check } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 import Toast from '../components/Toast'
 import { validateEmail } from '../lib/emailValidation'
 import { AlphaOnlyTag } from '../components/AlphaPricing'
-import SoundPathLogo from '../components/SoundPathLogo'
 
 const SignUp = () => {
   const navigate = useNavigate()
@@ -246,13 +245,9 @@ const SignUp = () => {
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.1 }}
-            className="mb-4 flex justify-center"
+            className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-neon-purple to-recording-red mb-4"
           >
-            <SoundPathLogo
-              collapsed
-              showAlpha={false}
-              markClassName="w-16 h-16 rounded-full border-white/[0.10]"
-            />
+            <Zap size={32} className="text-white" />
           </motion.div>
           <h1 className="text-4xl font-bold mb-2 text-neon-purple">
             SoundPath

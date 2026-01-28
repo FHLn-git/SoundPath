@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
@@ -51,7 +51,100 @@ const StaffAdmin = () => {
   const [activeOrgSlug, setActiveOrgSlug] = useState('')
   const [copied, setCopied] = useState(false)
   const [newGenre, setNewGenre] = useState('')
+  const [allowedDomains, setAllowedDomains] = useState([])
+  const [newAllowedDomain, setNewAllowedDomain] = useState('')
+  const [isSavingPortal, setIsSavingPortal] = useState(false)
+  const [settingsTab, setSettingsTab] = useState('portal') // 'portal' | 'genres' | 'compliance' | 'integrations' | 'privacy'
+  const [commWebhookUrls, setCommWebhookUrls] = useState({
+    slack: '',
+    discord: '',
+    telegram: '',
+    whatsapp: '',
+  })
+  const [isSavingCommWebhooks, setIsSavingCommWebhooks] = useState(false)
+  const [commNewSubmissionEnabled, setCommNewSubmissionEnabled] = useState(false)
+  const [isSavingNotifPrefs, setIsSavingNotifPrefs] = useState(false)
+  const [oauthConnections, setOauthConnections] = useState({ google: null, microsoft: null })
+  const [isConnectingProvider, setIsConnectingProvider] = useState(null)
   const { columnWidths, handleResize, getGridTemplate, minWidths } = useResizableColumns('profile-tracks')
+
+  const widgetIngestUrl = useMemo(() => {
+    const base = import.meta.env.VITE_SUPABASE_URL
+    if (!base || !activeOrgSlug) return ''
+    const u = new URL('/functions/v1/widget-ingest', base)
+    u.searchParams.set('organization_slug', activeOrgSlug)
+    return u.toString()
+  }, [activeOrgSlug])
+
+  const normalizeDomain = (value) => {
+    const v = (value || '').trim().toLowerCase()
+    if (!v) return ''
+    try {
+      if (v.includes('://')) return new URL(v).host.toLowerCase()
+    } catch (_e) {
+      // ignore
+    }
+    return v.split('/')[0]
+  }
+
+  const widgetJsSnippet = useMemo(() => {
+    if (!widgetIngestUrl) return ''
+    const lines = [
+      '<div id="soundpath-submission-widget"></div>',
+      '<script>',
+      '(function(){',
+      "  var root = document.getElementById('soundpath-submission-widget');",
+      '  if (!root) return;',
+      '  root.innerHTML = (',
+      "    '<form id=\"spw\" style=\"max-width:560px;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto;\">' +",
+      "    '<div style=\"display:grid;gap:10px;padding:14px;border:1px solid rgba(0,0,0,.12);border-radius:12px;\">' +",
+      "      '<div style=\"font-weight:700;font-size:16px;\">Submit Demo</div>' +",
+      "      '<input name=\"artist_name\" required placeholder=\"Artist name\" style=\"padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);\" />' +",
+      "      '<input name=\"email\" type=\"email\" placeholder=\"Email (optional)\" style=\"padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);\" />' +",
+      "      '<input name=\"track_title\" required placeholder=\"Track title\" style=\"padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);\" />' +",
+      "      '<input name=\"stream_link\" required placeholder=\"SoundCloud / Dropbox link\" style=\"padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);\" />' +",
+      "      '<input name=\"genre\" placeholder=\"Genre (optional)\" style=\"padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);\" />' +",
+      "      '<input name=\"bpm\" type=\"number\" min=\"1\" max=\"300\" placeholder=\"BPM (optional)\" style=\"padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);\" />' +",
+      "      '<textarea name=\"note\" placeholder=\"Note (optional)\" rows=\"3\" style=\"padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);resize:vertical;\"></textarea>' +",
+      "      '<button type=\"submit\" style=\"padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);background:#111;color:#fff;font-weight:700;cursor:pointer;\">Send</button>' +",
+      "      '<div id=\"spw-msg\" style=\"font-size:12px;opacity:.8;\"></div>' +",
+      "    '</div>' +",
+      "    '</form>'",
+      '  );',
+      "  var form = document.getElementById('spw');",
+      "  var msg = document.getElementById('spw-msg');",
+      '  form.addEventListener(\'submit\', async function(e){',
+      '    e.preventDefault();',
+      '    msg.textContent = \'Sending...\';',
+      '    var fd = new FormData(form);',
+      '    var body = {',
+      '      artist_name: String(fd.get(\'artist_name\') || \'\').trim(),',
+      '      email: String(fd.get(\'email\') || \'\').trim(),',
+      '      track_title: String(fd.get(\'track_title\') || \'\').trim(),',
+      '      stream_link: String(fd.get(\'stream_link\') || \'\').trim(),',
+      '      genre: String(fd.get(\'genre\') || \'\').trim(),',
+      '      bpm: fd.get(\'bpm\') ? Number(fd.get(\'bpm\')) : undefined,',
+      '      note: String(fd.get(\'note\') || \'\').trim(),',
+      '    };',
+      '    try {',
+      "      var res = await fetch('" + widgetIngestUrl.replace(/'/g, "\\'") + "', {",
+      '        method: \'POST\',',
+      '        headers: { \'Content-Type\': \'application/json\' },',
+      '        body: JSON.stringify(body),',
+      '      });',
+      '      var data = await res.json().catch(function(){ return null; });',
+      '      if (!res.ok) throw new Error((data && data.error) || (\'Request failed: \' + res.status));',
+      '      msg.textContent = \'Received. Thank you.\';',
+      '      form.reset();',
+      '    } catch (err) {',
+      '      msg.textContent = \'Error: \' + (err && err.message ? err.message : \'Failed\');',
+      '    }',
+      '  });',
+      '})();',
+      '</script>',
+    ]
+    return lines.join('\n')
+  }, [widgetIngestUrl])
 
   // Check if user has access - only restrict free tier, allow all paid tiers and system admins
   useEffect(() => {
@@ -127,13 +220,14 @@ const StaffAdmin = () => {
         // Load organization data (slug, branding) - all users need slug for submission portal visibility
         const { data, error } = await supabase
           .from('organizations')
-          .select('slug, branding_settings')
+          .select('slug, branding_settings, allowed_domains')
           .eq('id', activeOrgId)
           .single()
         
         if (!error && data) {
           // Set slug for submission portal
           setActiveOrgSlug(data.slug || '')
+          setAllowedDomains(Array.isArray(data.allowed_domains) ? data.allowed_domains : [])
           
           // Load branding settings (including genres) - only for owners
           if (isOwner) {
@@ -153,6 +247,58 @@ const StaffAdmin = () => {
             }
             console.log('Loaded org branding:', branding)
             setOrgBranding(branding)
+
+            // Load communication webhooks (Slack/Discord/Telegram/WhatsApp)
+            try {
+              const { data: commData, error: commError } = await supabase
+                .from('communication_webhooks')
+                .select('platform, url, active')
+                .eq('organization_id', activeOrgId)
+
+              if (!commError) {
+                const next = { slack: '', discord: '', telegram: '', whatsapp: '' }
+                ;(commData || []).forEach((row) => {
+                  if (row?.active === false) return
+                  if (row?.platform && row?.url) next[row.platform] = row.url
+                })
+                setCommWebhookUrls(next)
+              }
+            } catch (e) {
+              console.warn('Error loading communication webhooks:', e)
+            }
+
+            // Load org notification preferences (default high-frequency alerts off)
+            try {
+              const { data: prefsData, error: prefsError } = await supabase.rpc('get_org_notification_preferences', {
+                org_id: activeOrgId,
+              })
+              if (!prefsError && prefsData) {
+                const enabled = prefsData?.comm?.new_submission === true
+                setCommNewSubmissionEnabled(enabled)
+              } else if (prefsError) {
+                console.warn('Error loading notification preferences:', prefsError)
+              }
+            } catch (e) {
+              console.warn('Error loading notification preferences:', e)
+            }
+
+            // Load OAuth connections (Google/Microsoft)
+            try {
+              const { data: connData, error: connError } = await supabase
+                .from('oauth_connections')
+                .select('provider, account_email, account_name, active')
+                .eq('organization_id', activeOrgId)
+              if (!connError) {
+                const next = { google: null, microsoft: null }
+                ;(connData || []).forEach((row) => {
+                  if (!row?.provider) return
+                  next[row.provider] = row
+                })
+                setOauthConnections(next)
+              }
+            } catch (e) {
+              console.warn('Error loading OAuth connections:', e)
+            }
           }
         } else if (error) {
           console.error('Error loading organization data:', error)
@@ -167,9 +313,57 @@ const StaffAdmin = () => {
 
   // Get submission URLs
   const labelSubmissionUrl = activeOrgSlug ? `${window.location.origin}/submit/label/${activeOrgSlug}` : ''
+  const inboundDomain = import.meta.env.VITE_INBOUND_EMAIL_DOMAIN || 'inbox.soundpath.app'
+  const routingEmail = activeOrgId ? `${activeOrgId}@${inboundDomain}` : ''
 
   // Embed code for label
   const labelEmbedCode = activeOrgSlug ? `<iframe src="${labelSubmissionUrl}" width="100%" height="800" frameborder="0" style="border: none;"></iframe>` : ''
+
+  // Show OAuth callback results (and clean URL)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const integration = params.get('integration')
+    const connected = params.get('connected')
+    const error = params.get('error')
+    if (!integration || !connected) return
+
+    if (connected === '1') {
+      setToast({
+        isVisible: true,
+        message: `${integration} connected`,
+        type: 'success',
+      })
+    } else {
+      setToast({
+        isVisible: true,
+        message: `${integration} connection failed${error ? `: ${decodeURIComponent(error)}` : ''}`,
+        type: 'error',
+      })
+    }
+
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname)
+
+    // Best-effort refresh connections
+    if (supabase && activeOrgId && isOwner) {
+      supabase
+        .from('oauth_connections')
+        .select('provider, account_email, account_name, active')
+        .eq('organization_id', activeOrgId)
+        .then(({ data }) => {
+          const next = { google: null, microsoft: null }
+          ;(data || []).forEach((row) => {
+            if (!row?.provider) return
+            next[row.provider] = row
+          })
+          setOauthConnections(next)
+          setIsConnectingProvider(null)
+        })
+        .catch(() => setIsConnectingProvider(null))
+    } else {
+      setIsConnectingProvider(null)
+    }
+  }, [activeOrgId, isOwner])
 
 
   const handleCopyEmbed = (code, type) => {
@@ -194,6 +388,190 @@ const StaffAdmin = () => {
       })
       setTimeout(() => setCopied(false), 2000)
     })
+  }
+
+  const handleAddAllowedDomain = () => {
+    const d = normalizeDomain(newAllowedDomain)
+    if (!d) return
+    if (allowedDomains.map(normalizeDomain).includes(d)) {
+      setNewAllowedDomain('')
+      return
+    }
+    setAllowedDomains([...(allowedDomains || []), d])
+    setNewAllowedDomain('')
+  }
+
+  const handleRemoveAllowedDomain = (domainToRemove) => {
+    const normalizedRemove = normalizeDomain(domainToRemove)
+    setAllowedDomains((allowedDomains || []).filter((d) => normalizeDomain(d) !== normalizedRemove))
+  }
+
+  const handleSavePortalSettings = async () => {
+    if (!supabase || !activeOrgId || !isOwner) return
+    setIsSavingPortal(true)
+    try {
+      const normalized = (allowedDomains || [])
+        .map(normalizeDomain)
+        .filter(Boolean)
+        .slice(0, 50) // safety cap
+
+      const { error } = await supabase
+        .from('organizations')
+        .update({ allowed_domains: normalized })
+        .eq('id', activeOrgId)
+
+      if (error) throw error
+
+      setAllowedDomains(normalized)
+      setToast({
+        isVisible: true,
+        message: 'Portal settings saved',
+        type: 'success',
+      })
+    } catch (error) {
+      console.error('Error saving portal settings:', error)
+      setToast({
+        isVisible: true,
+        message: error.message || 'Failed to save portal settings',
+        type: 'error',
+      })
+    } finally {
+      setIsSavingPortal(false)
+    }
+  }
+
+  const handleSaveCommunicationWebhooks = async () => {
+    if (!supabase || !activeOrgId || !isOwner) return
+    setIsSavingCommWebhooks(true)
+    try {
+      const platforms = ['slack', 'discord', 'telegram', 'whatsapp']
+      for (const platform of platforms) {
+        const url = (commWebhookUrls?.[platform] || '').trim()
+        if (url) {
+          const { error } = await supabase
+            .from('communication_webhooks')
+            .upsert(
+              {
+                organization_id: activeOrgId,
+                platform,
+                url,
+                active: true,
+              },
+              { onConflict: 'organization_id,platform' }
+            )
+          if (error) throw error
+        } else {
+          // Remove if cleared
+          const { error } = await supabase
+            .from('communication_webhooks')
+            .delete()
+            .eq('organization_id', activeOrgId)
+            .eq('platform', platform)
+          if (error) throw error
+        }
+      }
+
+      setToast({
+        isVisible: true,
+        message: 'Communication webhooks saved',
+        type: 'success',
+      })
+    } catch (error) {
+      console.error('Error saving communication webhooks:', error)
+      setToast({
+        isVisible: true,
+        message: error.message || 'Failed to save communication webhooks',
+        type: 'error',
+      })
+    } finally {
+      setIsSavingCommWebhooks(false)
+    }
+  }
+
+  const handleSaveNotificationPreferences = async () => {
+    if (!supabase || !activeOrgId || !isOwner) return
+    setIsSavingNotifPrefs(true)
+    try {
+      const preferences = {
+        comm: { new_submission: Boolean(commNewSubmissionEnabled) },
+        browser: { high_priority_pitches: false },
+      }
+
+      const { error } = await supabase
+        .from('organization_notification_preferences')
+        .upsert({ organization_id: activeOrgId, preferences }, { onConflict: 'organization_id' })
+
+      if (error) throw error
+
+      setToast({
+        isVisible: true,
+        message: 'Notification preferences saved',
+        type: 'success',
+      })
+    } catch (error) {
+      console.error('Error saving notification preferences:', error)
+      setToast({
+        isVisible: true,
+        message: error.message || 'Failed to save notification preferences',
+        type: 'error',
+      })
+    } finally {
+      setIsSavingNotifPrefs(false)
+    }
+  }
+
+  const handleConnectProvider = async (provider) => {
+    if (!supabase || !activeOrgId || !isOwner) return
+    setIsConnectingProvider(provider)
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData?.session?.access_token
+      if (!token) throw new Error('Missing session token')
+
+      const base = import.meta.env.VITE_SUPABASE_URL
+      if (!base) throw new Error('Missing VITE_SUPABASE_URL')
+
+      const fn = provider === 'google' ? 'oauth-google' : 'oauth-microsoft'
+      const startUrl = new URL(`/functions/v1/${fn}`, base)
+      startUrl.searchParams.set('action', 'start')
+      startUrl.searchParams.set('organization_id', activeOrgId)
+      startUrl.searchParams.set('return_to', `${window.location.origin}/admin`)
+
+      const res = await fetch(startUrl.toString(), {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const json = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(json?.error || 'Failed to start OAuth')
+      if (!json?.url) throw new Error('Missing OAuth URL')
+
+      window.location.href = json.url
+    } catch (error) {
+      console.error('OAuth connect error:', error)
+      setToast({
+        isVisible: true,
+        message: error.message || 'Failed to start OAuth',
+        type: 'error',
+      })
+      setIsConnectingProvider(null)
+    }
+  }
+
+  const handleDisconnectProvider = async (provider) => {
+    if (!supabase || !activeOrgId || !isOwner) return
+    try {
+      const { error } = await supabase
+        .from('oauth_connections')
+        .delete()
+        .eq('organization_id', activeOrgId)
+        .eq('provider', provider)
+      if (error) throw error
+
+      setOauthConnections({ ...oauthConnections, [provider]: null })
+      setToast({ isVisible: true, message: `${provider} disconnected`, type: 'success' })
+    } catch (error) {
+      console.error('OAuth disconnect error:', error)
+      setToast({ isVisible: true, message: error.message || 'Failed to disconnect', type: 'error' })
+    }
   }
 
   const handleToggleRejectionReason = async (newValue) => {
@@ -528,7 +906,13 @@ const StaffAdmin = () => {
           </div>
           <div className="flex items-center gap-3">
             <motion.button
-              onClick={() => setShowSettings(!showSettings)}
+              onClick={() => {
+                const next = !showSettings
+                setShowSettings(next)
+                if (next) {
+                  setSettingsTab(isOwner && activeOrgId ? 'portal' : 'privacy')
+                }
+              }}
               className="px-3 py-1.5 text-sm bg-gray-900/50 hover:bg-gray-900/70 border border-gray-800 rounded-md text-gray-300 transition-all flex items-center gap-1.5"
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.95 }}
@@ -557,67 +941,349 @@ const StaffAdmin = () => {
           >
             <h3 className="text-lg font-bold text-white mb-4">Workspace Settings</h3>
             <div className="space-y-4 pb-16">
-              {/* Label Submission Portal (for Owners) */}
-              {isOwner && activeOrgId && (
-                <div className="pt-4">
-                  <h4 className="text-md font-bold text-white mb-4 flex items-center gap-2">
+              {/* Tabs */}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSettingsTab('portal')}
+                  disabled={!isOwner || !activeOrgId}
+                  className={`px-3 py-1.5 text-sm rounded-lg border transition-all ${
+                    settingsTab === 'portal'
+                      ? 'bg-gray-800/60 border-neon-purple/40 text-white'
+                      : 'bg-gray-900/30 border-gray-800 text-gray-300 hover:bg-gray-900/60'
+                  } ${(!isOwner || !activeOrgId) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  Portal Settings
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSettingsTab('genres')}
+                  disabled={!isOwner || !activeOrgId}
+                  className={`px-3 py-1.5 text-sm rounded-lg border transition-all ${
+                    settingsTab === 'genres'
+                      ? 'bg-gray-800/60 border-neon-purple/40 text-white'
+                      : 'bg-gray-900/30 border-gray-800 text-gray-300 hover:bg-gray-900/60'
+                  } ${(!isOwner || !activeOrgId) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  Submission Settings
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSettingsTab('compliance')}
+                  disabled={!isOwner || !activeOrgId}
+                  className={`px-3 py-1.5 text-sm rounded-lg border transition-all ${
+                    settingsTab === 'compliance'
+                      ? 'bg-gray-800/60 border-neon-purple/40 text-white'
+                      : 'bg-gray-900/30 border-gray-800 text-gray-300 hover:bg-gray-900/60'
+                  } ${(!isOwner || !activeOrgId) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  Compliance
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSettingsTab('integrations')}
+                  disabled={!isOwner || !activeOrgId}
+                  className={`px-3 py-1.5 text-sm rounded-lg border transition-all ${
+                    settingsTab === 'integrations'
+                      ? 'bg-gray-800/60 border-neon-purple/40 text-white'
+                      : 'bg-gray-900/30 border-gray-800 text-gray-300 hover:bg-gray-900/60'
+                  } ${(!isOwner || !activeOrgId) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  Integrations
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSettingsTab('privacy')}
+                  className={`px-3 py-1.5 text-sm rounded-lg border transition-all ${
+                    settingsTab === 'privacy'
+                      ? 'bg-gray-800/60 border-neon-purple/40 text-white'
+                      : 'bg-gray-900/30 border-gray-800 text-gray-300 hover:bg-gray-900/60'
+                  }`}
+                >
+                  Privacy & Account
+                </button>
+              </div>
+
+              {/* Portal Settings */}
+              {settingsTab === 'portal' && isOwner && activeOrgId && (
+                <div className="pt-2">
+                  <h4 className="text-md font-bold text-white mb-3 flex items-center gap-2">
                     <LinkIcon size={18} className="text-gray-400" />
-                    Label Submission Portal
+                    Portal Settings
                   </h4>
-                  {activeOrgSlug ? (
+                  <p className="text-gray-400 text-sm mb-4">
+                    Generate an embed widget and enforce domain allowlisting for secure website ingest.
+                  </p>
+
+                  {!activeOrgSlug ? (
                     <div className="p-4 bg-gray-900/40 rounded-lg border border-gray-800">
-                      <p className="text-white font-semibold mb-2 flex items-center gap-2">
-                        <Building2 size={16} className="text-gray-400" />
-                        Label Submission URL
-                      </p>
-                      <div className="flex items-center gap-2 mb-3">
-                        <input
-                          type="text"
-                          value={labelSubmissionUrl}
-                          readOnly
-                          className="flex-1 px-3 py-2 bg-gray-900/50 border border-gray-700 rounded text-white text-sm font-mono"
-                        />
-                        <motion.button
-                          type="button"
-                          onClick={() => handleCopyUrl(labelSubmissionUrl, 'label')}
-                          className="px-3 py-2 bg-gray-800/50 hover:bg-gray-800 border border-neon-purple/50 rounded text-gray-300 transition-all flex items-center gap-2"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          {copied === 'label' ? <Check size={16} /> : <Copy size={16} />}
-                        </motion.button>
-                      </div>
-                      <motion.button
-                        type="button"
-                        onClick={() => handleCopyEmbed(labelEmbedCode, 'label-embed')}
-                        className="w-full px-4 py-2 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded-lg text-gray-300 text-sm font-semibold transition-all flex items-center justify-center gap-2"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        {copied === 'label-embed' ? (
-                          <>
-                            <Check size={16} />
-                            <span>Embed Code Copied!</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy size={16} />
-                            <span>Copy Embed Code</span>
-                          </>
-                        )}
-                      </motion.button>
+                      <p className="text-gray-400 text-sm">Label slug not configured. Portal settings will be available once slug is set.</p>
                     </div>
                   ) : (
-                    <div className="p-4 bg-gray-900/40 rounded-lg border border-gray-800">
-                      <p className="text-gray-400 text-sm">Label slug not configured. Submission portal will be available once slug is set.</p>
+                    <div className="space-y-4">
+                      <div className="p-4 bg-gray-900/40 rounded-lg border border-gray-800">
+                        <p className="text-white font-semibold mb-2 flex items-center gap-2">
+                          <Building2 size={16} className="text-gray-400" />
+                          Label Submission URL
+                        </p>
+                        <div className="flex items-center gap-2 mb-3">
+                          <input
+                            type="text"
+                            value={labelSubmissionUrl}
+                            readOnly
+                            className="flex-1 px-3 py-2 bg-gray-900/50 border border-gray-700 rounded text-white text-sm font-mono"
+                          />
+                          <motion.button
+                            type="button"
+                            onClick={() => handleCopyUrl(labelSubmissionUrl, 'label')}
+                            className="px-3 py-2 bg-gray-800/50 hover:bg-gray-800 border border-neon-purple/50 rounded text-gray-300 transition-all flex items-center gap-2"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            {copied === 'label' ? <Check size={16} /> : <Copy size={16} />}
+                          </motion.button>
+                        </div>
+
+                        <p className="text-white font-semibold mb-2">Routing Email</p>
+                        <div className="flex items-center gap-2 mb-3">
+                          <input
+                            type="text"
+                            value={routingEmail}
+                            readOnly
+                            className="flex-1 px-3 py-2 bg-gray-900/50 border border-gray-700 rounded text-white text-sm font-mono"
+                          />
+                          <motion.button
+                            type="button"
+                            onClick={() => handleCopyUrl(routingEmail, 'routing-email')}
+                            className="px-3 py-2 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded text-gray-300 transition-all flex items-center gap-2"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            {copied === 'routing-email' ? <Check size={16} /> : <Copy size={16} />}
+                          </motion.button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          <motion.button
+                            type="button"
+                            onClick={() => handleCopyEmbed(labelEmbedCode, 'label-iframe')}
+                            className="w-full px-4 py-2 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded-lg text-gray-300 text-sm font-semibold transition-all flex items-center justify-center gap-2"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            {copied === 'label-iframe' ? (
+                              <>
+                                <Check size={16} />
+                                <span>iFrame Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy size={16} />
+                                <span>Copy iFrame Embed</span>
+                              </>
+                            )}
+                          </motion.button>
+
+                          <motion.button
+                            type="button"
+                            onClick={() => handleCopyEmbed(widgetJsSnippet, 'label-widget')}
+                            disabled={!widgetJsSnippet}
+                            className="w-full px-4 py-2 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded-lg text-gray-300 text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            whileHover={widgetJsSnippet ? { scale: 1.02 } : {}}
+                            whileTap={widgetJsSnippet ? { scale: 0.98 } : {}}
+                          >
+                            {copied === 'label-widget' ? (
+                              <>
+                                <Check size={16} />
+                                <span>Widget Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy size={16} />
+                                <span>Copy JS Widget</span>
+                              </>
+                            )}
+                          </motion.button>
+                        </div>
+
+                        <p className="text-xs text-gray-500 mt-3">
+                          JS widget submissions hit your Inbox via an allowlisted-origin ingest endpoint.
+                        </p>
+                      </div>
+
+                      <div className="p-4 bg-gray-900/30 rounded-lg border border-gray-800">
+                        <h5 className="text-sm font-bold text-white mb-2">Domain Whitelisting</h5>
+                        <p className="text-gray-400 text-sm mb-3">
+                          Only these hostnames can submit via the widget. Use <span className="font-mono text-gray-300">example.com</span> or
+                          wildcard suffixes like <span className="font-mono text-gray-300">.example.com</span>.
+                        </p>
+
+                        <div className="flex gap-2 mb-3">
+                          <input
+                            type="text"
+                            value={newAllowedDomain}
+                            onChange={(e) => setNewAllowedDomain(e.target.value)}
+                            placeholder="yourlabel.com"
+                            className="flex-1 px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple font-mono text-sm"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault()
+                                handleAddAllowedDomain()
+                              }
+                            }}
+                          />
+                          <motion.button
+                            type="button"
+                            onClick={handleAddAllowedDomain}
+                            disabled={!newAllowedDomain.trim()}
+                            className="px-4 py-2 bg-gray-800/50 hover:bg-gray-800 border border-neon-purple/50 rounded-lg text-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            whileHover={newAllowedDomain.trim() ? { scale: 1.05 } : {}}
+                            whileTap={newAllowedDomain.trim() ? { scale: 0.95 } : {}}
+                          >
+                            Add
+                          </motion.button>
+                        </div>
+
+                        {(allowedDomains || []).length === 0 ? (
+                          <p className="text-gray-500 text-sm mb-3">
+                            No domains allowlisted. Widget ingest will be blocked until you add at least one domain.
+                          </p>
+                        ) : (
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {(allowedDomains || []).map((d) => (
+                              <div
+                                key={d}
+                                className="px-3 py-1.5 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 text-sm flex items-center gap-2 font-mono"
+                              >
+                                <span>{normalizeDomain(d)}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveAllowedDomain(d)}
+                                  className="text-red-400 hover:text-red-300"
+                                  aria-label="Remove domain"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <motion.button
+                          type="button"
+                          onClick={handleSavePortalSettings}
+                          disabled={isSavingPortal}
+                          className="w-full px-4 py-2 bg-gray-800/50 hover:bg-gray-800 border border-neon-purple/50 rounded-lg text-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          whileHover={!isSavingPortal ? { scale: 1.01 } : {}}
+                          whileTap={!isSavingPortal ? { scale: 0.99 } : {}}
+                        >
+                          {isSavingPortal ? 'Saving…' : 'Save Portal Settings'}
+                        </motion.button>
+                      </div>
+
+                      <div className="p-4 bg-gray-900/30 rounded-lg border border-gray-800">
+                        <h5 className="text-sm font-bold text-white mb-2">Communication Webhooks</h5>
+                        <p className="text-gray-400 text-sm mb-4">
+                          Paste incoming webhook URLs to receive a <span className="text-gray-200 font-semibold">New Submission</span> ping when a track lands in your Inbox.
+                        </p>
+
+                        <div className="flex items-center justify-between gap-4 p-3 bg-gray-900/40 border border-gray-800 rounded-lg mb-4">
+                          <div className="min-w-0">
+                            <p className="text-white font-semibold text-sm">Enable New Submission pings</p>
+                            <p className="text-gray-500 text-xs">
+                              Default is off to keep high-frequency alerts quiet.
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <motion.button
+                              type="button"
+                              onClick={() => setCommNewSubmissionEnabled(!commNewSubmissionEnabled)}
+                              className={`relative w-14 h-8 rounded-full transition-colors ${
+                                commNewSubmissionEnabled ? 'bg-green-500' : 'bg-gray-600'
+                              }`}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <motion.div
+                                animate={{ x: commNewSubmissionEnabled ? 24 : 0 }}
+                                className="absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                              />
+                            </motion.button>
+                            <motion.button
+                              type="button"
+                              onClick={handleSaveNotificationPreferences}
+                              disabled={isSavingNotifPrefs}
+                              className="px-3 py-2 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded-lg text-gray-200 text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                              whileHover={!isSavingNotifPrefs ? { scale: 1.03 } : {}}
+                              whileTap={!isSavingNotifPrefs ? { scale: 0.97 } : {}}
+                            >
+                              {isSavingNotifPrefs ? 'Saving…' : 'Save'}
+                            </motion.button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-400 mb-1">Slack</label>
+                            <input
+                              type="url"
+                              value={commWebhookUrls.slack}
+                              onChange={(e) => setCommWebhookUrls({ ...commWebhookUrls, slack: e.target.value })}
+                              placeholder="https://hooks.slack.com/services/..."
+                              className="w-full px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple font-mono text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-400 mb-1">Discord</label>
+                            <input
+                              type="url"
+                              value={commWebhookUrls.discord}
+                              onChange={(e) => setCommWebhookUrls({ ...commWebhookUrls, discord: e.target.value })}
+                              placeholder="https://discord.com/api/webhooks/..."
+                              className="w-full px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple font-mono text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-400 mb-1">Telegram (custom endpoint)</label>
+                            <input
+                              type="url"
+                              value={commWebhookUrls.telegram}
+                              onChange={(e) => setCommWebhookUrls({ ...commWebhookUrls, telegram: e.target.value })}
+                              placeholder="https://your-telegram-bridge.example.com/..."
+                              className="w-full px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple font-mono text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-400 mb-1">WhatsApp (custom endpoint)</label>
+                            <input
+                              type="url"
+                              value={commWebhookUrls.whatsapp}
+                              onChange={(e) => setCommWebhookUrls({ ...commWebhookUrls, whatsapp: e.target.value })}
+                              placeholder="https://your-whatsapp-bridge.example.com/..."
+                              className="w-full px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple font-mono text-sm"
+                            />
+                          </div>
+                        </div>
+
+                        <motion.button
+                          type="button"
+                          onClick={handleSaveCommunicationWebhooks}
+                          disabled={isSavingCommWebhooks}
+                          className="w-full px-4 py-2 bg-gray-800/50 hover:bg-gray-800 border border-neon-purple/50 rounded-lg text-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          whileHover={!isSavingCommWebhooks ? { scale: 1.01 } : {}}
+                          whileTap={!isSavingCommWebhooks ? { scale: 0.99 } : {}}
+                        >
+                          {isSavingCommWebhooks ? 'Saving…' : 'Save Communication Webhooks'}
+                        </motion.button>
+                      </div>
                     </div>
                   )}
                 </div>
               )}
 
               {/* Submission Genres - Owners Only */}
-              {isOwner && activeOrgId && (
-                <div className="pt-4 border-t border-gray-700/50">
+              {settingsTab === 'genres' && isOwner && activeOrgId && (
+                <div className="pt-2">
                   <h4 className="text-md font-bold text-white mb-4 flex items-center gap-2">
                     <Music size={18} className="text-gray-300" />
                     Submission Genres
@@ -767,9 +1433,116 @@ const StaffAdmin = () => {
                 </div>
               )}
 
+              {/* Integrations (Google/Microsoft) - Owners Only */}
+              {settingsTab === 'integrations' && isOwner && activeOrgId && (
+                <div className="pt-2">
+                  <h4 className="text-md font-bold text-white mb-4 flex items-center gap-2">
+                    <Shield size={18} className="text-gray-300" />
+                    Productivity Suite
+                  </h4>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Connect Google or Microsoft 365 with least-privilege Calendar scopes. Tokens are encrypted before storage.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="p-4 bg-gray-900/30 rounded-lg border border-gray-800">
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <p className="text-white font-semibold">Google Calendar</p>
+                        {oauthConnections.google ? (
+                          <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 border border-green-500/40">
+                            Connected
+                          </span>
+                        ) : (
+                          <span className="text-xs px-2 py-1 rounded bg-gray-500/20 text-gray-400 border border-gray-700">
+                            Not connected
+                          </span>
+                        )}
+                      </div>
+                      {oauthConnections.google?.account_email && (
+                        <p className="text-xs text-gray-400 mb-3 font-mono">{oauthConnections.google.account_email}</p>
+                      )}
+                      <div className="flex gap-2">
+                        {!oauthConnections.google ? (
+                          <motion.button
+                            type="button"
+                            onClick={() => handleConnectProvider('google')}
+                            disabled={isConnectingProvider === 'google'}
+                            className="flex-1 px-4 py-2 bg-gray-800/50 hover:bg-gray-800 border border-neon-purple/50 rounded-lg text-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            whileHover={isConnectingProvider === 'google' ? {} : { scale: 1.01 }}
+                            whileTap={isConnectingProvider === 'google' ? {} : { scale: 0.99 }}
+                          >
+                            {isConnectingProvider === 'google' ? 'Connecting…' : 'Connect Google'}
+                          </motion.button>
+                        ) : (
+                          <motion.button
+                            type="button"
+                            onClick={() => handleDisconnectProvider('google')}
+                            className="flex-1 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 rounded-lg text-red-300 transition-all"
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
+                          >
+                            Disconnect
+                          </motion.button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-gray-900/30 rounded-lg border border-gray-800">
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <p className="text-white font-semibold">Microsoft 365 Calendar</p>
+                        {oauthConnections.microsoft ? (
+                          <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 border border-green-500/40">
+                            Connected
+                          </span>
+                        ) : (
+                          <span className="text-xs px-2 py-1 rounded bg-gray-500/20 text-gray-400 border border-gray-700">
+                            Not connected
+                          </span>
+                        )}
+                      </div>
+                      {oauthConnections.microsoft?.account_email && (
+                        <p className="text-xs text-gray-400 mb-3 font-mono">{oauthConnections.microsoft.account_email}</p>
+                      )}
+                      <div className="flex gap-2">
+                        {!oauthConnections.microsoft ? (
+                          <motion.button
+                            type="button"
+                            onClick={() => handleConnectProvider('microsoft')}
+                            disabled={isConnectingProvider === 'microsoft'}
+                            className="flex-1 px-4 py-2 bg-gray-800/50 hover:bg-gray-800 border border-neon-purple/50 rounded-lg text-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            whileHover={isConnectingProvider === 'microsoft' ? {} : { scale: 1.01 }}
+                            whileTap={isConnectingProvider === 'microsoft' ? {} : { scale: 0.99 }}
+                          >
+                            {isConnectingProvider === 'microsoft' ? 'Connecting…' : 'Connect Microsoft'}
+                          </motion.button>
+                        ) : (
+                          <motion.button
+                            type="button"
+                            onClick={() => handleDisconnectProvider('microsoft')}
+                            className="flex-1 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 rounded-lg text-red-300 transition-all"
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
+                          >
+                            Disconnect
+                          </motion.button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 p-3 bg-gray-900/40 rounded-lg border border-gray-800">
+                    <p className="text-xs text-gray-400">
+                      Calendar automation is queued when tracks change:
+                      <span className="font-mono text-gray-300"> Follow Up → +2 day reminder</span>, and
+                      <span className="font-mono text-gray-300"> Signed + Release Date → master calendar</span>.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Compliance & Data Settings - Owners Only */}
-              {isOwner && (
-                <div className="pt-4 border-t border-gray-700/50">
+              {settingsTab === 'compliance' && isOwner && (
+                <div className="pt-2">
                   <h4 className="text-md font-bold text-white mb-4 flex items-center gap-2">
                     <Shield size={18} className="text-gray-300" />
                     Compliance & Data
@@ -803,27 +1576,29 @@ const StaffAdmin = () => {
                 </div>
               )}
 
-              {/* GDPR & Account Management */}
-              <div className="pt-4 border-t border-gray-700/50">
-                <h4 className="text-md font-bold text-white mb-4 flex items-center gap-2">
-                  <Shield size={18} className="text-gray-300" />
-                  Privacy & Account
-                </h4>
-                <div className="space-y-3">
-                  <motion.a
-                    href="/data-export"
-                    className="flex items-center gap-3 p-3 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded-lg text-gray-300 transition-all"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Download size={18} className="text-blue-400" />
-                    <div className="flex-1">
-                      <p className="font-semibold text-white">Export My Data</p>
-                      <p className="text-xs text-gray-400">Download a copy of all your personal data</p>
-                    </div>
-                  </motion.a>
+              {/* Privacy & Account */}
+              {settingsTab === 'privacy' && (
+                <div className="pt-2">
+                  <h4 className="text-md font-bold text-white mb-4 flex items-center gap-2">
+                    <Shield size={18} className="text-gray-300" />
+                    Privacy & Account
+                  </h4>
+                  <div className="space-y-3">
+                    <motion.a
+                      href="/data-export"
+                      className="flex items-center gap-3 p-3 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded-lg text-gray-300 transition-all"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Download size={18} className="text-blue-400" />
+                      <div className="flex-1">
+                        <p className="font-semibold text-white">Export My Data</p>
+                        <p className="text-xs text-gray-400">Download a copy of all your personal data</p>
+                      </div>
+                    </motion.a>
+                  </div>
                 </div>
-              </div>
+              )}
 
             </div>
             
