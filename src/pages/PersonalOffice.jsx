@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { useBilling } from '../context/BillingContext'
 import { supabase } from '../lib/supabaseClient'
 import AddDemoModal from '../components/AddDemoModal'
+import GlobalIntakeDropdown from '../components/GlobalIntakeDropdown'
 import TrackRow from '../components/TrackRow'
 import Toast from '../components/Toast'
 import UpgradeOverlay from '../components/UpgradeOverlay'
@@ -331,6 +332,10 @@ const PersonalOffice = () => {
         .update({
           organization_id: orgId,
           recipient_user_id: null, // Remove personal inbox assignment
+          // Artist Relations Tracker (Agent privacy + network rollups):
+          // stamp who pitched/promoted this track into the label workspace
+          sender_id: staffProfile.id,
+          peer_to_peer: true,
         })
         .eq('id', trackId)
 
@@ -464,24 +469,18 @@ const PersonalOffice = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-white">Personal A&R Office</h1>
           <div className="relative">
-            <motion.button
-              type="button"
-              onClick={async (e) => {
-                e.preventDefault()
+            <GlobalIntakeDropdown
+              buttonLabel="Add submission"
+              manualAddDisabled={capacityLock}
+              manualAddDisabledReason="Limit reached"
+              onManualAdd={async () => {
                 if (capacityLock) return
                 const canAdd = await checkCapacityBeforeAdd()
                 if (canAdd) {
                   setIsModalOpen(true)
                 }
               }}
-              disabled={capacityLock}
-              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg flex items-center gap-2 transition-all duration-200 text-white relative"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Plus size={18} />
-              Add Demo
-            </motion.button>
+            />
             {showCapacityOverlay && capacityCheck && !capacityLock && (
               <CapacityOverlay
                 isOpen={showCapacityOverlay}

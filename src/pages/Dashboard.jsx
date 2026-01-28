@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
 import { useBilling } from '../context/BillingContext'
 import AddDemoModal from '../components/AddDemoModal'
+import GlobalIntakeDropdown from '../components/GlobalIntakeDropdown'
 import GapAlert from '../components/GapAlert'
 import StaffingAlert from '../components/StaffingAlert'
 import UpgradeOverlay from '../components/UpgradeOverlay'
@@ -319,20 +320,14 @@ const Dashboard = () => {
       <div className="p-3 border-b border-gray-800 bg-gray-950/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-white">{dashboardTitle}</h1>
-          <motion.button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault()
+          <GlobalIntakeDropdown
+            buttonLabel="Add submission"
+            manualAddDisabled={personalCapacityLock}
+            manualAddDisabledReason="Limit reached"
+            onManualAdd={() => {
               if (!personalCapacityLock) setIsModalOpen(true)
             }}
-            disabled={personalCapacityLock}
-            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg flex items-center gap-2 transition-all duration-200 text-white"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Plus size={18} />
-            Add Demo
-          </motion.button>
+          />
         </div>
       </div>
 

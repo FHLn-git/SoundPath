@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [session, setSession] = useState(null)
   const [staffRealtimeChannel, setStaffRealtimeChannel] = useState(null)
+  const [membershipsRealtimeChannel, setMembershipsRealtimeChannel] = useState(null)
 
   // Load user session on mount
   useEffect(() => {
@@ -63,16 +64,29 @@ export const AuthProvider = ({ children }) => {
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return
       
+      // AUTH STABILITY: treat refresh/focus events as "silent" updates.
+      // Only do redirects/major state resets on SIGNED_IN / SIGNED_OUT.
       setSession(session)
       setUser(session?.user ?? null)
-      if (session?.user) {
-        await loadStaffProfile(session.user.id)
-      } else {
+
+      // Supabase v2 events include: INITIAL_SESSION, SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, USER_UPDATED, PASSWORD_RECOVERY
+      if (_event === 'SIGNED_OUT') {
         setStaffProfile(null)
         setMemberships([])
         setActiveOrgId(null)
         setActiveMembership(null)
         setLoading(false)
+        return
+      }
+
+      // Ignore token refreshes / tab focus changes: do not reload profile or touch routing.
+      if (_event === 'TOKEN_REFRESHED' || _event === 'INITIAL_SESSION') {
+        return
+      }
+
+      if (session?.user && (_event === 'SIGNED_IN' || _event === 'USER_UPDATED' || _event === 'PASSWORD_RECOVERY')) {
+        setLoading(true)
+        await loadStaffProfile(session.user.id)
       }
     })
 
@@ -294,6 +308,49 @@ export const AuthProvider = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
 
+  // Real-time: keep memberships list synced (new labels appear without reload)
+  useEffect(() => {
+    if (!supabase || !staffProfile?.id) return
+
+    // Clean up any prior channel
+    if (membershipsRealtimeChannel) {
+      try {
+        supabase.removeChannel(membershipsRealtimeChannel)
+      } catch (_e) {
+        // ignore
+      }
+      setMembershipsRealtimeChannel(null)
+    }
+
+    const channel = supabase
+      .channel(`memberships-${staffProfile.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'memberships',
+          filter: `user_id=eq.${staffProfile.id}`,
+        },
+        () => {
+          // best-effort refresh; AuthContext will keep Personal view default
+          loadMemberships(staffProfile.id)
+        }
+      )
+      .subscribe()
+
+    setMembershipsRealtimeChannel(channel)
+
+    return () => {
+      try {
+        supabase.removeChannel(channel)
+      } catch (_e) {
+        // ignore
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [staffProfile?.id])
+
   // Load user memberships
   const loadMemberships = async (staffId) => {
     if (!supabase || !staffId) {
@@ -511,12 +568,14 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
+      setLoading(true)
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) {
+        setLoading(false)
         return { error }
       }
 
@@ -526,6 +585,7 @@ export const AuthProvider = ({ children }) => {
 
       return { data, error: null }
     } catch (error) {
+      setLoading(false)
       return { error }
     }
   }
@@ -701,6 +761,42 @@ export const AuthProvider = ({ children }) => {
 
     return () => clearInterval(interval)
   }, [staffProfile?.user_status, staffProfile?.trial_ends_at, user?.id])
+
+  // Session heartbeat: keep JWT fresh without UI interruption.
+  // This reduces "random logouts" when switching tabs or leaving the app idle.
+  useEffect(() => {
+    if (!supabase || !user?.id) return
+
+    let cancelled = false
+
+    const safeRefresh = async () => {
+      if (cancelled) return
+      try {
+        await supabase.auth.refreshSession()
+      } catch (_e) {
+        // Non-fatal: autoRefreshToken will also handle this in most cases.
+      }
+    }
+
+    // Refresh periodically while the app is open.
+    const interval = setInterval(safeRefresh, 4 * 60 * 1000) // every 4 minutes
+
+    // Also refresh when user returns to the tab.
+    const onFocus = () => safeRefresh()
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') safeRefresh()
+    }
+
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [user?.id])
 
   const value = {
     user,

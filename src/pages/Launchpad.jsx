@@ -15,13 +15,15 @@ import GlobalSettings from '../components/GlobalSettings'
 import UpgradeOverlay from '../components/UpgradeOverlay'
 import UsageWarningBanner from '../components/UsageWarningBanner'
 import TrialExpiredModal from '../components/TrialExpiredModal'
+import GlobalIntakeDropdown from '../components/GlobalIntakeDropdown'
+import AddDemoModal from '../components/AddDemoModal'
 
 const Launchpad = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { staffProfile, memberships, switchOrganization, clearWorkspace, activeOrgId, user, signOut, isSystemAdmin, refreshStaffProfile } = useAuth()
   const { hasFeature } = useBilling()
-  const { tracks, loadTracks } = useApp()
+  const { tracks, loadTracks, addTrack, GENRES } = useApp()
   const [searchQuery, setSearchQuery] = useState('')
   const [labelStats, setLabelStats] = useState({})
   const [labelCognitiveLoad, setLabelCognitiveLoad] = useState({})
@@ -61,6 +63,7 @@ const Launchpad = () => {
   const [showNetworkMenu, setShowNetworkMenu] = useState(false)
   const [showGlobalSettings, setShowGlobalSettings] = useState(false)
   const [pendingConnectionRequests, setPendingConnectionRequests] = useState(0)
+  const [isAddSubmissionOpen, setIsAddSubmissionOpen] = useState(false)
   
   // Global Close Watch state
   const [globalCloseWatchTracks, setGlobalCloseWatchTracks] = useState([])
@@ -1345,6 +1348,10 @@ const Launchpad = () => {
         .update({
           organization_id: orgId,
           recipient_user_id: null, // Remove personal inbox assignment
+          // Artist Relations Tracker (Agent privacy + network rollups):
+          // stamp who pitched/promoted this track into the label workspace
+          sender_id: staffProfile?.id || null,
+          peer_to_peer: true,
         })
         .eq('id', trackId)
 
@@ -1575,20 +1582,32 @@ const Launchpad = () => {
             <p className="text-gray-500 text-sm">Review vitals before entering your workspace</p>
           </div>
           <div className="flex items-center gap-2">
+            <GlobalIntakeDropdown
+              buttonLabel="Add submission"
+              manualAddDisabled={!hasPersonalInboxAccess}
+              manualAddDisabledReason="Upgrade required"
+              onManualAdd={() => {
+                if (!hasPersonalInboxAccess) {
+                  setShowUpgradeOverlay(true)
+                  return
+                }
+                setIsAddSubmissionOpen(true)
+              }}
+            />
             <motion.button
               type="button"
               onClick={(e) => {
                 e.preventDefault()
                 setShowGlobalSettings(true)
               }}
-              className="relative px-4 py-2 bg-gray-900/50 hover:bg-gray-900/70 border border-gray-800 rounded-lg text-gray-300 transition-all flex items-center gap-2"
-              whileHover={{ scale: 1.05 }}
+              className="relative px-3 py-1.5 text-sm bg-gray-900/50 hover:bg-gray-900/70 border border-gray-800 rounded-md text-gray-300 transition-all flex items-center gap-1.5"
+              whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Settings size={18} />
+              <Settings size={16} />
               Settings
               {pendingConnectionRequests > 0 && (
-                <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-xs font-bold rounded-full border-2 border-[#0B0E14]">
+                <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full border-2 border-[#0B0E14]">
                   {pendingConnectionRequests > 9 ? '9+' : pendingConnectionRequests}
                 </span>
               )}
@@ -1599,11 +1618,11 @@ const Launchpad = () => {
                 e.preventDefault()
                 signOut()
               }}
-              className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg text-red-400 transition-all flex items-center gap-2"
-              whileHover={{ scale: 1.05 }}
+              className="px-3 py-1.5 text-sm bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-md text-red-400 transition-all flex items-center gap-1.5"
+              whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.95 }}
             >
-              <LogOut size={18} />
+              <LogOut size={16} />
               Logout
             </motion.button>
           </div>
@@ -2369,6 +2388,16 @@ const Launchpad = () => {
         showFinishUpgrading={canFinishUpgrading}
         onFinishUpgrading={handleFinishUpgrading}
         finishUpgradingLoading={upgradeRedirecting}
+      />
+
+      <AddDemoModal
+        isOpen={isAddSubmissionOpen}
+        onClose={() => setIsAddSubmissionOpen(false)}
+        onAdd={(data) => {
+          addTrack?.(data)
+          setIsAddSubmissionOpen(false)
+        }}
+        vibeTags={GENRES || []}
       />
 
       {/* Send to Peer Modal */}

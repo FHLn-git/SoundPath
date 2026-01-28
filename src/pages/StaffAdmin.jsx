@@ -275,20 +275,20 @@ const StaffAdmin = () => {
               <div className="flex items-center gap-3">
                 <motion.button
                   onClick={() => setShowSettings(!showSettings)}
-                  className="px-4 py-2 bg-gray-900/50 hover:bg-gray-900/70 border border-gray-800 rounded-lg text-gray-300 transition-all flex items-center gap-2"
-                  whileHover={{ scale: 1.05 }}
+                  className="px-3 py-1.5 text-sm bg-gray-900/50 hover:bg-gray-900/70 border border-gray-800 rounded-md text-gray-300 transition-all flex items-center gap-1.5"
+                  whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Settings size={18} />
+                  <Settings size={16} />
                   Settings
                 </motion.button>
                 <motion.button
                   onClick={handleLogout}
-                  className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg text-red-400 transition-all flex items-center gap-2"
-                  whileHover={{ scale: 1.05 }}
+                  className="px-3 py-1.5 text-sm bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-md text-red-400 transition-all flex items-center gap-1.5"
+                  whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <LogOut size={18} />
+                  <LogOut size={16} />
                   Logout
                 </motion.button>
               </div>
@@ -343,9 +343,8 @@ const StaffAdmin = () => {
 
       // Switch to personal view (null org) and reload
       await switchOrganization(null)
-      setTimeout(() => {
-        window.location.reload()
-      }, 500)
+      await loadMemberships?.(staffProfile.id)
+      navigate('/launchpad', { replace: true })
     } catch (error) {
       console.error('Error leaving label:', error)
       setToast({
@@ -530,20 +529,20 @@ const StaffAdmin = () => {
           <div className="flex items-center gap-3">
             <motion.button
               onClick={() => setShowSettings(!showSettings)}
-              className="px-4 py-2 bg-gray-900/50 hover:bg-gray-900/70 border border-gray-800 rounded-lg text-gray-300 transition-all flex items-center gap-2"
-              whileHover={{ scale: 1.05 }}
+              className="px-3 py-1.5 text-sm bg-gray-900/50 hover:bg-gray-900/70 border border-gray-800 rounded-md text-gray-300 transition-all flex items-center gap-1.5"
+              whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Settings size={18} />
+              <Settings size={16} />
               Settings
             </motion.button>
             <motion.button
               onClick={handleLogout}
-              className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg text-red-400 transition-all flex items-center gap-2"
-              whileHover={{ scale: 1.05 }}
+              className="px-3 py-1.5 text-sm bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-md text-red-400 transition-all flex items-center gap-1.5"
+              whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.95 }}
             >
-              <LogOut size={18} />
+              <LogOut size={16} />
               Logout
             </motion.button>
           </div>
@@ -1386,8 +1385,8 @@ const StaffAdmin = () => {
                       e.preventDefault()
                       navigate('/admin/staff')
                     }}
-                    className="px-4 py-2 bg-gray-800/50 hover:bg-gray-800 border border-neon-purple/50 rounded-lg text-gray-300 text-sm font-semibold flex items-center gap-2"
-                    whileHover={{ scale: 1.05 }}
+                    className="px-3 py-1.5 text-sm bg-gray-800/50 hover:bg-gray-800 border border-neon-purple/50 rounded-md text-gray-300 font-semibold flex items-center gap-1.5"
+                    whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <ArrowRight size={16} />
