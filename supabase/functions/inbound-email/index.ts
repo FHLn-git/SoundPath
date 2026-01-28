@@ -62,14 +62,24 @@ async function fetchSoundCloudMetadata(url: string) {
   }
 }
 
-function parseOrgIdFromRecipient(toEmail: string) {
-  // Expected: <org_uuid>@<your-inbound-domain>
+function getLocalPart(toEmail: string) {
   const m = (toEmail || '').trim().match(/^([^@]+)@/i)
   if (!m) return null
-  const local = m[1]
+  return m[1]
+}
+
+function normalizeRecipientKey(localPart: string) {
+  // support plus-addressing (e.g. contact+labelslug@domain)
+  const lp = (localPart || '').trim().toLowerCase()
+  if (!lp) return null
+  if (lp.includes('+')) return lp.split('+').pop() || null
+  return lp
+}
+
+function parseOrgIdFromLocal(localPart: string) {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  if (!uuidRegex.test(local)) return null
-  return local.toLowerCase()
+  if (!uuidRegex.test(localPart)) return null
+  return localPart.toLowerCase()
 }
 
 function getFirstRecipient(emails: unknown): string {
@@ -233,8 +243,21 @@ serve(async (req) => {
     ''
 
   const toEmail = getFirstRecipient(to)
-  const orgId = parseOrgIdFromRecipient(toEmail) || (Array.isArray(to) ? to.map((x) => parseOrgIdFromRecipient(String(x || ''))).find(Boolean) : null)
-  if (!orgId) return json(400, { error: 'Could not determine organization from recipient' })
+  const localPart = normalizeRecipientKey(getLocalPart(toEmail) || '')
+  if (!localPart) return json(400, { error: 'Could not determine recipient routing key' })
+
+  let orgId = parseOrgIdFromLocal(localPart)
+  if (!orgId) {
+    // slug routing: <label_slug>@domain
+    const { data: org, error: orgErr } = await supabase
+      .from('organizations')
+      .select('id')
+      .eq('slug', localPart)
+      .maybeSingle()
+    if (!orgErr && org?.id) orgId = org.id
+  }
+
+  if (!orgId) return json(400, { error: 'Could not determine organization from recipient (unknown org id / slug)' })
 
   const subject = String(body?.Subject || body?.subject || 'New Submission').slice(0, 200)
   const text = String(body?.TextBody || body?.text || body?.textBody || body?.body || '')
@@ -290,7 +313,13 @@ serve(async (req) => {
     ins = await attemptInsert(insertBase)
   }
 
-  if (ins.error) return json(500, { error: ins.error.message })
+  if (ins.error) {
+    const msg = String(ins.error.message || '')
+    if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
+      return json(409, { error: 'Duplicate submission (link already submitted)' })
+    }
+    return json(500, { error: ins.error.message })
+  }
 
   return json(200, {
     success: true,

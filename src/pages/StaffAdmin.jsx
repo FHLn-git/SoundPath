@@ -314,7 +314,8 @@ const StaffAdmin = () => {
   // Get submission URLs
   const labelSubmissionUrl = activeOrgSlug ? `${window.location.origin}/submit/label/${activeOrgSlug}` : ''
   const inboundDomain = import.meta.env.VITE_INBOUND_EMAIL_DOMAIN || 'inbox.soundpath.app'
-  const routingEmail = activeOrgId ? `${activeOrgId}@${inboundDomain}` : ''
+  const routingKey = activeOrgSlug || activeOrgId
+  const routingEmail = routingKey ? `${routingKey}@${inboundDomain}` : ''
 
   // Embed code for label
   const labelEmbedCode = activeOrgSlug ? `<iframe src="${labelSubmissionUrl}" width="100%" height="800" frameborder="0" style="border: none;"></iframe>` : ''

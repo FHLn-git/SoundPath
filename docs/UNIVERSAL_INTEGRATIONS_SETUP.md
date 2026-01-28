@@ -29,6 +29,7 @@ Run these in Supabase SQL Editor (order doesn’t matter if tables already exist
 - `database/migrations/calendar-jobs.sql`
 - `database/migrations/push-subscriptions.sql`
 - `database/migrations/push-notification-jobs.sql`
+- `database/migrations/prevent-duplicate-submissions.sql`
 
 ### Post-migration sanity checks (recommended)
 
@@ -238,7 +239,7 @@ This project uses **Resend Receiving**.
    - `RESEND_WEBHOOK_SECRET`
 4. Make sure `RESEND_API_KEY` is set in Supabase secrets (it’s also used for sending).
 5. In Vercel env, set `VITE_INBOUND_EMAIL_DOMAIN` to your receiving domain (so the Portal Settings UI shows the correct routing email).
-6. Send a test email to `<org_id>@<your receiving domain>` containing a SoundCloud link.
+6. Send a test email to `<label_slug>@<your receiving domain>` containing a SoundCloud link.
 7. Confirm a new track appears and the artist/title auto-populates when SoundCloud oEmbed succeeds.
 
 ### E) Web Push

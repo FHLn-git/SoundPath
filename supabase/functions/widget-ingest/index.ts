@@ -245,6 +245,10 @@ serve(async (req) => {
   }
 
   if (trackResp.error) {
+    const msg = String(trackResp.error.message || '')
+    if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
+      return json(409, { error: 'Duplicate submission (link already submitted)' }, cors)
+    }
     return json(500, { error: `Failed to create track: ${trackResp.error.message}` }, cors)
   }
 

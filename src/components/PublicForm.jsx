@@ -232,6 +232,10 @@ const PublicForm = () => {
         .insert(trackData)
 
       if (trackError) {
+        // Friendly duplicate message (DB unique index)
+        if (trackError.code === '23505' || trackError.message?.toLowerCase().includes('duplicate')) {
+          throw new Error('This link was already submitted. Please send a different link.')
+        }
         throw new Error(`Failed to submit track: ${trackError.message}`)
       }
 
