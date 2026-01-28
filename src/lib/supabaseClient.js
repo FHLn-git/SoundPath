@@ -9,7 +9,22 @@ let supabase = null
 
 if (supabaseUrl && supabaseAnonKey && supabaseUrl.trim() !== '' && supabaseAnonKey.trim() !== '') {
   try {
-    supabase = createClient(supabaseUrl, supabaseAnonKey)
+    // AUTH STABILITY:
+    // - Explicit PKCE flow (recommended for SPAs)
+    // - Persist session in localStorage for cross-tab stability
+    // - Auto-refresh tokens without UI interruption
+    // - Detect OAuth/email link sessions in URL on initial load
+    const storage = typeof window !== 'undefined' ? window.localStorage : undefined
+
+    supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        flowType: 'pkce',
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage,
+      },
+    })
   } catch (error) {
     console.error('❌ Failed to initialize Supabase client:', error)
   }

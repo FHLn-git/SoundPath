@@ -1,6 +1,6 @@
 import React from 'react'
 import { AlertCircle, Home, RefreshCw } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -10,6 +10,15 @@ class ErrorBoundary extends React.Component {
 
   static getDerivedStateFromError(error) {
     return { hasError: true }
+  }
+
+  componentDidUpdate(prevProps) {
+    // If the route changes, automatically reset the boundary so SPA navigation
+    // can recover without forcing a full reload.
+    if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
+      // eslint-disable-next-line react/no-did-update-set-state
+      this.setState({ hasError: false, error: null, errorInfo: null })
+    }
   }
 
   componentDidCatch(error, errorInfo) {
@@ -50,13 +59,19 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+function ErrorBoundaryWithReset({ children }) {
+  // Works only inside Router; in this app we mount boundaries within Router.
+  const location = useLocation()
+  return <ErrorBoundary resetKey={location.key}>{children}</ErrorBoundary>
+}
+
 function ErrorFallback({ error, errorInfo }) {
   const navigate = useNavigate()
   const [showDetails, setShowDetails] = React.useState(false)
 
   const handleGoHome = () => {
-    navigate('/launchpad')
-    window.location.reload()
+    // Prefer SPA navigation; avoid forcing a full reload (stability).
+    navigate('/launchpad', { replace: true })
   }
 
   const handleReload = () => {
@@ -128,4 +143,4 @@ function ErrorFallback({ error, errorInfo }) {
   )
 }
 
-export default ErrorBoundary
+export default ErrorBoundaryWithReset

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from './AuthContext'
 
@@ -259,6 +259,46 @@ export const AppProvider = ({ children }) => {
         setLoading(false)
       }
   }
+
+  // Keep a ref to the latest loadTracks (avoids effect dependency churn).
+  const loadTracksRef = useRef(loadTracks)
+  useEffect(() => {
+    loadTracksRef.current = loadTracks
+  }, [loadTracks])
+
+  // Background activity: refresh data when returning to the tab.
+  // This helps "Submission counts" and other widgets stay accurate after tab switches.
+  useEffect(() => {
+    if (!supabase || !user?.id) return
+    if (typeof window === 'undefined' || typeof document === 'undefined') return
+
+    let lastRefreshAt = 0
+
+    const refresh = () => {
+      // Throttle: avoid burst refreshes during rapid focus/visibility toggles.
+      const now = Date.now()
+      if (now - lastRefreshAt < 15_000) return
+      lastRefreshAt = now
+      try {
+        loadTracksRef.current?.()
+      } catch (_e) {
+        // ignore
+      }
+    }
+
+    const onFocus = () => refresh()
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refresh()
+    }
+
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [user?.id])
 
   // Load tracks when staffProfile is available (for RLS)
   useEffect(() => {
@@ -1481,7 +1521,10 @@ updates.moved_to_second_listen = null
   }
 
   const archiveTrack = async (trackId, rejectionReason = null) => {
-    const updateData = { archived: true, column: 'archive', status: 'archive' }
+    // Artist Relations Tracker:
+    // - Use status='denied' so DB trigger logs into denials table.
+    // - Keep column='archive' to preserve UI semantics for legacy flows.
+    const updateData = { archived: true, column: 'archive', status: 'denied' }
     if (rejectionReason) {
       updateData.rejectionReason = rejectionReason
     } else {

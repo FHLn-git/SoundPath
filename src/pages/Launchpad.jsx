@@ -21,7 +21,7 @@ import AddDemoModal from '../components/AddDemoModal'
 const Launchpad = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { staffProfile, memberships, switchOrganization, clearWorkspace, activeOrgId, user, signOut, isSystemAdmin, refreshStaffProfile } = useAuth()
+  const { staffProfile, memberships, switchOrganization, clearWorkspace, activeOrgId, user, signOut, isSystemAdmin, refreshStaffProfile, loadMemberships } = useAuth()
   const { hasFeature } = useBilling()
   const { tracks, loadTracks, addTrack, GENRES } = useApp()
   const [searchQuery, setSearchQuery] = useState('')
@@ -1234,8 +1234,11 @@ const Launchpad = () => {
         type: 'success',
       })
 
-      // Reload to refresh all data
-      window.location.reload()
+      // Refresh memberships so the new label appears without a full reload (stability).
+      await loadMemberships?.(staffProfile.id)
+
+      // Launchpad is intended to be a neutral workspace selector.
+      clearWorkspace?.()
     } catch (error) {
       console.error('Error creating label:', error)
       setToast({
@@ -1291,10 +1294,11 @@ const Launchpad = () => {
         // Remove accepted invite from list
         setPendingInvites(prev => prev.filter(inv => inv.id !== invite.id))
 
-        // Reload page to refresh memberships and show the new label
-        setTimeout(() => {
-          window.location.reload()
-        }, 1000)
+        // Refresh memberships so the new label appears without a full reload (stability).
+        await loadMemberships?.(staffProfile.id)
+
+        // Keep Launchpad neutral (no active label selected).
+        clearWorkspace?.()
       } else {
         throw new Error(data?.error || 'Failed to accept invite')
       }

@@ -167,13 +167,14 @@ function AppContent() {
   }
 
   return (
-    <ErrorBoundary>
-      <Router
-        future={{
-          v7_startTransition: true,
-          v7_relativeSplatPath: true,
-        }}
-      >
+    <Router
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
+      {/* IMPORTANT: ErrorBoundary must be inside Router so its fallback can navigate safely */}
+      <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Public Routes */}
@@ -194,7 +195,9 @@ function AppContent() {
           <>
             {/* Launchpad - Universal A&R Launchpad (No Sidebar - Lobby View) */}
             <Route path="/launchpad" element={
-              <Launchpad />
+              <ErrorBoundary>
+                <Launchpad />
+              </ErrorBoundary>
             } />
             
             {/* Redirect old Personal Office routes to Dashboard */}
@@ -231,7 +234,9 @@ function AppContent() {
                 <Navigate to="/launchpad" />
               ) : (
                 <MobileLayout showBottomNav={true}>
-                  <Dashboard />
+                  <ErrorBoundary>
+                    <Dashboard />
+                  </ErrorBoundary>
                 </MobileLayout>
               )
             } />
@@ -365,25 +370,23 @@ function AppContent() {
         )}
           </Routes>
         </Suspense>
-      </Router>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </Router>
   )
 }
 
 function App() {
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <AppProvider>
-          <BillingProvider>
-            <Suspense fallback={null}>
-              <SupportWidget />
-            </Suspense>
-            <AppContent />
-          </BillingProvider>
-        </AppProvider>
-      </AuthProvider>
-    </ErrorBoundary>
+    <AuthProvider>
+      <AppProvider>
+        <BillingProvider>
+          <Suspense fallback={null}>
+            <SupportWidget />
+          </Suspense>
+          <AppContent />
+        </BillingProvider>
+      </AppProvider>
+    </AuthProvider>
   )
 }
 

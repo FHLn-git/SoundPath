@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabaseClient'
 import Toast from './Toast'
 
 const UsageWarningBanner = () => {
-  const { plan, usage, getUsagePercentage } = useBilling()
+  const { plan, usage, getUsagePercentage, refresh } = useBilling()
   const { activeOrgId, isOwner } = useAuth()
   const navigate = useNavigate()
   const [showBanner, setShowBanner] = useState(true)
@@ -122,8 +122,8 @@ const UsageWarningBanner = () => {
         type: 'success'
       })
 
-      // Refresh usage data
-      window.location.reload()
+      // Refresh billing/usage data without a full reload (stability + avoids losing state).
+      refresh?.()
     } catch (error) {
       console.error('Error erasing data:', error)
       setToast({

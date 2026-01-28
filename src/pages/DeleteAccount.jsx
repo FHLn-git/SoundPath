@@ -73,8 +73,7 @@ const DeleteAccount = () => {
 
       // Redirect to landing page
       setTimeout(() => {
-        navigate('/')
-        window.location.reload()
+        navigate('/', { replace: true })
       }, 2000)
     } catch (error) {
       console.error('Error deleting account:', error)

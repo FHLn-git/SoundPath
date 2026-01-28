@@ -9,6 +9,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useResizableColumns } from '../hooks/useResizableColumns'
 import ResizableColumnHeader from '../components/ResizableColumnHeader'
 import UpgradeOverlay from '../components/UpgradeOverlay'
+import { supabase } from '../lib/supabaseClient'
 
 const ArtistDirectory = () => {
   const { getAllArtists, moveTrack, GENRES } = useApp()
@@ -22,6 +23,8 @@ const ArtistDirectory = () => {
   const [signedOnly, setSignedOnly] = useState(false)
   const [hasAccess, setHasAccess] = useState(false)
   const [showUpgradeOverlay, setShowUpgradeOverlay] = useState(false)
+  const [relationsStats, setRelationsStats] = useState(null)
+  const [relationsLoading, setRelationsLoading] = useState(false)
   const navigate = useNavigate()
   const { columnWidths, handleResize, getGridTemplate, minWidths } = useResizableColumns('artists')
   const { columnWidths: detailColumnWidths, handleResize: handleDetailResize, getGridTemplate: getDetailGridTemplate, minWidths: detailMinWidths } = useResizableColumns('artist-detail')
@@ -64,6 +67,45 @@ const ArtistDirectory = () => {
   }, [location.state, navigate, location.pathname])
 
   const artists = getAllArtists()
+
+  // Artist Relations Tracker stats (drill-down only)
+  useEffect(() => {
+    const loadRelations = async () => {
+      if (!supabase || !selectedArtist?.name) {
+        setRelationsStats(null)
+        return
+      }
+
+      try {
+        setRelationsLoading(true)
+
+        // Label workspace: show per-label engagement + attention rate
+        if (activeOrgId) {
+          const { data, error } = await supabase.rpc('get_label_artist_relations_stats', {
+            artist_name_param: selectedArtist.name,
+            org_id_param: activeOrgId,
+          })
+          if (error) throw error
+          setRelationsStats(data?.[0] || data || null)
+          return
+        }
+
+        // Personal (Agent) view: show global stats across their pitched network
+        const { data, error } = await supabase.rpc('get_agent_artist_relations_stats', {
+          artist_name_param: selectedArtist.name,
+        })
+        if (error) throw error
+        setRelationsStats(data?.[0] || data || null)
+      } catch (e) {
+        console.error('Error loading artist relations stats:', e)
+        setRelationsStats(null)
+      } finally {
+        setRelationsLoading(false)
+      }
+    }
+
+    loadRelations()
+  }, [selectedArtist?.name, activeOrgId])
 
   // Filter and sort artists
   const filteredAndSortedArtists = useMemo(() => {
@@ -158,6 +200,46 @@ const ArtistDirectory = () => {
                   <span className="text-gray-400">Total Submitted:</span>
                   <span className="text-white font-semibold">{selectedArtist.totalSubmitted}</span>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Artist Relations Tracker (drill-down only) */}
+          <div className="mt-4">
+            <div className="text-xs uppercase tracking-wide text-gray-500 mb-2 font-semibold">
+              {activeOrgId ? 'Label Engagement' : 'Agent Network Engagement'}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-3">
+                <div className="text-gray-400 text-xs mb-1">
+                  {activeOrgId ? 'Denied by this label' : 'Denied across your network'}
+                </div>
+                <div className="text-white text-lg font-bold">
+                  {relationsLoading ? '—' : (relationsStats?.denied_count ?? 0)}
+                </div>
+              </div>
+              <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-3">
+                <div className="text-gray-400 text-xs mb-1">
+                  {activeOrgId ? 'Missed by this label' : 'Missed across your network'}
+                </div>
+                <div className="text-white text-lg font-bold">
+                  {relationsLoading ? '—' : (relationsStats?.missed_count ?? 0)}
+                </div>
+              </div>
+              <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-3">
+                <div className="text-gray-400 text-xs mb-1">
+                  {activeOrgId ? 'Label Attention Rate' : 'Attention Rate'}
+                </div>
+                <div className="text-white text-lg font-bold">
+                  {activeOrgId
+                    ? (relationsLoading ? '—' : `${relationsStats?.attention_rate ?? 0}%`)
+                    : '—'}
+                </div>
+                {activeOrgId && (
+                  <div className="text-[11px] text-gray-500 mt-1">
+                    {relationsLoading ? '' : `${relationsStats?.total_listened ?? 0} listened / ${relationsStats?.total_submitted ?? 0} submitted`}
+                  </div>
+                )}
               </div>
             </div>
           </div>
