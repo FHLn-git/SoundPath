@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS error_logs (
   error_component TEXT,
   error_url TEXT,
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  staff_member_id UUID REFERENCES staff_members(id) ON DELETE SET NULL,
+  -- staff_members.id is TEXT in this project (e.g. "staff_<uuid>_<ts>")
+  staff_member_id TEXT REFERENCES staff_members(id) ON DELETE SET NULL,
   organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
   user_agent TEXT,
   browser_info JSONB,
@@ -16,7 +17,7 @@ CREATE TABLE IF NOT EXISTS error_logs (
   severity TEXT DEFAULT 'error' CHECK (severity IN ('error', 'warning', 'info')),
   resolved BOOLEAN DEFAULT false,
   resolved_at TIMESTAMPTZ,
-  resolved_by UUID REFERENCES staff_members(id) ON DELETE SET NULL,
+  resolved_by TEXT REFERENCES staff_members(id) ON DELETE SET NULL,
   resolved_note TEXT,
   occurrence_count INTEGER DEFAULT 1, -- How many times this error occurred
   first_seen_at TIMESTAMPTZ DEFAULT NOW(),
@@ -102,7 +103,7 @@ CREATE OR REPLACE FUNCTION log_error(
   p_error_component TEXT DEFAULT NULL,
   p_error_url TEXT DEFAULT NULL,
   p_user_id UUID DEFAULT NULL,
-  p_staff_member_id UUID DEFAULT NULL,
+  p_staff_member_id TEXT DEFAULT NULL,
   p_organization_id UUID DEFAULT NULL,
   p_user_agent TEXT DEFAULT NULL,
   p_browser_info JSONB DEFAULT NULL,
@@ -167,3 +168,15 @@ BEGIN
   END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Ensure PostgREST roles can see/execute the RPCs and insert logs.
+-- Without these GRANTs, the function can exist but still appear as "not found" (PGRST202) to the client.
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT INSERT ON TABLE public.error_logs TO anon, authenticated;
+GRANT SELECT, UPDATE ON TABLE public.error_logs TO authenticated;
+
+GRANT EXECUTE ON FUNCTION public.log_error(
+  TEXT, TEXT, TEXT, TEXT, UUID, TEXT, UUID, TEXT, JSONB, JSONB, TEXT
+) TO anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION public.get_error_stats() TO authenticated;
