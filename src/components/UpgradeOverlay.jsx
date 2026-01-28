@@ -82,7 +82,7 @@ const UpgradeOverlay = ({
               disabled={showFinishUpgrading && finishUpgradingLoading}
               className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg text-white font-semibold transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {showFinishUpgrading ? (finishUpgradingLoading ? 'Redirecting…' : 'Finish Upgrading') : 'View Plans'}
+              {showFinishUpgrading ? (finishUpgradingLoading ? 'Redirecting…' : 'Finish Upgrading') : 'Secure Alpha Access'}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

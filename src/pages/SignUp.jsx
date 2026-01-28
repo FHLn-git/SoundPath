@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Zap, Mail, Lock, User, ArrowRight, Check } from 'lucide-react'
+import { Mail, Lock, User, ArrowRight, Check } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 import Toast from '../components/Toast'
 import { validateEmail } from '../lib/emailValidation'
+import { AlphaOnlyTag } from '../components/AlphaPricing'
+import SoundPathLogo from '../components/SoundPathLogo'
 
 const SignUp = () => {
   const navigate = useNavigate()
@@ -244,9 +246,13 @@ const SignUp = () => {
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.1 }}
-            className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-neon-purple to-recording-red mb-4"
+            className="mb-4 flex justify-center"
           >
-            <Zap size={32} className="text-white" />
+            <SoundPathLogo
+              collapsed
+              showAlpha={false}
+              markClassName="w-16 h-16 rounded-full border-white/[0.10]"
+            />
           </motion.div>
           <h1 className="text-4xl font-bold mb-2 text-neon-purple">
             SoundPath
@@ -443,7 +449,6 @@ const SignUp = () => {
                     const price = billingInterval === 'year' && plan.price_yearly 
                       ? plan.price_yearly 
                       : plan.price_monthly
-                    
                     return (
                       <motion.button
                         key={plan.id}
@@ -457,6 +462,7 @@ const SignUp = () => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
+                        {plan.id !== 'free' && <AlphaOnlyTag className="top-2 right-2" />}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -480,6 +486,9 @@ const SignUp = () => {
                                 </span>
                               )}
                             </div>
+                            {plan.id !== 'free' && (
+                              <div className="text-[11px] text-gray-400 mt-1">Temporary Alpha Rate</div>
+                            )}
                           </div>
                         </div>
                       </motion.button>
@@ -523,7 +532,7 @@ const SignUp = () => {
                 <>
                   <span>
                     {selectedPlanId && selectedPlanId !== 'free'
-                      ? 'Proceed to Secure Payment'
+                      ? 'Secure Alpha Access'
                       : 'Create Account'}
                   </span>
                   <ArrowRight size={18} />

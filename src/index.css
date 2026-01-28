@@ -34,6 +34,36 @@
     backdrop-filter: blur(10px);
     border: 1px solid rgba(168, 85, 247, 0.2);
   }
+
+  /* SoundPath logo: subtle neon hover pulse (brand mark only) */
+  .soundpath-mark {
+    transition: filter 220ms ease, transform 220ms ease;
+    filter: drop-shadow(0 0 0 rgba(0, 240, 255, 0));
+  }
+
+  .soundpath-logo:hover .soundpath-mark {
+    filter:
+      drop-shadow(0 0 10px rgba(0, 240, 255, 0.55))
+      drop-shadow(0 0 22px rgba(168, 85, 247, 0.22));
+    animation: soundpath-neon-pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes soundpath-neon-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.03);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .soundpath-logo:hover .soundpath-mark {
+      animation: none;
+      transform: none;
+    }
+  }
   
   .glow-green {
     box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);

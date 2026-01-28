@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { CreditCard, Check, X, AlertCircle, Loader2, Download, Calendar, DollarSign, Sparkles, Shield, Zap, Infinity, Users, BarChart3, Webhook, Key, Globe, Mail, ArrowRight, HelpCircle, Package } from 'lucide-react'
 import Toast from '../components/Toast'
 import { handleSubscriptionChange, createBillingPortalSession } from '../lib/stripeClient'
+import { AlphaOnlyTag, AlphaPricingContainer, AlphaStatusBanner } from '../components/AlphaPricing'
 
 const Billing = () => {
   const navigate = useNavigate()
@@ -389,7 +390,11 @@ const Billing = () => {
         )}
 
         {/* Available Plans - Visible to Everyone */}
-        <div className="bg-gray-900 rounded-lg p-6 mb-8 border border-gray-800">
+        <AlphaPricingContainer className="mb-8">
+          <div className="bg-gray-900 rounded-xl p-6 border border-gray-800 relative">
+            <div className="mb-6">
+              <AlphaStatusBanner className="border-amber-400/35" />
+            </div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold">Available Plans</h2>
             {/* Billing Interval Toggle */}
@@ -489,12 +494,12 @@ const Billing = () => {
 
               const colors = getPlanColors(p.id)
               const IconComponent = p.id === 'agent' ? Users : p.id === 'free' ? Zap : p.id === 'starter' ? BarChart3 : Sparkles
-
               return (
                 <div
                   key={p.id}
                   className={`relative overflow-visible rounded-xl p-6 border-2 transition-all flex flex-col bg-gradient-to-br ${colors.gradient} ${colors.border} ${p.id === 'starter' ? 'ring-2 ring-green-500/50' : ''}`}
                 >
+                  {p.id !== 'free' && <AlphaOnlyTag />}
                   {/* Most Popular Badge for Starter - 3D Effect */}
                   {p.id === 'starter' && (
                     <div 
@@ -546,6 +551,11 @@ const Billing = () => {
                         )}
                       </div>
                       <div className="h-[20px]">
+                        {p.id !== 'free' && (
+                          <div className="text-[11px] text-gray-300">
+                            <span className="text-gray-300 font-medium">Temporary Alpha Rate</span>
+                          </div>
+                        )}
                         {p.id !== 'free' && billingInterval === 'year' && p.price_yearly && (
                           <div className="text-sm text-gray-400">
                             {p.id === 'pro' ? (
@@ -694,8 +704,8 @@ const Billing = () => {
                           className={`w-full px-4 py-3 ${colors.button} rounded-lg transition-all text-white font-semibold shadow-lg ${colors.buttonShadow} flex items-center justify-center gap-2`}
                         >
                           {(() => {
-                            if (!activeOrgId) return 'Subscribe'
-                            if (!plan) return 'Subscribe'
+                            if (!activeOrgId) return 'Secure Alpha Access'
+                            if (!plan) return 'Secure Alpha Access'
                             const currentPrice = plan.price_monthly || 0
                             const newPrice = billingInterval === 'year' && p.price_yearly ? p.price_yearly / 12 : p.price_monthly
                             return newPrice > currentPrice ? 'Upgrade' : 'Downgrade'
@@ -860,7 +870,14 @@ const Billing = () => {
               </div>
             )
           })()}
+          
+          <div className="mt-6 pt-4 border-t border-gray-800">
+            <p className="text-xs text-gray-500">
+              Pricing is subject to change as SoundPath exits Alpha and introduces new features. Current users will be notified 30 days prior to any rate adjustments.
+            </p>
           </div>
+          </div>
+        </AlphaPricingContainer>
 
         {/* Payment Methods */}
         {isOwner && (

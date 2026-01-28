@@ -2,13 +2,15 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
-  Zap, Mail, Lock, ArrowRight, X, Menu, 
+  Mail, Lock, ArrowRight, X, Menu, 
   BarChart3, Users, Shield, Workflow, Clock, 
   CheckCircle2, Star, ChevronRight, Check
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 import Toast from '../components/Toast'
+import { AlphaOnlyTag, AlphaPricingContainer, AlphaStatusBanner } from '../components/AlphaPricing'
+import SoundPathLogo from '../components/SoundPathLogo'
 
 const Landing = () => {
   const [email, setEmail] = useState('')
@@ -302,10 +304,12 @@ const Landing = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-neon-purple to-recording-red rounded-lg">
-                <Zap size={20} className="text-white" />
-              </div>
-              <span className="text-xl font-bold text-white">{labelName}</span>
+              <SoundPathLogo
+                name={labelName}
+                showAlpha
+                markClassName="w-9 h-9"
+                textClassName="text-[16px]"
+              />
             </div>
 
             {/* Desktop Navigation */}
@@ -505,6 +509,9 @@ const Landing = () => {
       {/* Pricing Section */}
       <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
+          <div className="mb-10">
+            <AlphaStatusBanner />
+          </div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -512,11 +519,9 @@ const Landing = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">
-              Simple, Transparent Pricing
-            </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Choose the plan that works best for your label.
+            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">Choose Your Alpha Plan</h2>
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+              Temporary Alpha rates. Secure early access while capacity is limited.
             </p>
           </motion.div>
 
@@ -561,20 +566,19 @@ const Landing = () => {
                       ? Math.round(monthlyPrice * 12 - yearlyPrice)
                       : 0
                     const isPopular = plan.id === 'starter'
-                    
                     return (
-                      <motion.div
-                        key={plan.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: index * 0.1 }}
-                        className={`relative p-8 bg-gray-900/50 border rounded-lg flex flex-col ${
-                          isPopular
-                            ? 'border-neon-purple/50 ring-2 ring-neon-purple/20'
-                            : 'border-gray-800'
-                        }`}
-                      >
+                      <motion.div key={plan.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: index * 0.1 }}>
+                        <AlphaPricingContainer
+                          className={`p-0 ${isPopular ? 'ring-2 ring-neon-purple/15' : ''}`}
+                        >
+                          <div
+                            className={`relative p-8 bg-gray-900/50 border rounded-lg flex flex-col ${
+                              isPopular
+                                ? 'border-neon-purple/50'
+                                : 'border-gray-800'
+                            }`}
+                          >
+                            {plan.id !== 'free' && <AlphaOnlyTag />}
                         {isPopular && (
                           <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                             <span className="px-4 py-1 bg-gradient-to-r from-neon-purple to-recording-red text-white text-sm font-semibold rounded-full">
@@ -597,6 +601,11 @@ const Landing = () => {
                                 </span>
                               )}
                             </div>
+                            {plan.id !== 'free' && (
+                              <div className="text-sm text-gray-300 mt-1">
+                                <span className="text-gray-300 font-medium">Temporary Alpha Rate</span>
+                              </div>
+                            )}
                             {billingInterval === 'year' && plan.id !== 'free' && yearlyPrice > 0 && (
                               <>
                                 <div className="text-sm text-gray-500 line-through">
@@ -636,9 +645,11 @@ const Landing = () => {
                             }}
                             className="flex-1 py-3 rounded-lg font-semibold transition-all bg-gradient-to-r from-neon-purple to-recording-red text-white hover:opacity-90"
                           >
-                            Get Started
+                            {plan.id === 'free' ? 'Get Started Free' : 'Secure Alpha Access'}
                           </button>
                         </div>
+                          </div>
+                        </AlphaPricingContainer>
                       </motion.div>
                     )
                   })}
@@ -759,10 +770,12 @@ const Landing = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-gradient-to-br from-neon-purple to-recording-red rounded-lg">
-                  <Zap size={20} className="text-white" />
-                </div>
-                <span className="text-xl font-bold text-white">{labelName}</span>
+                <SoundPathLogo
+                  name={labelName}
+                  showAlpha
+                  markClassName="w-9 h-9"
+                  textClassName="text-[16px]"
+                />
               </div>
               <p className="text-gray-400 text-sm">
                 The A&R Command Center for modern labels.
@@ -875,8 +888,12 @@ const Landing = () => {
                 </button>
 
                 <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-neon-purple to-recording-red mb-4">
-                    <Zap size={32} className="text-white" />
+                  <div className="mb-4 flex justify-center">
+                    <SoundPathLogo
+                      collapsed
+                      showAlpha={false}
+                      markClassName="w-16 h-16 rounded-full border-white/[0.10]"
+                    />
                   </div>
                   <h2
                     className="text-3xl font-bold mb-2"
