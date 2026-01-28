@@ -47,7 +47,7 @@ const GlobalPulse = () => {
 
   useEffect(() => {
     if (!isSystemAdmin) {
-      navigate('/dashboard')
+      navigate('/launchpad')
       return
     }
 
@@ -120,7 +120,7 @@ const GlobalPulse = () => {
     setSelectedOrganization(orgId)
     setIsImpersonating(true)
     // Navigate to dashboard with impersonation context
-    navigate('/dashboard', { state: { impersonatingOrgId: orgId } })
+    navigate(`/labels/${orgId}`, { state: { impersonatingOrgId: orgId } })
   }
 
   if (!isSystemAdmin) {

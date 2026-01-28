@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom'
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { AppProvider, useApp } from './context/AppContext'
 import { BillingProvider } from './context/BillingContext'
@@ -8,6 +8,54 @@ import Sidebar from './components/Sidebar'
 import MobileLayout from './components/MobileLayout'
 import { Loader2 } from 'lucide-react'
 import Diagnostics from './components/Diagnostics'
+
+/** Syncs URL to activeOrganizationId: /labels/:orgId -> set org; /personal/* -> set null. */
+function WorkspaceRouteSync() {
+  const location = useLocation()
+  const { pathname } = location
+  const { switchOrganization, clearWorkspace, activeOrgId, memberships } = useAuth()
+  const lastPathRef = useRef(null)
+
+  useEffect(() => {
+    if (lastPathRef.current === pathname) return
+    lastPathRef.current = pathname
+
+    const labelsMatch = pathname.match(/^\/labels\/([^/]+)/)
+    if (labelsMatch) {
+      const orgId = labelsMatch[1]
+      const hasMembership = memberships?.some((m) => m.organization_id === orgId)
+      if (hasMembership && activeOrgId !== orgId) {
+        switchOrganization(orgId)
+      }
+      return
+    }
+
+    if (pathname.startsWith('/personal/')) {
+      if (activeOrgId !== null) {
+        clearWorkspace()
+      }
+    }
+  }, [pathname, activeOrgId, memberships, switchOrganization, clearWorkspace])
+
+  return null
+}
+
+/** Renders Dashboard for /labels/:orgId only if user has membership; otherwise redirects to launchpad. */
+function LabelDashboardGuard() {
+  const { orgId } = useParams()
+  const { memberships } = useAuth()
+  const hasMembership = memberships?.some((m) => m.organization_id === orgId)
+  if (!orgId || !hasMembership) {
+    return <Navigate to="/launchpad" replace />
+  }
+  return (
+    <MobileLayout showBottomNav={true}>
+      <ErrorBoundary>
+        <Dashboard />
+      </ErrorBoundary>
+    </MobileLayout>
+  )
+}
 
 // Lazy load pages for better performance
 const Landing = lazy(() => import('./pages/Landing'))
@@ -70,15 +118,12 @@ function AppContent() {
     if (!memberships || memberships.length === 0) {
       return '/launchpad'
     }
-    
     // Agent-Centric: If no active organization, user is in Personal view -> launchpad
-    // If activeOrgId is set, they're in a Label workspace -> dashboard
     if (activeOrgId === null) {
       return '/launchpad'
     }
-    
-    // If activeOrgId is set, they're in a Label workspace
-    return '/dashboard'
+    // If activeOrgId is set, they're in a Label workspace -> context-aware URL
+    return `/labels/${activeOrgId}`
   }, [memberships, activeOrgId])
 
   // Add timeout fallback to prevent infinite loading
@@ -175,6 +220,7 @@ function AppContent() {
     >
       {/* IMPORTANT: ErrorBoundary must be inside Router so its fallback can navigate safely */}
       <ErrorBoundary>
+        <WorkspaceRouteSync />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Public Routes */}
@@ -200,36 +246,13 @@ function AppContent() {
               </ErrorBoundary>
             } />
             
-            {/* Redirect old Personal Office routes to Dashboard */}
-            <Route path="/personal-office" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/personal-office/submitted" element={<Navigate to="/dashboard" replace />} />
+            {/* Redirect old Personal Office routes to context-aware URLs */}
+            <Route path="/personal-office" element={<Navigate to="/personal/dashboard" replace />} />
+            <Route path="/personal-office/submitted" element={<Navigate to="/personal/dashboard" replace />} />
             <Route path="/personal-office/signed" element={<Navigate to="/personal/signed" replace />} />
             
-            {/* Personal Workspace Routes */}
-            <Route path="/personal/pitched" element={
-              (!memberships || memberships.length === 0) ? (
-                <Navigate to="/launchpad" />
-              ) : activeOrgId !== null ? (
-                <Navigate to="/dashboard" />
-              ) : (
-                <MobileLayout showBottomNav={true}>
-                  <PersonalPitched />
-                </MobileLayout>
-              )
-            } />
-            <Route path="/personal/signed" element={
-              (!memberships || memberships.length === 0) ? (
-                <Navigate to="/launchpad" />
-              ) : activeOrgId !== null ? (
-                <Navigate to="/dashboard" />
-              ) : (
-                <MobileLayout showBottomNav={true}>
-                  <PersonalSigned />
-                </MobileLayout>
-              )
-            } />
-            
-            <Route path="/dashboard" element={
+            {/* Personal Workspace: /personal/dashboard (activeOrganizationId = NULL) */}
+            <Route path="/personal/dashboard" element={
               (!memberships || memberships.length === 0) ? (
                 <Navigate to="/launchpad" />
               ) : (
@@ -240,6 +263,40 @@ function AppContent() {
                 </MobileLayout>
               )
             } />
+            <Route path="/personal/pitched" element={
+              (!memberships || memberships.length === 0) ? (
+                <Navigate to="/launchpad" />
+              ) : activeOrgId !== null ? (
+                <Navigate to={`/labels/${activeOrgId}`} replace />
+              ) : (
+                <MobileLayout showBottomNav={true}>
+                  <PersonalPitched />
+                </MobileLayout>
+              )
+            } />
+            <Route path="/personal/signed" element={
+              (!memberships || memberships.length === 0) ? (
+                <Navigate to="/launchpad" />
+              ) : activeOrgId !== null ? (
+                <Navigate to={`/labels/${activeOrgId}`} replace />
+              ) : (
+                <MobileLayout showBottomNav={true}>
+                  <PersonalSigned />
+                </MobileLayout>
+              )
+            } />
+            
+            {/* Label Workspace: /labels/:orgId (activeOrganizationId from URL) */}
+            <Route path="/labels/:orgId" element={
+              (!memberships || memberships.length === 0) ? (
+                <Navigate to="/launchpad" />
+              ) : (
+                <LabelDashboardGuard />
+              )
+            } />
+            
+            {/* Removed generic /dashboard to prevent data collisions; redirect to launchpad */}
+            <Route path="/dashboard" element={<Navigate to="/launchpad" replace />} />
             <Route path="/phase/:phaseId" element={
               memberships?.length === 0 ? (
                 <Navigate to="/launchpad" />

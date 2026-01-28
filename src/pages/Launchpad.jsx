@@ -1145,8 +1145,8 @@ const Launchpad = () => {
         await loadTracks()
       }
       
-      // Navigate to dashboard - AppContext will have reloaded tracks
-      navigate('/dashboard')
+      // Navigate to label workspace (URL drives activeOrganizationId)
+      navigate(`/labels/${orgId}`)
     } catch (error) {
       console.error('Exception switching workspace:', error)
       setToast({
@@ -1884,15 +1884,10 @@ const Launchpad = () => {
                 className="bg-gradient-to-br from-purple-900/30 to-blue-900/30 rounded-lg p-3 hover:border-purple-500/60 transition-all cursor-pointer group backdrop-blur-sm h-full flex flex-col border-2 border-purple-500/40"
                 onClick={async () => {
                   // WORKSPACE CLEARANCE: Explicitly clear activeOrgId before navigating to Personal Office
-                  // This ensures the user goes to their Personal workspace, not the previous Label
                   clearWorkspace()
-                  
-                  // LOCAL STORAGE CLEANUP: Overwrite any persisted workspace state
                   localStorage.removeItem('active_org_id')
-                  
-                  // Navigate to dashboard (Personal Office redirects to /dashboard)
-                  // The Dashboard component will show Personal view since activeOrgId is now null
-                  navigate('/dashboard')
+                  // Personal Office at /personal/dashboard (URL drives activeOrgId = null)
+                  navigate('/personal/dashboard')
                 }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}

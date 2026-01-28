@@ -92,6 +92,13 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
   const isPersonalView = activeOrgId === null
   const activeOrg = memberships?.find(m => m.organization_id === activeOrgId) || null
   const dashboardLabel = isPersonalView ? 'Personal Dashboard' : (activeOrg?.organization_name || 'Dashboard')
+
+  // Workspace indicator text from URL: /labels → "[Label Name] Workspace"; /personal → "Personal Agent Office"
+  const workspaceIndicatorText = location.pathname.startsWith('/labels/')
+    ? (activeOrg ? `${activeOrg.organization_name} Workspace` : 'Label Workspace')
+    : location.pathname.startsWith('/personal')
+      ? 'Personal Agent Office'
+      : null
   
   // Check if user is on free tier for personal workspace
   useEffect(() => {
@@ -117,10 +124,9 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
   }, [staffProfile, isPersonalView, hasFeature, isSystemAdmin])
   
   // Agent-Centric Navigation: Show Personal features when activeOrgId is null, Label features when set
-  // Personal view uses /dashboard (which now shows personal inbox crates)
-  // Pitched and Signed are ALWAYS available in personal view - no access restrictions
+  // Personal dashboard at /personal/dashboard; Label dashboard at /labels/:orgId
   const personalNavItems = [
-    { path: '/dashboard', label: 'DASHBOARD', icon: LayoutDashboard },
+    { path: '/personal/dashboard', label: 'DASHBOARD', icon: LayoutDashboard },
     ...(hasArtistDirectoryAccess ? [{ path: '/artists', label: 'ARTIST DIRECTORY', icon: Users }] : []),
     { path: '/personal/pitched', label: 'PITCHED', icon: Send, isPremium: true },
     { path: '/personal/signed', label: 'SIGNED', icon: Trophy, isPremium: true },
@@ -128,7 +134,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
   ]
   
   const labelNavItems = [
-    { path: '/dashboard', label: dashboardLabel, icon: LayoutDashboard },
+    { path: activeOrgId ? `/labels/${activeOrgId}` : '/launchpad', label: dashboardLabel, icon: LayoutDashboard },
     ...(hasArtistDirectoryAccess ? [{ path: '/artists', label: 'Artist Directory', icon: Users }] : []),
     { path: '/upcoming', label: 'Upcoming', icon: Calendar, count: upcomingCount },
     { path: '/vault', label: 'The Vault', icon: Archive, count: vaultCount },
@@ -255,6 +261,19 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
               A&R Command Center
             </motion.p>
             
+            {/* Workspace Indicator: [Label Name] Workspace | Personal Agent Office */}
+            {workspaceIndicatorText && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-2 px-2 py-1.5 rounded-lg bg-gray-800/60 border border-gray-700"
+              >
+                <p className="text-xs font-semibold text-neon-purple/90 truncate" title={workspaceIndicatorText}>
+                  {workspaceIndicatorText}
+                </p>
+              </motion.div>
+            )}
+            
             {/* Name/Workspace Info */}
             {staffProfile && (
               <motion.div 
@@ -323,8 +342,9 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
       <nav className={`${collapsed ? 'p-2' : 'p-3 md:p-4'} space-y-2 overflow-y-auto flex-1`}>
         {navItems.map((item) => {
           const showProBadge = isPersonalView && item.isPremium && isFreeTier
-          const isActive = location.pathname === item.path || 
-            (item.path === '/dashboard' && location.pathname.startsWith('/dashboard'))
+          const isDashboardPath = item.path === '/personal/dashboard' || (activeOrgId && item.path === `/labels/${activeOrgId}`)
+          const isActive = location.pathname === item.path ||
+            (isDashboardPath && (location.pathname === '/personal/dashboard' || location.pathname.match(/^\/labels\/[^/]+$/)))
           
           return (
             <div
@@ -336,7 +356,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
               <NavLink
                 to={item.path}
                 onClick={handleNavClick}
-                end={item.path === '/dashboard' || item.path === '/'}
+                end={item.path === '/personal/dashboard' || item.path === '/' || (activeOrgId && item.path === `/labels/${activeOrgId}`)}
                 className={({ isActive: navIsActive }) =>
                   `flex items-center ${collapsed ? 'justify-center' : 'justify-between'} ${collapsed ? 'px-2' : 'px-3 md:px-4'} py-2.5 md:py-3 rounded-lg transition-all duration-200 relative touch-target ${
                     navIsActive || isActive

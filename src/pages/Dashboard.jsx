@@ -12,7 +12,7 @@ import UpgradeOverlay from '../components/UpgradeOverlay'
 import PremiumOverlay from '../components/PremiumOverlay'
 import CapacityOverlay from '../components/CapacityOverlay'
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 
 const Dashboard = () => {
@@ -27,29 +27,13 @@ const Dashboard = () => {
     getCompanyHealth,
     moveTrack,
   } = useApp()
-  const { isOwner, staffProfile, memberships, activeOrgId, isSystemAdmin, clearWorkspace } = useAuth()
+  const { isOwner, staffProfile, memberships, activeOrgId, isSystemAdmin } = useAuth()
   const { hasFeature } = useBilling()
   
   const activeOrg = memberships?.find(m => m.organization_id === activeOrgId) || null
   const isPersonalView = activeOrgId === null
   const dashboardTitle = isPersonalView ? 'Personal Dashboard' : (activeOrg?.organization_name || 'Dashboard')
-  const location = useLocation()
 
-  // ROUTING LOGIC AUDIT: Ensure Dashboard shows Personal view when appropriate
-  // If user navigated from Personal Office (localStorage cleared), force Personal view
-  useEffect(() => {
-    // Check if we're on /dashboard route
-    if (location.pathname === '/dashboard') {
-      const storedOrgId = localStorage.getItem('active_org_id')
-      
-      // If localStorage has no active_org_id but activeOrgId state is set,
-      // it means user navigated from Personal Office - clear the state
-      if (!storedOrgId && activeOrgId !== null && activeOrgId !== 'GLOBAL') {
-        // User came from Personal Office - ensure we show Personal view
-        clearWorkspace()
-      }
-    }
-  }, [location.pathname, activeOrgId, clearWorkspace])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [companyHealth, setCompanyHealth] = useState(null)
   const [showUpgradeOverlay, setShowUpgradeOverlay] = useState(false)

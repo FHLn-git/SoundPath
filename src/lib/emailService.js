@@ -196,7 +196,7 @@ If you didn't expect this invitation, you can safely ignore this email.
               <p><strong>Track:</strong> ${trackTitle}</p>
               <p><strong>Artist:</strong> ${artistName}</p>
             </div>
-            <a href="${window.location.origin}/dashboard" class="button">View in SoundPath</a>
+            <a href="${window.location.origin}/launchpad" class="button">View in SoundPath</a>
           </div>
         </body>
       </html>
@@ -209,7 +209,7 @@ A new track has been submitted to ${organizationName}:
 Track: ${trackTitle}
 Artist: ${artistName}
 
-View in SoundPath: ${window.location.origin}/dashboard
+View in SoundPath: ${window.location.origin}/launchpad
     `.trim(),
   }),
 

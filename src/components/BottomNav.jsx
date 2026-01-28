@@ -49,7 +49,7 @@ const BottomNav = () => {
   }
 
   const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/personal/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     ...(hasArtistDirectoryAccess ? [{ path: '/artists', label: 'Directory', icon: Users }] : []),
     { path: '/personal/pitched', label: 'Pitched', icon: Send, isPremium: true },
     { path: '/personal/signed', label: 'Signed', icon: Trophy, isPremium: true },
@@ -84,8 +84,8 @@ const BottomNav = () => {
         }}
       >
         {navItems.map((item, index) => {
-          const isActive = location.pathname === item.path || 
-            (item.path === '/dashboard' && location.pathname.startsWith('/dashboard'))
+          const isActive = location.pathname === item.path ||
+            (item.path === '/personal/dashboard' && location.pathname === '/personal/dashboard')
           const showProBadge = item.isPremium && isFreeTier
 
           return (

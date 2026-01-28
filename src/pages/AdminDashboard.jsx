@@ -41,7 +41,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (!isSystemAdmin) {
-      navigate('/dashboard')
+      navigate('/launchpad')
       return
     }
 
