@@ -190,10 +190,38 @@ async function handleCheckoutSessionCompleted(
       return
     }
 
-    // Update tier on staff_members (this is what capacity + gating uses)
+    // Personal tier purchase (signup flow):
+    // - Keep effective tier as 'pro' during trial.
+    // - Store selected tier in paid_tier, and link subscription_id for later activation.
+    const stripeSubscriptionId = session.subscription ? String(session.subscription) : null
+
+    const { data: staffRow } = await supabase
+      .from('staff_members')
+      .select('user_status, trial_ends_at')
+      .eq('auth_user_id', authUserId)
+      .maybeSingle()
+
+    const isTrialing =
+      staffRow?.user_status === 'trialing' &&
+      staffRow?.trial_ends_at &&
+      new Date(staffRow.trial_ends_at).getTime() > Date.now()
+
+    const updatePayload: any = {
+      paid_tier: tier,
+      subscription_id: stripeSubscriptionId,
+      updated_at: new Date().toISOString(),
+      ...(isTrialing
+        ? {}
+        : {
+            tier,
+            user_status: 'active',
+            trial_ends_at: null,
+          }),
+    }
+
     const { error } = await supabase
       .from('staff_members')
-      .update({ tier, updated_at: new Date().toISOString() })
+      .update(updatePayload)
       .eq('auth_user_id', authUserId)
 
     if (error) {

@@ -14,6 +14,7 @@ import Toast from '../components/Toast'
 import GlobalSettings from '../components/GlobalSettings'
 import UpgradeOverlay from '../components/UpgradeOverlay'
 import UsageWarningBanner from '../components/UsageWarningBanner'
+import TrialExpiredModal from '../components/TrialExpiredModal'
 
 const Launchpad = () => {
   const navigate = useNavigate()
@@ -42,6 +43,7 @@ const Launchpad = () => {
   const [hasPersonalInboxAccess, setHasPersonalInboxAccess] = useState(false)
   const [showUpgradeOverlay, setShowUpgradeOverlay] = useState(false)
   const [upgradeRedirecting, setUpgradeRedirecting] = useState(false)
+  const [showTrialExpiredModal, setShowTrialExpiredModal] = useState(false)
   
   // Quad-Inbox state
   const [activeCrate, setActiveCrate] = useState('submissions') // 'submissions', 'network', 'crate_a', 'crate_b'
@@ -72,6 +74,15 @@ const Launchpad = () => {
       clearWorkspace()
     }
   }, []) // Run once on mount
+
+  // Trial-expired UX: show a modal once per session after automatic downgrade
+  useEffect(() => {
+    const justExpired = sessionStorage.getItem('trial_just_expired') === '1'
+    if (justExpired) {
+      sessionStorage.removeItem('trial_just_expired')
+      setShowTrialExpiredModal(true)
+    }
+  }, [])
 
   // Post-checkout sync: if user returns with session_id, refresh tier until unlocked
   useEffect(() => {
@@ -1476,6 +1487,10 @@ const Launchpad = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col">
+      <TrialExpiredModal
+        isOpen={showTrialExpiredModal}
+        onClose={() => setShowTrialExpiredModal(false)}
+      />
       <div className="w-full px-4 sm:px-6 lg:px-10 flex-shrink-0">
         {/* Usage Warning Banner */}
         <UsageWarningBanner />

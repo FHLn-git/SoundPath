@@ -74,6 +74,28 @@ export default async function handler(req, res) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+    // Resolve trial end:
+    // - If the user already has a stored trial_ends_at in staff_members and it's in the future, honor remaining time.
+    // - Otherwise default to 7 days from now.
+    let trialEndSeconds = null
+    try {
+      const { data: staffRow } = await supabase
+        .from('staff_members')
+        .select('trial_ends_at')
+        .eq('auth_user_id', user_id)
+        .maybeSingle()
+
+      const nowMs = Date.now()
+      const existingMs = staffRow?.trial_ends_at ? new Date(staffRow.trial_ends_at).getTime() : null
+      const fallbackMs = nowMs + 7 * 24 * 60 * 60 * 1000
+      const finalMs = existingMs && existingMs > nowMs ? existingMs : fallbackMs
+
+      trialEndSeconds = Math.floor(finalMs / 1000)
+    } catch (_e) {
+      // If anything goes wrong, still provide a 7-day trial
+      trialEndSeconds = Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000)
+    }
+
     const { data: plan, error: planError } = await supabase
       .from('plans')
       .select('stripe_price_id_monthly, stripe_price_id_yearly')
@@ -130,6 +152,8 @@ export default async function handler(req, res) {
         billing_interval,
       },
       subscription_data: {
+        // Ensure Stripe handles the $0 -> paid transition automatically after the 7-day trial
+        ...(trialEndSeconds ? { trial_end: trialEndSeconds } : { trial_period_days: 7 }),
         metadata: {
           tier,
           auth_user_id: user_id,

@@ -142,6 +142,11 @@ export const AuthProvider = ({ children }) => {
                 role: 'Scout',
                 auth_user_id: authUserId,
                 organization_id: null, // NULL is allowed - organization membership via memberships table
+                // 7-day Pro trial fallback (DB trigger should normally handle this)
+                tier: 'pro',
+                user_status: 'trialing',
+                trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                paid_tier: null,
               })
               .select()
               .single()
@@ -149,6 +154,15 @@ export const AuthProvider = ({ children }) => {
             if (!createError && newStaff) {
               console.log('✅ Successfully created staff member automatically')
               setStaffProfile(newStaff)
+              // Enforce trial expiry / activation on login (best-effort)
+              try {
+                const { data: enforceData } = await supabase.rpc('enforce_personal_trial_status')
+                if (enforceData?.downgraded) {
+                  sessionStorage.setItem('trial_just_expired', '1')
+                }
+              } catch (_e) {
+                // ignore
+              }
               await loadMemberships(newStaff.id)
               setLoading(false)
               return
@@ -187,6 +201,27 @@ export const AuthProvider = ({ children }) => {
       } else {
         console.log('✅ Staff profile loaded:', data)
         setStaffProfile(data)
+        // Enforce trial expiry / activation on login (best-effort)
+        // This acts like middleware: if trial ended and no subscription_id, downgrade to free.
+        try {
+          const { data: enforceData } = await supabase.rpc('enforce_personal_trial_status')
+          if (enforceData?.downgraded) {
+            sessionStorage.setItem('trial_just_expired', '1')
+          }
+          // If enforcement changed anything, refresh the staff profile once.
+          if (enforceData?.downgraded || enforceData?.activated) {
+            const refreshed = await supabase
+              .from('staff_members')
+              .select('*')
+              .eq('auth_user_id', authUserId)
+              .single()
+            if (!refreshed?.error && refreshed?.data) {
+              setStaffProfile(refreshed.data)
+            }
+          }
+        } catch (e) {
+          console.warn('Trial enforcement check failed (non-fatal):', e?.message || e)
+        }
         // Load memberships after profile is loaded
         await loadMemberships(data.id)
       }
@@ -637,6 +672,35 @@ export const AuthProvider = ({ children }) => {
     if (!activeMembership) return false
     return activeMembership.permissions_json?.can_view_metrics ?? false
   }
+
+  // Background enforcement: if a trial expires while the app is open, downgrade/activate without requiring a full reload.
+  useEffect(() => {
+    if (!supabase || !user?.id) return
+    if (staffProfile?.user_status !== 'trialing' || !staffProfile?.trial_ends_at) return
+
+    const interval = setInterval(async () => {
+      try {
+        const { data: enforceData } = await supabase.rpc('enforce_personal_trial_status')
+        if (enforceData?.downgraded) {
+          sessionStorage.setItem('trial_just_expired', '1')
+        }
+        if (enforceData?.downgraded || enforceData?.activated) {
+          const refreshed = await supabase
+            .from('staff_members')
+            .select('*')
+            .eq('auth_user_id', user.id)
+            .single()
+          if (!refreshed?.error && refreshed?.data) {
+            setStaffProfile(refreshed.data)
+          }
+        }
+      } catch (_e) {
+        // ignore periodic failures
+      }
+    }, 5 * 60 * 1000) // every 5 minutes
+
+    return () => clearInterval(interval)
+  }, [staffProfile?.user_status, staffProfile?.trial_ends_at, user?.id])
 
   const value = {
     user,

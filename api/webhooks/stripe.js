@@ -60,18 +60,81 @@ export default async function handler(req, res) {
 
       const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+      // During the Pro trial, we keep effective tier as 'pro' and store the chosen paid tier separately.
+      // When the trial ends, Stripe will transition the subscription and we’ll update tier accordingly.
+      const { data: staffRow } = await supabase
+        .from('staff_members')
+        .select('id, tier, user_status, trial_ends_at')
+        .eq('auth_user_id', authUserId)
+        .maybeSingle()
+
+      const isTrialing =
+        staffRow?.user_status === 'trialing' &&
+        staffRow?.trial_ends_at &&
+        new Date(staffRow.trial_ends_at).getTime() > Date.now()
+
+      const updatePayload = {
+        // Store Stripe linkage
+        subscription_id: stripeSubscriptionId,
+        // Store the selected plan while trial is active
+        paid_tier: tier,
+        updated_at: new Date().toISOString(),
+        // If not currently trialing, apply tier immediately
+        ...(isTrialing
+          ? {}
+          : {
+              tier,
+              user_status: 'active',
+              trial_ends_at: null,
+            }),
+      }
+
       const { error } = await supabase
         .from('staff_members')
-        .update({
-          tier,
-          subscription_id: stripeSubscriptionId,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updatePayload)
         .eq('auth_user_id', authUserId)
 
       if (error) {
         console.error('Failed updating staff_members after checkout:', error)
         return json(res, 200, { received: true, updated: false })
+      }
+    }
+
+    // When the personal subscription transitions from trialing -> active (or is updated),
+    // apply the paid tier and clear trial state.
+    if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.created') {
+      const subscription = event.data.object
+      const meta = subscription?.metadata || {}
+      const authUserId = meta.auth_user_id
+      const tier = meta.tier
+      const flow = meta.flow
+
+      if (flow !== 'signup' || !authUserId || !tier) {
+        return json(res, 200, { received: true, ignored: true })
+      }
+      if (!['agent', 'starter', 'pro'].includes(tier)) {
+        return json(res, 200, { received: true, ignored: true })
+      }
+
+      // Only activate on active status; keep trialing users in Pro until the end.
+      if (subscription.status === 'active') {
+        const supabase = createClient(supabaseUrl, supabaseServiceKey)
+        const { error } = await supabase
+          .from('staff_members')
+          .update({
+            tier,
+            paid_tier: tier,
+            subscription_id: subscription.id,
+            user_status: 'active',
+            trial_ends_at: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('auth_user_id', authUserId)
+
+        if (error) {
+          console.error('Failed applying paid tier after subscription activation:', error)
+          return json(res, 200, { received: true, updated: false })
+        }
       }
     }
 

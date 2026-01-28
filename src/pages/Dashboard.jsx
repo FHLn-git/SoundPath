@@ -9,6 +9,7 @@ import GapAlert from '../components/GapAlert'
 import StaffingAlert from '../components/StaffingAlert'
 import UpgradeOverlay from '../components/UpgradeOverlay'
 import PremiumOverlay from '../components/PremiumOverlay'
+import CapacityOverlay from '../components/CapacityOverlay'
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
@@ -54,6 +55,8 @@ const Dashboard = () => {
   const [toast, setToast] = useState({ isVisible: false, message: '', type: 'success' })
   const [isFreeTier, setIsFreeTier] = useState(false)
   const [hasNetworkAccess, setHasNetworkAccess] = useState(false)
+  const [personalCapacityLock, setPersonalCapacityLock] = useState(false)
+  const [personalCapacityCheck, setPersonalCapacityCheck] = useState(null)
   const navigate = useNavigate()
   
   // Personal inbox crate state (like Launchpad)
@@ -196,6 +199,33 @@ const Dashboard = () => {
     }
   }, [staffProfile, isPersonalView])
 
+  // Capacity lock (data retention): if user is Free and over the limit, lock UI until upgrade or deletions.
+  useEffect(() => {
+    const checkCapacityLock = async () => {
+      if (!supabase || !staffProfile || !isPersonalView) return
+      try {
+        const { data, error } = await supabase.rpc('check_track_capacity', {
+          user_id_param: staffProfile.id,
+          org_id_param: null,
+        })
+        if (error) throw error
+
+        const current = data?.current_count ?? 0
+        const max = data?.max_count ?? 0
+        const tier = data?.tier || 'free'
+
+        // Only hard-lock if they are *over* the free limit (not merely at it)
+        const overCapacity = tier === 'free' && max > 0 && current > max
+        setPersonalCapacityCheck(data || null)
+        setPersonalCapacityLock(overCapacity)
+      } catch (e) {
+        console.error('Error checking personal capacity lock:', e)
+      }
+    }
+
+    checkCapacityLock()
+  }, [staffProfile?.id, isPersonalView])
+
   // Load company health for owners (label view only)
   useEffect(() => {
     if (isOwner && getCompanyHealth && !isPersonalView) {
@@ -273,7 +303,18 @@ const Dashboard = () => {
 
   // EXACT SAME DASHBOARD FOR BOTH PERSONAL AND LABEL VIEW
   return (
-    <div className="flex flex-col bg-gray-950">
+    <div className="flex flex-col bg-gray-950 relative">
+      {/* Capacity lock overlay (Free tier over-limit) */}
+      {isPersonalView && personalCapacityLock && personalCapacityCheck && (
+        <CapacityOverlay
+          isOpen={true}
+          onClose={() => {}}
+          currentCount={personalCapacityCheck.current_count || 0}
+          maxCount={personalCapacityCheck.max_count || 0}
+          tier={personalCapacityCheck.tier || 'free'}
+          featureName="tracks"
+        />
+      )}
       {/* Header */}
       <div className="p-3 border-b border-gray-800 bg-gray-950/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="flex items-center justify-between">
@@ -282,8 +323,9 @@ const Dashboard = () => {
             type="button"
             onClick={(e) => {
               e.preventDefault()
-              setIsModalOpen(true)
+              if (!personalCapacityLock) setIsModalOpen(true)
             }}
+            disabled={personalCapacityLock}
             className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg flex items-center gap-2 transition-all duration-200 text-white"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

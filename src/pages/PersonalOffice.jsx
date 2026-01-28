@@ -26,6 +26,7 @@ const PersonalOffice = () => {
   // Capacity check state
   const [capacityCheck, setCapacityCheck] = useState(null)
   const [showCapacityOverlay, setShowCapacityOverlay] = useState(false)
+  const [capacityLock, setCapacityLock] = useState(false)
   const [promoteCapacityCheck, setPromoteCapacityCheck] = useState(null)
   const [showPromoteCapacityOverlay, setShowPromoteCapacityOverlay] = useState(false)
   
@@ -136,6 +137,37 @@ const PersonalOffice = () => {
 
     loadPersonalTracks()
   }, [staffProfile, hasPersonalInboxAccess, activeOrgId])
+
+  // Capacity lock (data retention): if user is Free and over the limit, lock UI until upgrade or deletions.
+  useEffect(() => {
+    const checkCapacityLock = async () => {
+      if (!supabase || !staffProfile || activeOrgId !== null) return
+      try {
+        const { data, error } = await supabase.rpc('check_track_capacity', {
+          user_id_param: staffProfile.id,
+          org_id_param: null,
+        })
+        if (error) throw error
+
+        const current = data?.current_count ?? 0
+        const max = data?.max_count ?? 0
+        const tier = data?.tier || 'free'
+        const overCapacity = tier === 'free' && max > 0 && current > max
+
+        if (overCapacity) {
+          setCapacityCheck(data)
+          setCapacityLock(true)
+          setShowCapacityOverlay(true)
+        } else {
+          setCapacityLock(false)
+        }
+      } catch (e) {
+        console.error('Error checking personal capacity lock:', e)
+      }
+    }
+
+    checkCapacityLock()
+  }, [staffProfile?.id, activeOrgId])
 
   // Get current crate tracks
   const currentCrateTracks = useMemo(() => {
@@ -409,13 +441,24 @@ const PersonalOffice = () => {
   }
 
   return (
-    <div className="flex flex-col bg-[#0B0E14] min-h-screen">
+    <div className="flex flex-col bg-[#0B0E14] min-h-screen relative">
       <UpgradeOverlay
         isOpen={showUpgradeOverlay}
         onClose={() => setShowUpgradeOverlay(false)}
         featureName="Personal Inbox"
         planName="Agent"
       />
+      {/* Capacity lock overlay (Free tier over-limit) */}
+      {capacityLock && capacityCheck && (
+        <CapacityOverlay
+          isOpen={true}
+          onClose={() => {}}
+          currentCount={capacityCheck.current_count || 0}
+          maxCount={capacityCheck.max_count || 0}
+          tier={capacityCheck.tier || 'free'}
+          featureName="tracks"
+        />
+      )}
       {/* Header */}
       <div className="p-3 border-b border-gray-800 bg-[#0B0E14]/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="flex items-center justify-between">
@@ -425,11 +468,13 @@ const PersonalOffice = () => {
               type="button"
               onClick={async (e) => {
                 e.preventDefault()
+                if (capacityLock) return
                 const canAdd = await checkCapacityBeforeAdd()
                 if (canAdd) {
                   setIsModalOpen(true)
                 }
               }}
+              disabled={capacityLock}
               className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg flex items-center gap-2 transition-all duration-200 text-white relative"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -437,10 +482,12 @@ const PersonalOffice = () => {
               <Plus size={18} />
               Add Demo
             </motion.button>
-            {showCapacityOverlay && capacityCheck && (
+            {showCapacityOverlay && capacityCheck && !capacityLock && (
               <CapacityOverlay
                 isOpen={showCapacityOverlay}
-                onClose={() => setShowCapacityOverlay(false)}
+                onClose={() => {
+                  if (!capacityLock) setShowCapacityOverlay(false)
+                }}
                 currentCount={capacityCheck.current_count || 0}
                 maxCount={capacityCheck.max_count || 0}
                 tier={capacityCheck.tier || 'free'}

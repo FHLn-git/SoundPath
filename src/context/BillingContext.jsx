@@ -134,6 +134,12 @@ export const BillingProvider = ({ children }) => {
     if (userIsSystemAdmin) {
       return true
     }
+
+    // TRIAL RULES (Pulse Guard):
+    // During the 7-day Pro trial, keep Global Trend Reports locked.
+    if (staffProfile?.user_status === 'trialing' && featureKey === 'global_trend_reports') {
+      return false
+    }
     
     // For personal features (like personal_inbox), activeOrgId can be null
     // In that case, we check the free plan or user's personal subscription
@@ -143,6 +149,12 @@ export const BillingProvider = ({ children }) => {
     if (!activeOrgId && (featureKey === 'personal_inbox' || featureKey === 'network')) {
       try {
         const tierPlanId = staffProfile?.tier || 'free'
+
+        // Personal sampler access: any non-free tier (agent/starter/pro) can access personal inbox + network.
+        // This is intentionally tier-based (not feature-flag based) to avoid misconfigured plan JSON blocking access.
+        if ((featureKey === 'personal_inbox' || featureKey === 'network') && tierPlanId !== 'free') {
+          return true
+        }
 
         // Prefer already-loaded plans
         const planRow = plans?.find(p => p.id === tierPlanId)

@@ -222,6 +222,26 @@ serve(async (req) => {
         (Deno.env.get('SITE_URL') || Deno.env.get('VITE_SITE_URL') || req.headers.get('origin') || 'https://soundpath.app')
           .replace(/\/+$/, '')
 
+      // Resolve trial end:
+      // - If the user already has a stored trial_ends_at and it's in the future, honor remaining time.
+      // - Otherwise default to 7 days from now.
+      let trialEndSeconds: number | null = null
+      try {
+        const { data: staffRow } = await supabase
+          .from('staff_members')
+          .select('trial_ends_at')
+          .eq('auth_user_id', user_id)
+          .maybeSingle()
+
+        const nowMs = Date.now()
+        const existingMs = staffRow?.trial_ends_at ? new Date(staffRow.trial_ends_at as string).getTime() : null
+        const fallbackMs = nowMs + 7 * 24 * 60 * 60 * 1000
+        const finalMs = existingMs && existingMs > nowMs ? existingMs : fallbackMs
+        trialEndSeconds = Math.floor(finalMs / 1000)
+      } catch (_e) {
+        trialEndSeconds = Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000)
+      }
+
       const session = await stripe.checkout.sessions.create({
         customer: stripeCustomerId,
         payment_method_types: ['card'],
@@ -235,6 +255,8 @@ serve(async (req) => {
         mode: 'subscription',
         // Store tier + user linkage for webhook
         subscription_data: {
+          // Ensure Stripe handles the $0 -> paid transition automatically after the 7-day trial
+          ...(trialEndSeconds ? { trial_end: trialEndSeconds } : { trial_period_days: 7 }),
           metadata: {
             auth_user_id: user_id,
             tier: tier,
