@@ -103,7 +103,8 @@ jobs:
   deploy-staging:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop'
+    # Disabled: Vercel handles staging deploys via native Git integration
+    if: false
     
     steps:
     - uses: actions/checkout@v3
@@ -120,7 +121,8 @@ jobs:
   deploy-production:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    # Disabled: Vercel handles production deploys via native Git integration
+    if: false
     
     steps:
     - uses: actions/checkout@v3
