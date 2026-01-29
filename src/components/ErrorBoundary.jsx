@@ -16,7 +16,6 @@ class ErrorBoundary extends React.Component {
     // If the route changes, automatically reset the boundary so SPA navigation
     // can recover without forcing a full reload.
     if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
-      // eslint-disable-next-line react/no-did-update-set-state
       this.setState({ hasError: false, error: null, errorInfo: null })
     }
   }
