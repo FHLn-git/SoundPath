@@ -1,9 +1,30 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { 
-  Shield, TrendingUp, Activity, Zap, Users, LogOut, Settings, 
-  Eye, ArrowRight, Building2, BarChart3, DollarSign, Clock, Gauge, Lock, Copy, Check, Link as LinkIcon, Music, X, AlertTriangle, Download, Trash2
+import {
+  Shield,
+  TrendingUp,
+  Activity,
+  Zap,
+  Users,
+  LogOut,
+  Settings,
+  Eye,
+  ArrowRight,
+  Building2,
+  BarChart3,
+  DollarSign,
+  Clock,
+  Gauge,
+  Lock,
+  Copy,
+  Check,
+  Link as LinkIcon,
+  Music,
+  X,
+  AlertTriangle,
+  Download,
+  Trash2,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
@@ -17,21 +38,35 @@ import { supabase } from '../lib/supabaseClient'
 
 const StaffAdmin = () => {
   const navigate = useNavigate()
-  const { 
-    getStaffActivity, 
-    getStaffMetrics, 
+  const {
+    getStaffActivity,
+    getStaffMetrics,
     getCognitiveLoad,
     getCompanyHealth,
     getAllStaffMetrics,
     getOrganizationSettings,
     updateOrganizationSettings,
-    currentStaff, 
+    currentStaff,
     tracks,
     getWatchedTracks,
   } = useApp()
-  const { staffProfile, signOut, updateStaffProfile, isOwner, isManager, isScout, canViewMetrics, activeOrgId, memberships, activeMembership, switchOrganization, loadMemberships, isSystemAdmin } = useAuth()
+  const {
+    staffProfile,
+    signOut,
+    updateStaffProfile,
+    isOwner,
+    isManager,
+    isScout,
+    canViewMetrics,
+    activeOrgId,
+    memberships,
+    activeMembership,
+    switchOrganization,
+    loadMemberships,
+    isSystemAdmin,
+  } = useAuth()
   const { plan } = useBilling()
-  
+
   // Ensure system admin check is reliable
   const userIsSystemAdmin = isSystemAdmin || staffProfile?.role === 'SystemAdmin'
   const [showSettings, setShowSettings] = useState(false)
@@ -46,7 +81,15 @@ const StaffAdmin = () => {
   const [companyHealth, setCompanyHealth] = useState(null)
   const [allStaffMetrics, setAllStaffMetrics] = useState([])
   const [orgSettings, setOrgSettings] = useState({ require_rejection_reason: true })
-  const [orgBranding, setOrgBranding] = useState({ submission_genres: ['Tech House', 'Deep House', 'Classic House', 'Piano House', 'Progressive House'] })
+  const [orgBranding, setOrgBranding] = useState({
+    submission_genres: [
+      'Tech House',
+      'Deep House',
+      'Classic House',
+      'Piano House',
+      'Progressive House',
+    ],
+  })
   const [isUpdatingSettings, setIsUpdatingSettings] = useState(false)
   const [activeOrgSlug, setActiveOrgSlug] = useState('')
   const [copied, setCopied] = useState(false)
@@ -66,7 +109,8 @@ const StaffAdmin = () => {
   const [isSavingNotifPrefs, setIsSavingNotifPrefs] = useState(false)
   const [oauthConnections, setOauthConnections] = useState({ google: null, microsoft: null })
   const [isConnectingProvider, setIsConnectingProvider] = useState(null)
-  const { columnWidths, handleResize, getGridTemplate, minWidths } = useResizableColumns('profile-tracks')
+  const { columnWidths, handleResize, getGridTemplate, minWidths } =
+    useResizableColumns('profile-tracks')
 
   const widgetIngestUrl = useMemo(() => {
     const base = import.meta.env.VITE_SUPABASE_URL
@@ -76,7 +120,7 @@ const StaffAdmin = () => {
     return u.toString()
   }, [activeOrgSlug])
 
-  const normalizeDomain = (value) => {
+  const normalizeDomain = value => {
     const v = (value || '').trim().toLowerCase()
     if (!v) return ''
     try {
@@ -96,48 +140,48 @@ const StaffAdmin = () => {
       "  var root = document.getElementById('soundpath-submission-widget');",
       '  if (!root) return;',
       '  root.innerHTML = (',
-      "    '<form id=\"spw\" style=\"max-width:560px;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto;\">' +",
-      "    '<div style=\"display:grid;gap:10px;padding:14px;border:1px solid rgba(0,0,0,.12);border-radius:12px;\">' +",
-      "      '<div style=\"font-weight:700;font-size:16px;\">Submit Demo</div>' +",
-      "      '<input name=\"artist_name\" required placeholder=\"Artist name\" style=\"padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);\" />' +",
-      "      '<input name=\"email\" type=\"email\" placeholder=\"Email (optional)\" style=\"padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);\" />' +",
-      "      '<input name=\"track_title\" required placeholder=\"Track title\" style=\"padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);\" />' +",
-      "      '<input name=\"stream_link\" required placeholder=\"SoundCloud / Dropbox link\" style=\"padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);\" />' +",
-      "      '<input name=\"genre\" placeholder=\"Genre (optional)\" style=\"padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);\" />' +",
-      "      '<input name=\"bpm\" type=\"number\" min=\"1\" max=\"300\" placeholder=\"BPM (optional)\" style=\"padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);\" />' +",
-      "      '<textarea name=\"note\" placeholder=\"Note (optional)\" rows=\"3\" style=\"padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);resize:vertical;\"></textarea>' +",
-      "      '<button type=\"submit\" style=\"padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);background:#111;color:#fff;font-weight:700;cursor:pointer;\">Send</button>' +",
-      "      '<div id=\"spw-msg\" style=\"font-size:12px;opacity:.8;\"></div>' +",
+      '    \'<form id="spw" style="max-width:560px;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto;">\' +',
+      '    \'<div style="display:grid;gap:10px;padding:14px;border:1px solid rgba(0,0,0,.12);border-radius:12px;">\' +',
+      '      \'<div style="font-weight:700;font-size:16px;">Submit Demo</div>\' +',
+      '      \'<input name="artist_name" required placeholder="Artist name" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);" />\' +',
+      '      \'<input name="email" type="email" placeholder="Email (optional)" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);" />\' +',
+      '      \'<input name="track_title" required placeholder="Track title" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);" />\' +',
+      '      \'<input name="stream_link" required placeholder="SoundCloud / Dropbox link" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);" />\' +',
+      '      \'<input name="genre" placeholder="Genre (optional)" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);" />\' +',
+      '      \'<input name="bpm" type="number" min="1" max="300" placeholder="BPM (optional)" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);" />\' +',
+      '      \'<textarea name="note" placeholder="Note (optional)" rows="3" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);resize:vertical;"></textarea>\' +',
+      '      \'<button type="submit" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.18);background:#111;color:#fff;font-weight:700;cursor:pointer;">Send</button>\' +',
+      '      \'<div id="spw-msg" style="font-size:12px;opacity:.8;"></div>\' +',
       "    '</div>' +",
       "    '</form>'",
       '  );',
       "  var form = document.getElementById('spw');",
       "  var msg = document.getElementById('spw-msg');",
-      '  form.addEventListener(\'submit\', async function(e){',
+      "  form.addEventListener('submit', async function(e){",
       '    e.preventDefault();',
-      '    msg.textContent = \'Sending...\';',
+      "    msg.textContent = 'Sending...';",
       '    var fd = new FormData(form);',
       '    var body = {',
-      '      artist_name: String(fd.get(\'artist_name\') || \'\').trim(),',
-      '      email: String(fd.get(\'email\') || \'\').trim(),',
-      '      track_title: String(fd.get(\'track_title\') || \'\').trim(),',
-      '      stream_link: String(fd.get(\'stream_link\') || \'\').trim(),',
-      '      genre: String(fd.get(\'genre\') || \'\').trim(),',
-      '      bpm: fd.get(\'bpm\') ? Number(fd.get(\'bpm\')) : undefined,',
-      '      note: String(fd.get(\'note\') || \'\').trim(),',
+      "      artist_name: String(fd.get('artist_name') || '').trim(),",
+      "      email: String(fd.get('email') || '').trim(),",
+      "      track_title: String(fd.get('track_title') || '').trim(),",
+      "      stream_link: String(fd.get('stream_link') || '').trim(),",
+      "      genre: String(fd.get('genre') || '').trim(),",
+      "      bpm: fd.get('bpm') ? Number(fd.get('bpm')) : undefined,",
+      "      note: String(fd.get('note') || '').trim(),",
       '    };',
       '    try {',
       "      var res = await fetch('" + widgetIngestUrl.replace(/'/g, "\\'") + "', {",
-      '        method: \'POST\',',
-      '        headers: { \'Content-Type\': \'application/json\' },',
+      "        method: 'POST',",
+      "        headers: { 'Content-Type': 'application/json' },",
       '        body: JSON.stringify(body),',
       '      });',
       '      var data = await res.json().catch(function(){ return null; });',
-      '      if (!res.ok) throw new Error((data && data.error) || (\'Request failed: \' + res.status));',
-      '      msg.textContent = \'Received. Thank you.\';',
+      "      if (!res.ok) throw new Error((data && data.error) || ('Request failed: ' + res.status));",
+      "      msg.textContent = 'Received. Thank you.';",
       '      form.reset();',
       '    } catch (err) {',
-      '      msg.textContent = \'Error: \' + (err && err.message ? err.message : \'Failed\');',
+      "      msg.textContent = 'Error: ' + (err && err.message ? err.message : 'Failed');",
       '    }',
       '  });',
       '})();',
@@ -155,7 +199,7 @@ const StaffAdmin = () => {
         setShowUpgradeOverlay(false)
         return
       }
-      
+
       // For non-system admins, check plan tier
       // IMPORTANT: If plan is null (loading), default to allowing access to avoid blocking paid users
       // Only explicitly restrict if plan.id === 'free'
@@ -209,38 +253,48 @@ const StaffAdmin = () => {
   useEffect(() => {
     const loadOrgData = async () => {
       if (!activeOrgId || !supabase) return
-      
+
       try {
         // Load organization settings (for all users, not just owners, so rejection reason setting is visible)
         if (getOrganizationSettings) {
           const settings = await getOrganizationSettings()
           setOrgSettings(settings)
         }
-        
+
         // Load organization data (slug, branding) - all users need slug for submission portal visibility
         const { data, error } = await supabase
           .from('organizations')
           .select('slug, branding_settings, allowed_domains')
           .eq('id', activeOrgId)
           .single()
-        
+
         if (!error && data) {
           // Set slug for submission portal
           setActiveOrgSlug(data.slug || '')
           setAllowedDomains(Array.isArray(data.allowed_domains) ? data.allowed_domains : [])
-          
+
           // Load branding settings (including genres) - only for owners
           if (isOwner) {
             const branding = data.branding_settings || {}
             // Ensure submission_genres exists, use default if not
-            if (!branding.submission_genres || !Array.isArray(branding.submission_genres) || branding.submission_genres.length === 0) {
-              branding.submission_genres = ['Tech House', 'Deep House', 'Classic House', 'Piano House', 'Progressive House']
+            if (
+              !branding.submission_genres ||
+              !Array.isArray(branding.submission_genres) ||
+              branding.submission_genres.length === 0
+            ) {
+              branding.submission_genres = [
+                'Tech House',
+                'Deep House',
+                'Classic House',
+                'Piano House',
+                'Progressive House',
+              ]
               // Save default genres if they don't exist
               const { error: updateError } = await supabase
                 .from('organizations')
                 .update({ branding_settings: branding })
                 .eq('id', activeOrgId)
-              
+
               if (updateError) {
                 console.error('Error saving default genres:', updateError)
               }
@@ -257,7 +311,7 @@ const StaffAdmin = () => {
 
               if (!commError) {
                 const next = { slack: '', discord: '', telegram: '', whatsapp: '' }
-                ;(commData || []).forEach((row) => {
+                ;(commData || []).forEach(row => {
                   if (row?.active === false) return
                   if (row?.platform && row?.url) next[row.platform] = row.url
                 })
@@ -269,9 +323,12 @@ const StaffAdmin = () => {
 
             // Load org notification preferences (default high-frequency alerts off)
             try {
-              const { data: prefsData, error: prefsError } = await supabase.rpc('get_org_notification_preferences', {
-                org_id: activeOrgId,
-              })
+              const { data: prefsData, error: prefsError } = await supabase.rpc(
+                'get_org_notification_preferences',
+                {
+                  org_id: activeOrgId,
+                }
+              )
               if (!prefsError && prefsData) {
                 const enabled = prefsData?.comm?.new_submission === true
                 setCommNewSubmissionEnabled(enabled)
@@ -290,7 +347,7 @@ const StaffAdmin = () => {
                 .eq('organization_id', activeOrgId)
               if (!connError) {
                 const next = { google: null, microsoft: null }
-                ;(connData || []).forEach((row) => {
+                ;(connData || []).forEach(row => {
                   if (!row?.provider) return
                   next[row.provider] = row
                 })
@@ -307,18 +364,22 @@ const StaffAdmin = () => {
         console.error('Error loading organization data:', err)
       }
     }
-    
+
     loadOrgData()
   }, [isOwner, activeOrgId, getOrganizationSettings])
 
   // Get submission URLs
-  const labelSubmissionUrl = activeOrgSlug ? `${window.location.origin}/submit/label/${activeOrgSlug}` : ''
+  const labelSubmissionUrl = activeOrgSlug
+    ? `${window.location.origin}/submit/label/${activeOrgSlug}`
+    : ''
   const inboundDomain = import.meta.env.VITE_INBOUND_EMAIL_DOMAIN || 'inbox.soundpath.app'
   const routingKey = activeOrgSlug || activeOrgId
   const routingEmail = routingKey ? `${routingKey}@${inboundDomain}` : ''
 
   // Embed code for label
-  const labelEmbedCode = activeOrgSlug ? `<iframe src="${labelSubmissionUrl}" width="100%" height="800" frameborder="0" style="border: none;"></iframe>` : ''
+  const labelEmbedCode = activeOrgSlug
+    ? `<iframe src="${labelSubmissionUrl}" width="100%" height="800" frameborder="0" style="border: none;"></iframe>`
+    : ''
 
   // Show OAuth callback results (and clean URL)
   useEffect(() => {
@@ -353,7 +414,7 @@ const StaffAdmin = () => {
         .eq('organization_id', activeOrgId)
         .then(({ data }) => {
           const next = { google: null, microsoft: null }
-          ;(data || []).forEach((row) => {
+          ;(data || []).forEach(row => {
             if (!row?.provider) return
             next[row.provider] = row
           })
@@ -365,7 +426,6 @@ const StaffAdmin = () => {
       setIsConnectingProvider(null)
     }
   }, [activeOrgId, isOwner])
-
 
   const handleCopyEmbed = (code, type) => {
     navigator.clipboard.writeText(code).then(() => {
@@ -402,19 +462,16 @@ const StaffAdmin = () => {
     setNewAllowedDomain('')
   }
 
-  const handleRemoveAllowedDomain = (domainToRemove) => {
+  const handleRemoveAllowedDomain = domainToRemove => {
     const normalizedRemove = normalizeDomain(domainToRemove)
-    setAllowedDomains((allowedDomains || []).filter((d) => normalizeDomain(d) !== normalizedRemove))
+    setAllowedDomains((allowedDomains || []).filter(d => normalizeDomain(d) !== normalizedRemove))
   }
 
   const handleSavePortalSettings = async () => {
     if (!supabase || !activeOrgId || !isOwner) return
     setIsSavingPortal(true)
     try {
-      const normalized = (allowedDomains || [])
-        .map(normalizeDomain)
-        .filter(Boolean)
-        .slice(0, 50) // safety cap
+      const normalized = (allowedDomains || []).map(normalizeDomain).filter(Boolean).slice(0, 50) // safety cap
 
       const { error } = await supabase
         .from('organizations')
@@ -449,17 +506,15 @@ const StaffAdmin = () => {
       for (const platform of platforms) {
         const url = (commWebhookUrls?.[platform] || '').trim()
         if (url) {
-          const { error } = await supabase
-            .from('communication_webhooks')
-            .upsert(
-              {
-                organization_id: activeOrgId,
-                platform,
-                url,
-                active: true,
-              },
-              { onConflict: 'organization_id,platform' }
-            )
+          const { error } = await supabase.from('communication_webhooks').upsert(
+            {
+              organization_id: activeOrgId,
+              platform,
+              url,
+              active: true,
+            },
+            { onConflict: 'organization_id,platform' }
+          )
           if (error) throw error
         } else {
           // Remove if cleared
@@ -521,7 +576,7 @@ const StaffAdmin = () => {
     }
   }
 
-  const handleConnectProvider = async (provider) => {
+  const handleConnectProvider = async provider => {
     if (!supabase || !activeOrgId || !isOwner) return
     setIsConnectingProvider(provider)
     try {
@@ -557,7 +612,7 @@ const StaffAdmin = () => {
     }
   }
 
-  const handleDisconnectProvider = async (provider) => {
+  const handleDisconnectProvider = async provider => {
     if (!supabase || !activeOrgId || !isOwner) return
     try {
       const { error } = await supabase
@@ -575,17 +630,18 @@ const StaffAdmin = () => {
     }
   }
 
-  const handleToggleRejectionReason = async (newValue) => {
+  const handleToggleRejectionReason = async newValue => {
     if (!isOwner || !updateOrganizationSettings) return
 
     setIsUpdatingSettings(true)
     const { error } = await updateOrganizationSettings({ require_rejection_reason: newValue })
-    
+
     if (error) {
       if (error.code === 'SCHEMA_MIGRATION_REQUIRED') {
         setToast({
           isVisible: true,
-          message: 'Database migration required. Please run add-rejection-reason-setting.sql in Supabase SQL Editor.',
+          message:
+            'Database migration required. Please run add-rejection-reason-setting.sql in Supabase SQL Editor.',
           type: 'error',
         })
       } else {
@@ -621,10 +677,12 @@ const StaffAdmin = () => {
   const watchedTracks = getWatchedTracks()
 
   // Get tracks this staff member advanced (moved from one phase to another)
-  const advancedTracks = tracks.filter(t => {
-    // This is a simplified check - in a real system you'd track who advanced each track
-    return t.column !== 'inbox' && t.column !== 'vault' && !t.archived
-  }).slice(0, 20) // Limit to 20 for performance
+  const advancedTracks = tracks
+    .filter(t => {
+      // This is a simplified check - in a real system you'd track who advanced each track
+      return t.column !== 'inbox' && t.column !== 'vault' && !t.archived
+    })
+    .slice(0, 20) // Limit to 20 for performance
 
   const handleLogout = async () => {
     const { error } = await signOut()
@@ -679,7 +737,8 @@ const StaffAdmin = () => {
             <div className="text-center max-w-md">
               <h2 className="text-2xl font-bold text-white mb-4">Manager Tools</h2>
               <p className="text-gray-400 mb-6">
-                Manager tools are available on Agent tier and above. Upgrade to unlock staff management, analytics, and team collaboration features.
+                Manager tools are available on Agent tier and above. Upgrade to unlock staff
+                management, analytics, and team collaboration features.
               </p>
               <button
                 onClick={() => navigate('/billing')}
@@ -705,7 +764,7 @@ const StaffAdmin = () => {
 
     try {
       const { data, error } = await supabase.rpc('leave_label', {
-        organization_id_param: activeOrgId
+        organization_id_param: activeOrgId,
       })
 
       if (error) throw error
@@ -742,7 +801,7 @@ const StaffAdmin = () => {
         hasSupabase: !!supabase,
         activeOrgId,
         hasStaffProfile: !!staffProfile,
-        isOwner
+        isOwner,
       })
       return
     }
@@ -750,7 +809,7 @@ const StaffAdmin = () => {
     console.log('Starting label deletion:', {
       organizationId: activeOrgId,
       staffProfileId: staffProfile.id,
-      isOwner
+      isOwner,
     })
 
     // Verify all confirmations are complete
@@ -775,10 +834,13 @@ const StaffAdmin = () => {
 
     try {
       // Step 1: Archive metrics before deletion
-      const { data: archiveData, error: archiveError } = await supabase.rpc('archive_organization_metrics', {
-        p_organization_id: activeOrgId,
-        p_deleted_by: staffProfile.id
-      })
+      const { data: archiveData, error: archiveError } = await supabase.rpc(
+        'archive_organization_metrics',
+        {
+          p_organization_id: activeOrgId,
+          p_deleted_by: staffProfile.id,
+        }
+      )
 
       if (archiveError) {
         console.error('Error archiving metrics:', archiveError)
@@ -794,10 +856,7 @@ const StaffAdmin = () => {
 
       // Step 2: Delete the organization (this will cascade delete related data due to ON DELETE CASCADE)
       // Note: We don't use .select() here because RLS may block SELECT after DELETE
-      const { error } = await supabase
-        .from('organizations')
-        .delete()
-        .eq('id', activeOrgId)
+      const { error } = await supabase.from('organizations').delete().eq('id', activeOrgId)
 
       if (error) {
         console.error('Delete organization error:', error)
@@ -805,11 +864,17 @@ const StaffAdmin = () => {
           code: error.code,
           message: error.message,
           details: error.details,
-          hint: error.hint
+          hint: error.hint,
         })
         // Provide more specific error messages
-        if (error.code === '42501' || error.message?.includes('permission denied') || error.message?.includes('policy')) {
-          throw new Error('Permission denied: You do not have permission to delete this organization. Make sure you are the owner and the DELETE policy is configured correctly. Run fix-organization-delete-rls.sql in Supabase SQL Editor.')
+        if (
+          error.code === '42501' ||
+          error.message?.includes('permission denied') ||
+          error.message?.includes('policy')
+        ) {
+          throw new Error(
+            'Permission denied: You do not have permission to delete this organization. Make sure you are the owner and the DELETE policy is configured correctly. Run fix-organization-delete-rls.sql in Supabase SQL Editor.'
+          )
         }
         throw new Error(`Deletion failed: ${error.message || 'Unknown error'}`)
       }
@@ -817,19 +882,22 @@ const StaffAdmin = () => {
       // Step 3: Verify deletion succeeded by checking if organization still exists
       // Wait a moment for the deletion to complete
       await new Promise(resolve => setTimeout(resolve, 100))
-      
+
       const { data: verifyOrg, error: verifyError } = await supabase
         .from('organizations')
         .select('id')
         .eq('id', activeOrgId)
         .maybeSingle()
-      
-      if (verifyError && verifyError.code !== 'PGRST116') { // PGRST116 = not found, which is what we want
+
+      if (verifyError && verifyError.code !== 'PGRST116') {
+        // PGRST116 = not found, which is what we want
         console.warn('Verify deletion check error (non-critical):', verifyError)
       }
-      
+
       if (verifyOrg) {
-        throw new Error('Deletion failed: Organization still exists. The DELETE policy may not be working correctly. Please verify the policy exists and you are the owner.')
+        throw new Error(
+          'Deletion failed: Organization still exists. The DELETE policy may not be working correctly. Please verify the policy exists and you are the owner.'
+        )
       }
 
       setToast({
@@ -846,12 +914,12 @@ const StaffAdmin = () => {
 
       // Switch to personal view (null org)
       await switchOrganization(null)
-      
+
       // Reload memberships to immediately remove deleted label from launchpad
       if (staffProfile && loadMemberships) {
         await loadMemberships(staffProfile.id)
       }
-      
+
       // Navigate to launchpad to see updated list
       navigate('/launchpad')
     } catch (error) {
@@ -868,23 +936,33 @@ const StaffAdmin = () => {
     }
   }
 
-  const getStatusColor = (status) => {
+  const getStatusColor = status => {
     switch (status) {
-      case 'Optimal': return 'text-green-400'
-      case 'Sleeping': return 'text-blue-400'
-      case 'Warning': return 'text-yellow-400'
-      case 'Fatigued': return 'text-orange-400'
-      default: return 'text-gray-400'
+      case 'Optimal':
+        return 'text-green-400'
+      case 'Sleeping':
+        return 'text-blue-400'
+      case 'Warning':
+        return 'text-yellow-400'
+      case 'Fatigued':
+        return 'text-orange-400'
+      default:
+        return 'text-gray-400'
     }
   }
 
-  const getStatusBgColor = (status) => {
+  const getStatusBgColor = status => {
     switch (status) {
-      case 'Optimal': return 'bg-green-500/20 border-green-500/50'
-      case 'Sleeping': return 'bg-blue-500/20 border-blue-500/50'
-      case 'Warning': return 'bg-yellow-500/20 border-yellow-500/50'
-      case 'Fatigued': return 'bg-orange-500/20 border-orange-500/50'
-      default: return 'bg-gray-500/20 border-gray-500/50'
+      case 'Optimal':
+        return 'bg-green-500/20 border-green-500/50'
+      case 'Sleeping':
+        return 'bg-blue-500/20 border-blue-500/50'
+      case 'Warning':
+        return 'bg-yellow-500/20 border-yellow-500/50'
+      case 'Fatigued':
+        return 'bg-orange-500/20 border-orange-500/50'
+      default:
+        return 'bg-gray-500/20 border-gray-500/50'
     }
   }
 
@@ -952,7 +1030,7 @@ const StaffAdmin = () => {
                     settingsTab === 'portal'
                       ? 'bg-gray-800/60 border-neon-purple/40 text-white'
                       : 'bg-gray-900/30 border-gray-800 text-gray-300 hover:bg-gray-900/60'
-                  } ${(!isOwner || !activeOrgId) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  } ${!isOwner || !activeOrgId ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   Portal Settings
                 </button>
@@ -964,7 +1042,7 @@ const StaffAdmin = () => {
                     settingsTab === 'genres'
                       ? 'bg-gray-800/60 border-neon-purple/40 text-white'
                       : 'bg-gray-900/30 border-gray-800 text-gray-300 hover:bg-gray-900/60'
-                  } ${(!isOwner || !activeOrgId) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  } ${!isOwner || !activeOrgId ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   Submission Settings
                 </button>
@@ -976,7 +1054,7 @@ const StaffAdmin = () => {
                     settingsTab === 'compliance'
                       ? 'bg-gray-800/60 border-neon-purple/40 text-white'
                       : 'bg-gray-900/30 border-gray-800 text-gray-300 hover:bg-gray-900/60'
-                  } ${(!isOwner || !activeOrgId) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  } ${!isOwner || !activeOrgId ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   Compliance
                 </button>
@@ -988,7 +1066,7 @@ const StaffAdmin = () => {
                     settingsTab === 'integrations'
                       ? 'bg-gray-800/60 border-neon-purple/40 text-white'
                       : 'bg-gray-900/30 border-gray-800 text-gray-300 hover:bg-gray-900/60'
-                  } ${(!isOwner || !activeOrgId) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  } ${!isOwner || !activeOrgId ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   Integrations
                 </button>
@@ -1013,12 +1091,16 @@ const StaffAdmin = () => {
                     Portal Settings
                   </h4>
                   <p className="text-gray-400 text-sm mb-4">
-                    Generate an embed widget and enforce domain allowlisting for secure website ingest.
+                    Generate an embed widget and enforce domain allowlisting for secure website
+                    ingest.
                   </p>
 
                   {!activeOrgSlug ? (
                     <div className="p-4 bg-gray-900/40 rounded-lg border border-gray-800">
-                      <p className="text-gray-400 text-sm">Label slug not configured. Portal settings will be available once slug is set.</p>
+                      <p className="text-gray-400 text-sm">
+                        Label slug not configured. Portal settings will be available once slug is
+                        set.
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -1108,25 +1190,28 @@ const StaffAdmin = () => {
                         </div>
 
                         <p className="text-xs text-gray-500 mt-3">
-                          JS widget submissions hit your Inbox via an allowlisted-origin ingest endpoint.
+                          JS widget submissions hit your Inbox via an allowlisted-origin ingest
+                          endpoint.
                         </p>
                       </div>
 
                       <div className="p-4 bg-gray-900/30 rounded-lg border border-gray-800">
                         <h5 className="text-sm font-bold text-white mb-2">Domain Whitelisting</h5>
                         <p className="text-gray-400 text-sm mb-3">
-                          Only these hostnames can submit via the widget. Use <span className="font-mono text-gray-300">example.com</span> or
-                          wildcard suffixes like <span className="font-mono text-gray-300">.example.com</span>.
+                          Only these hostnames can submit via the widget. Use{' '}
+                          <span className="font-mono text-gray-300">example.com</span> or wildcard
+                          suffixes like{' '}
+                          <span className="font-mono text-gray-300">.example.com</span>.
                         </p>
 
                         <div className="flex gap-2 mb-3">
                           <input
                             type="text"
                             value={newAllowedDomain}
-                            onChange={(e) => setNewAllowedDomain(e.target.value)}
+                            onChange={e => setNewAllowedDomain(e.target.value)}
                             placeholder="yourlabel.com"
                             className="flex-1 px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple font-mono text-sm"
-                            onKeyDown={(e) => {
+                            onKeyDown={e => {
                               if (e.key === 'Enter') {
                                 e.preventDefault()
                                 handleAddAllowedDomain()
@@ -1147,11 +1232,12 @@ const StaffAdmin = () => {
 
                         {(allowedDomains || []).length === 0 ? (
                           <p className="text-gray-500 text-sm mb-3">
-                            No domains allowlisted. Widget ingest will be blocked until you add at least one domain.
+                            No domains allowlisted. Widget ingest will be blocked until you add at
+                            least one domain.
                           </p>
                         ) : (
                           <div className="flex flex-wrap gap-2 mb-4">
-                            {(allowedDomains || []).map((d) => (
+                            {(allowedDomains || []).map(d => (
                               <div
                                 key={d}
                                 className="px-3 py-1.5 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 text-sm flex items-center gap-2 font-mono"
@@ -1183,14 +1269,20 @@ const StaffAdmin = () => {
                       </div>
 
                       <div className="p-4 bg-gray-900/30 rounded-lg border border-gray-800">
-                        <h5 className="text-sm font-bold text-white mb-2">Communication Webhooks</h5>
+                        <h5 className="text-sm font-bold text-white mb-2">
+                          Communication Webhooks
+                        </h5>
                         <p className="text-gray-400 text-sm mb-4">
-                          Paste incoming webhook URLs to receive a <span className="text-gray-200 font-semibold">New Submission</span> ping when a track lands in your Inbox.
+                          Paste incoming webhook URLs to receive a{' '}
+                          <span className="text-gray-200 font-semibold">New Submission</span> ping
+                          when a track lands in your Inbox.
                         </p>
 
                         <div className="flex items-center justify-between gap-4 p-3 bg-gray-900/40 border border-gray-800 rounded-lg mb-4">
                           <div className="min-w-0">
-                            <p className="text-white font-semibold text-sm">Enable New Submission pings</p>
+                            <p className="text-white font-semibold text-sm">
+                              Enable New Submission pings
+                            </p>
                             <p className="text-gray-500 text-xs">
                               Default is off to keep high-frequency alerts quiet.
                             </p>
@@ -1225,41 +1317,57 @@ const StaffAdmin = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                           <div>
-                            <label className="block text-xs font-semibold text-gray-400 mb-1">Slack</label>
+                            <label className="block text-xs font-semibold text-gray-400 mb-1">
+                              Slack
+                            </label>
                             <input
                               type="url"
                               value={commWebhookUrls.slack}
-                              onChange={(e) => setCommWebhookUrls({ ...commWebhookUrls, slack: e.target.value })}
+                              onChange={e =>
+                                setCommWebhookUrls({ ...commWebhookUrls, slack: e.target.value })
+                              }
                               placeholder="https://hooks.slack.com/services/..."
                               className="w-full px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple font-mono text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-gray-400 mb-1">Discord</label>
+                            <label className="block text-xs font-semibold text-gray-400 mb-1">
+                              Discord
+                            </label>
                             <input
                               type="url"
                               value={commWebhookUrls.discord}
-                              onChange={(e) => setCommWebhookUrls({ ...commWebhookUrls, discord: e.target.value })}
+                              onChange={e =>
+                                setCommWebhookUrls({ ...commWebhookUrls, discord: e.target.value })
+                              }
                               placeholder="https://discord.com/api/webhooks/..."
                               className="w-full px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple font-mono text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-gray-400 mb-1">Telegram (custom endpoint)</label>
+                            <label className="block text-xs font-semibold text-gray-400 mb-1">
+                              Telegram (custom endpoint)
+                            </label>
                             <input
                               type="url"
                               value={commWebhookUrls.telegram}
-                              onChange={(e) => setCommWebhookUrls({ ...commWebhookUrls, telegram: e.target.value })}
+                              onChange={e =>
+                                setCommWebhookUrls({ ...commWebhookUrls, telegram: e.target.value })
+                              }
                               placeholder="https://your-telegram-bridge.example.com/..."
                               className="w-full px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple font-mono text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-gray-400 mb-1">WhatsApp (custom endpoint)</label>
+                            <label className="block text-xs font-semibold text-gray-400 mb-1">
+                              WhatsApp (custom endpoint)
+                            </label>
                             <input
                               type="url"
                               value={commWebhookUrls.whatsapp}
-                              onChange={(e) => setCommWebhookUrls({ ...commWebhookUrls, whatsapp: e.target.value })}
+                              onChange={e =>
+                                setCommWebhookUrls({ ...commWebhookUrls, whatsapp: e.target.value })
+                              }
                               placeholder="https://your-whatsapp-bridge.example.com/..."
                               className="w-full px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple font-mono text-sm"
                             />
@@ -1292,81 +1400,97 @@ const StaffAdmin = () => {
                   <p className="text-gray-400 text-sm mb-4">
                     Control which genres artists can select when submitting demos to your label.
                   </p>
-                  
+
                   {/* Current Genres */}
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Available Genres</label>
-                    {(!orgBranding.submission_genres || orgBranding.submission_genres.length === 0) ? (
-                      <p className="text-gray-500 text-sm mb-3">No genres configured. Add your first genre below.</p>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Available Genres
+                    </label>
+                    {!orgBranding.submission_genres ||
+                    orgBranding.submission_genres.length === 0 ? (
+                      <p className="text-gray-500 text-sm mb-3">
+                        No genres configured. Add your first genre below.
+                      </p>
                     ) : (
                       <div className="flex flex-wrap gap-2 mb-3">
                         {orgBranding.submission_genres.map((genre, index) => (
-                        <div
-                          key={index}
-                          className="px-3 py-1.5 bg-gray-800/50 border border-neon-purple/50 rounded-lg text-gray-300 text-sm flex items-center gap-2"
-                        >
-                          <span>{genre}</span>
-                          <button
-                            onClick={async () => {
-                              const updatedGenres = orgBranding.submission_genres.filter((_, i) => i !== index)
-                              const updatedBranding = { ...orgBranding, submission_genres: updatedGenres }
-                              setOrgBranding(updatedBranding)
-                              
-                              // Update in database
-                              if (supabase && activeOrgId) {
-                                const { error } = await supabase
-                                  .from('organizations')
-                                  .update({ branding_settings: updatedBranding })
-                                  .eq('id', activeOrgId)
-                                
-                                if (error) {
-                                  console.error('Error updating genres:', error)
-                                  setToast({
-                                    isVisible: true,
-                                    message: 'Error updating genres',
-                                    type: 'error',
-                                  })
-                                  // Revert on error
-                                  setOrgBranding(orgBranding)
-                                } else {
-                                  setToast({
-                                    isVisible: true,
-                                    message: 'Genres updated',
-                                    type: 'success',
-                                  })
-                                }
-                              }
-                            }}
-                            className="text-red-400 hover:text-red-300"
+                          <div
+                            key={index}
+                            className="px-3 py-1.5 bg-gray-800/50 border border-neon-purple/50 rounded-lg text-gray-300 text-sm flex items-center gap-2"
                           >
-                            ×
-                          </button>
-                        </div>
+                            <span>{genre}</span>
+                            <button
+                              onClick={async () => {
+                                const updatedGenres = orgBranding.submission_genres.filter(
+                                  (_, i) => i !== index
+                                )
+                                const updatedBranding = {
+                                  ...orgBranding,
+                                  submission_genres: updatedGenres,
+                                }
+                                setOrgBranding(updatedBranding)
+
+                                // Update in database
+                                if (supabase && activeOrgId) {
+                                  const { error } = await supabase
+                                    .from('organizations')
+                                    .update({ branding_settings: updatedBranding })
+                                    .eq('id', activeOrgId)
+
+                                  if (error) {
+                                    console.error('Error updating genres:', error)
+                                    setToast({
+                                      isVisible: true,
+                                      message: 'Error updating genres',
+                                      type: 'error',
+                                    })
+                                    // Revert on error
+                                    setOrgBranding(orgBranding)
+                                  } else {
+                                    setToast({
+                                      isVisible: true,
+                                      message: 'Genres updated',
+                                      type: 'success',
+                                    })
+                                  }
+                                }
+                              }}
+                              className="text-red-400 hover:text-red-300"
+                            >
+                              ×
+                            </button>
+                          </div>
                         ))}
                       </div>
                     )}
-                    
+
                     {/* Add New Genre */}
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={newGenre}
-                        onChange={(e) => setNewGenre(e.target.value)}
-                        onKeyPress={async (e) => {
+                        onChange={e => setNewGenre(e.target.value)}
+                        onKeyPress={async e => {
                           if (e.key === 'Enter' && newGenre.trim()) {
                             e.preventDefault()
-                            const updatedGenres = [...(orgBranding.submission_genres || []), newGenre.trim()]
-                            const updatedBranding = { ...orgBranding, submission_genres: updatedGenres }
+                            const updatedGenres = [
+                              ...(orgBranding.submission_genres || []),
+                              newGenre.trim(),
+                            ]
+                            const updatedBranding = {
+                              ...orgBranding,
+                              submission_genres: updatedGenres,
+                            }
                             setOrgBranding(updatedBranding)
                             setNewGenre('')
-                            
+
                             // Update in database
                             if (supabase && activeOrgId) {
                               const { error } = await supabase
                                 .from('organizations')
                                 .update({ branding_settings: updatedBranding })
                                 .eq('id', activeOrgId)
-                              
+
                               if (error) {
                                 console.error('Error updating genres:', error)
                                 setToast({
@@ -1392,18 +1516,24 @@ const StaffAdmin = () => {
                       <motion.button
                         onClick={async () => {
                           if (!newGenre.trim()) return
-                          const updatedGenres = [...(orgBranding.submission_genres || []), newGenre.trim()]
-                          const updatedBranding = { ...orgBranding, submission_genres: updatedGenres }
+                          const updatedGenres = [
+                            ...(orgBranding.submission_genres || []),
+                            newGenre.trim(),
+                          ]
+                          const updatedBranding = {
+                            ...orgBranding,
+                            submission_genres: updatedGenres,
+                          }
                           setOrgBranding(updatedBranding)
                           setNewGenre('')
-                          
+
                           // Update in database
                           if (supabase && activeOrgId) {
                             const { error } = await supabase
                               .from('organizations')
                               .update({ branding_settings: updatedBranding })
                               .eq('id', activeOrgId)
-                            
+
                             if (error) {
                               console.error('Error updating genres:', error)
                               setToast({
@@ -1442,7 +1572,8 @@ const StaffAdmin = () => {
                     Productivity Suite
                   </h4>
                   <p className="text-gray-400 text-sm mb-4">
-                    Connect Google or Microsoft 365 with least-privilege Calendar scopes. Tokens are encrypted before storage.
+                    Connect Google or Microsoft 365 with least-privilege Calendar scopes. Tokens are
+                    encrypted before storage.
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1460,7 +1591,9 @@ const StaffAdmin = () => {
                         )}
                       </div>
                       {oauthConnections.google?.account_email && (
-                        <p className="text-xs text-gray-400 mb-3 font-mono">{oauthConnections.google.account_email}</p>
+                        <p className="text-xs text-gray-400 mb-3 font-mono">
+                          {oauthConnections.google.account_email}
+                        </p>
                       )}
                       <div className="flex gap-2">
                         {!oauthConnections.google ? (
@@ -1502,7 +1635,9 @@ const StaffAdmin = () => {
                         )}
                       </div>
                       {oauthConnections.microsoft?.account_email && (
-                        <p className="text-xs text-gray-400 mb-3 font-mono">{oauthConnections.microsoft.account_email}</p>
+                        <p className="text-xs text-gray-400 mb-3 font-mono">
+                          {oauthConnections.microsoft.account_email}
+                        </p>
                       )}
                       <div className="flex gap-2">
                         {!oauthConnections.microsoft ? (
@@ -1514,7 +1649,9 @@ const StaffAdmin = () => {
                             whileHover={isConnectingProvider === 'microsoft' ? {} : { scale: 1.01 }}
                             whileTap={isConnectingProvider === 'microsoft' ? {} : { scale: 0.99 }}
                           >
-                            {isConnectingProvider === 'microsoft' ? 'Connecting…' : 'Connect Microsoft'}
+                            {isConnectingProvider === 'microsoft'
+                              ? 'Connecting…'
+                              : 'Connect Microsoft'}
                           </motion.button>
                         ) : (
                           <motion.button
@@ -1534,8 +1671,13 @@ const StaffAdmin = () => {
                   <div className="mt-4 p-3 bg-gray-900/40 rounded-lg border border-gray-800">
                     <p className="text-xs text-gray-400">
                       Calendar automation is queued when tracks change:
-                      <span className="font-mono text-gray-300"> Follow Up → +2 day reminder</span>, and
-                      <span className="font-mono text-gray-300"> Signed + Release Date → master calendar</span>.
+                      <span className="font-mono text-gray-300"> Follow Up → +2 day reminder</span>,
+                      and
+                      <span className="font-mono text-gray-300">
+                        {' '}
+                        Signed + Release Date → master calendar
+                      </span>
+                      .
                     </p>
                   </div>
                 </div>
@@ -1550,18 +1692,21 @@ const StaffAdmin = () => {
                   </h4>
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <p className="text-white font-semibold mb-1">Require Staff Rejection Reasons</p>
+                      <p className="text-white font-semibold mb-1">
+                        Require Staff Rejection Reasons
+                      </p>
                       <p className="text-gray-400 text-sm">
-                        When enabled, staff must provide a reason (minimum 5 characters) when rejecting tracks.
+                        When enabled, staff must provide a reason (minimum 5 characters) when
+                        rejecting tracks.
                       </p>
                     </div>
                     <motion.button
-                      onClick={() => handleToggleRejectionReason(!orgSettings.require_rejection_reason)}
+                      onClick={() =>
+                        handleToggleRejectionReason(!orgSettings.require_rejection_reason)
+                      }
                       disabled={isUpdatingSettings}
                       className={`relative w-14 h-8 rounded-full transition-colors ${
-                        orgSettings.require_rejection_reason
-                          ? 'bg-green-500'
-                          : 'bg-gray-600'
+                        orgSettings.require_rejection_reason ? 'bg-green-500' : 'bg-gray-600'
                       } ${isUpdatingSettings ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                       whileHover={!isUpdatingSettings ? { scale: 1.05 } : {}}
                       whileTap={!isUpdatingSettings ? { scale: 0.95 } : {}}
@@ -1594,15 +1739,16 @@ const StaffAdmin = () => {
                       <Download size={18} className="text-blue-400" />
                       <div className="flex-1">
                         <p className="font-semibold text-white">Export My Data</p>
-                        <p className="text-xs text-gray-400">Download a copy of all your personal data</p>
+                        <p className="text-xs text-gray-400">
+                          Download a copy of all your personal data
+                        </p>
                       </div>
                     </motion.a>
                   </div>
                 </div>
               )}
-
             </div>
-            
+
             {/* Delete Label Button (Owners) / Leave Label Button (Non-Owners) - Bottom Right Corner */}
             {activeOrgId !== null && activeMembership && (
               <div className="absolute bottom-4 right-4">
@@ -1661,13 +1807,13 @@ const StaffAdmin = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className={`bg-gray-900 border-2 rounded-lg p-6 max-w-md w-full ${
-                leaveLabelStep === 1 
-                  ? 'border-yellow-500/50' 
+                leaveLabelStep === 1
+                  ? 'border-yellow-500/50'
                   : leaveLabelStep === 2
-                  ? 'border-orange-500/50'
-                  : 'border-red-500/50'
+                    ? 'border-orange-500/50'
+                    : 'border-red-500/50'
               }`}
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               {isOwner ? (
                 // Owner: Delete Label Flow - 3 Steps
@@ -1692,8 +1838,11 @@ const StaffAdmin = () => {
                       </button>
                     </div>
                     <p className="text-gray-300 mb-6">
-                      Are you sure you want to permanently delete <span className="font-semibold text-white">{activeMembership?.organization_name}</span>? 
-                      This will delete the entire label and all its data.
+                      Are you sure you want to permanently delete{' '}
+                      <span className="font-semibold text-white">
+                        {activeMembership?.organization_name}
+                      </span>
+                      ? This will delete the entire label and all its data.
                     </p>
                     <div className="flex gap-3">
                       <motion.button
@@ -1740,10 +1889,15 @@ const StaffAdmin = () => {
                       </button>
                     </div>
                     <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
-                      <p className="text-red-400 font-semibold mb-2">⚠️ This action cannot be undone</p>
+                      <p className="text-red-400 font-semibold mb-2">
+                        ⚠️ This action cannot be undone
+                      </p>
                       <p className="text-gray-300 text-sm mb-4">
-                        You are about to permanently delete <span className="font-semibold text-white">{activeMembership?.organization_name}</span>. 
-                        This will immediately delete:
+                        You are about to permanently delete{' '}
+                        <span className="font-semibold text-white">
+                          {activeMembership?.organization_name}
+                        </span>
+                        . This will immediately delete:
                       </p>
                       <ul className="text-gray-400 text-sm mt-2 ml-4 list-disc space-y-1">
                         <li>All label tracks and submissions</li>
@@ -1754,7 +1908,10 @@ const StaffAdmin = () => {
                         <li>All label-specific features and configurations</li>
                       </ul>
                       <p className="text-gray-300 text-sm mt-3">
-                        <strong className="text-red-400">All team members will lose access immediately.</strong> This cannot be reversed.
+                        <strong className="text-red-400">
+                          All team members will lose access immediately.
+                        </strong>{' '}
+                        This cannot be reversed.
                       </p>
                     </div>
                     <div className="mb-6">
@@ -1767,10 +1924,10 @@ const StaffAdmin = () => {
                           min="0"
                           max="100"
                           value={sliderValue}
-                          onChange={(e) => setSliderValue(parseInt(e.target.value))}
+                          onChange={e => setSliderValue(parseInt(e.target.value))}
                           className="w-full h-3 bg-gray-800 rounded-lg appearance-none cursor-pointer slider"
                           style={{
-                            background: `linear-gradient(to right, #ef4444 0%, #ef4444 ${sliderValue}%, #374151 ${sliderValue}%, #374151 100%)`
+                            background: `linear-gradient(to right, #ef4444 0%, #ef4444 ${sliderValue}%, #374151 ${sliderValue}%, #374151 100%)`,
                           }}
                         />
                         <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -1833,10 +1990,15 @@ const StaffAdmin = () => {
                       </button>
                     </div>
                     <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
-                      <p className="text-red-400 font-semibold mb-2">⚠️ Final Step - This action cannot be undone</p>
+                      <p className="text-red-400 font-semibold mb-2">
+                        ⚠️ Final Step - This action cannot be undone
+                      </p>
                       <p className="text-gray-300 text-sm mb-4">
-                        To confirm deletion of <span className="font-semibold text-white">{activeMembership?.organization_name}</span>, 
-                        please type the following exactly:
+                        To confirm deletion of{' '}
+                        <span className="font-semibold text-white">
+                          {activeMembership?.organization_name}
+                        </span>
+                        , please type the following exactly:
                       </p>
                       <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-3 mb-4">
                         <p className="text-white font-mono text-sm">
@@ -1846,14 +2008,17 @@ const StaffAdmin = () => {
                       <input
                         type="text"
                         value={deleteConfirmText}
-                        onChange={(e) => setDeleteConfirmText(e.target.value)}
+                        onChange={e => setDeleteConfirmText(e.target.value)}
                         placeholder="Type the confirmation text above..."
                         className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
-                      {deleteConfirmText && deleteConfirmText !== 'I want to delete my record label and all of its information.' && (
-                        <p className="text-red-400 text-xs mt-2">Text does not match exactly</p>
-                      )}
-                      {deleteConfirmText === 'I want to delete my record label and all of its information.' && (
+                      {deleteConfirmText &&
+                        deleteConfirmText !==
+                          'I want to delete my record label and all of its information.' && (
+                          <p className="text-red-400 text-xs mt-2">Text does not match exactly</p>
+                        )}
+                      {deleteConfirmText ===
+                        'I want to delete my record label and all of its information.' && (
                         <p className="text-green-400 text-xs mt-2 flex items-center gap-1">
                           <Check size={12} />
                           Confirmation text matches
@@ -1863,10 +2028,23 @@ const StaffAdmin = () => {
                     <div className="flex gap-3">
                       <motion.button
                         onClick={handleDeleteLabel}
-                        disabled={deleteConfirmText !== 'I want to delete my record label and all of its information.'}
+                        disabled={
+                          deleteConfirmText !==
+                          'I want to delete my record label and all of its information.'
+                        }
                         className="flex-1 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg text-red-400 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                        whileHover={deleteConfirmText === 'I want to delete my record label and all of its information.' ? { scale: 1.02 } : {}}
-                        whileTap={deleteConfirmText === 'I want to delete my record label and all of its information.' ? { scale: 0.98 } : {}}
+                        whileHover={
+                          deleteConfirmText ===
+                          'I want to delete my record label and all of its information.'
+                            ? { scale: 1.02 }
+                            : {}
+                        }
+                        whileTap={
+                          deleteConfirmText ===
+                          'I want to delete my record label and all of its information.'
+                            ? { scale: 0.98 }
+                            : {}
+                        }
                       >
                         Yes, Delete Label
                       </motion.button>
@@ -1884,17 +2062,16 @@ const StaffAdmin = () => {
                     </div>
                   </>
                 )
-              ) : (
-                // Non-Owner: Leave Label Flow
-                leaveLabelStep === 1 ? (
-                  // First Confirmation - Warning
-                  <>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <AlertTriangle className="text-yellow-500" size={24} />
-                        <h3 className="text-xl font-bold text-white">Leave Label?</h3>
-                      </div>
-                      <button
+              ) : // Non-Owner: Leave Label Flow
+              leaveLabelStep === 1 ? (
+                // First Confirmation - Warning
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle className="text-yellow-500" size={24} />
+                      <h3 className="text-xl font-bold text-white">Leave Label?</h3>
+                    </div>
+                    <button
                       onClick={() => {
                         setShowLeaveLabelModal(false)
                         setLeaveLabelStep(1)
@@ -1907,8 +2084,12 @@ const StaffAdmin = () => {
                     </button>
                   </div>
                   <p className="text-gray-300 mb-6">
-                    Are you sure you want to leave <span className="font-semibold text-white">{activeMembership?.organization_name}</span>? 
-                    You will lose access to this label's workspace, but you can rejoin if invited again.
+                    Are you sure you want to leave{' '}
+                    <span className="font-semibold text-white">
+                      {activeMembership?.organization_name}
+                    </span>
+                    ? You will lose access to this label's workspace, but you can rejoin if invited
+                    again.
                   </p>
                   <div className="flex gap-3">
                     <motion.button
@@ -1955,10 +2136,15 @@ const StaffAdmin = () => {
                     </button>
                   </div>
                   <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
-                    <p className="text-red-400 font-semibold mb-2">⚠️ This action cannot be undone</p>
+                    <p className="text-red-400 font-semibold mb-2">
+                      ⚠️ This action cannot be undone
+                    </p>
                     <p className="text-gray-300 text-sm">
-                      You are about to permanently leave <span className="font-semibold text-white">{activeMembership?.organization_name}</span>. 
-                      You will immediately lose access to:
+                      You are about to permanently leave{' '}
+                      <span className="font-semibold text-white">
+                        {activeMembership?.organization_name}
+                      </span>
+                      . You will immediately lose access to:
                     </p>
                     <ul className="text-gray-400 text-sm mt-2 ml-4 list-disc">
                       <li>All label tracks and submissions</li>
@@ -1991,7 +2177,6 @@ const StaffAdmin = () => {
                     </motion.button>
                   </div>
                 </>
-              )
               )}
             </motion.div>
           </motion.div>
@@ -2017,43 +2202,50 @@ const StaffAdmin = () => {
                       ? companyHealth.companyHealthScore >= 70
                         ? 'border-green-500/50'
                         : companyHealth.companyHealthScore >= 50
-                        ? 'border-yellow-500/50'
-                        : 'border-red-500/50'
+                          ? 'border-yellow-500/50'
+                          : 'border-red-500/50'
                       : 'border-gray-800'
                   }`}
                 >
                   <div className="flex items-center gap-3 mb-4">
-                    <div className={`p-3 rounded-lg ${
-                      companyHealth?.companyHealthScore !== undefined
-                        ? companyHealth.companyHealthScore >= 70
-                          ? 'bg-green-500/20'
-                          : companyHealth.companyHealthScore >= 50
-                          ? 'bg-yellow-500/20'
-                          : 'bg-red-500/20'
-                        : 'bg-blue-500/20'
-                    }`}>
-                      <BarChart3 size={24} className={
+                    <div
+                      className={`p-3 rounded-lg ${
                         companyHealth?.companyHealthScore !== undefined
                           ? companyHealth.companyHealthScore >= 70
-                            ? 'text-green-400'
+                            ? 'bg-green-500/20'
                             : companyHealth.companyHealthScore >= 50
-                            ? 'text-yellow-400'
-                            : 'text-red-400'
-                          : 'text-blue-400'
-                      } />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400">Company Health Score</p>
-                      {canViewMetrics() ? (
-                        <p className={`text-2xl font-bold ${
+                              ? 'bg-yellow-500/20'
+                              : 'bg-red-500/20'
+                          : 'bg-blue-500/20'
+                      }`}
+                    >
+                      <BarChart3
+                        size={24}
+                        className={
                           companyHealth?.companyHealthScore !== undefined
                             ? companyHealth.companyHealthScore >= 70
                               ? 'text-green-400'
                               : companyHealth.companyHealthScore >= 50
-                              ? 'text-yellow-400'
-                              : 'text-red-400'
-                            : 'text-white'
-                        }`}>
+                                ? 'text-yellow-400'
+                                : 'text-red-400'
+                            : 'text-blue-400'
+                        }
+                      />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Company Health Score</p>
+                      {canViewMetrics() ? (
+                        <p
+                          className={`text-2xl font-bold ${
+                            companyHealth?.companyHealthScore !== undefined
+                              ? companyHealth.companyHealthScore >= 70
+                                ? 'text-green-400'
+                                : companyHealth.companyHealthScore >= 50
+                                  ? 'text-yellow-400'
+                                  : 'text-red-400'
+                              : 'text-white'
+                          }`}
+                        >
                           {companyHealth?.companyHealthScore ?? 'N/A'}%
                         </p>
                       ) : (
@@ -2065,7 +2257,8 @@ const StaffAdmin = () => {
                     </div>
                   </div>
                   <p className="text-xs text-gray-500">
-                    {companyHealth?.fatiguedStaffCount || 0} staff fatigued • {companyHealth?.totalStaff || 0} total staff
+                    {companyHealth?.fatiguedStaffCount || 0} staff fatigued •{' '}
+                    {companyHealth?.totalStaff || 0} total staff
                   </p>
                 </motion.div>
 
@@ -2081,11 +2274,14 @@ const StaffAdmin = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-400">Daily Submissions</p>
-                      <p className="text-2xl font-bold text-white">{companyHealth?.dailyDemos || 0}</p>
+                      <p className="text-2xl font-bold text-white">
+                        {companyHealth?.dailyDemos || 0}
+                      </p>
                     </div>
                   </div>
                   <p className="text-xs text-gray-500">
-                    {companyHealth?.demosPerStaff?.toFixed(1) || 0} per staff (Cap: {companyHealth?.expectationCap || 60}/day)
+                    {companyHealth?.demosPerStaff?.toFixed(1) || 0} per staff (Cap:{' '}
+                    {companyHealth?.expectationCap || 60}/day)
                   </p>
                 </motion.div>
 
@@ -2132,7 +2328,11 @@ const StaffAdmin = () => {
                       <p className="text-sm text-gray-400">Total Earnings</p>
                       {canViewMetrics() ? (
                         <p className="text-2xl font-bold text-white">
-                          ${tracks.filter(t => t.column === 'vault').reduce((sum, t) => sum + (t.totalEarnings || 0), 0).toFixed(2)}
+                          $
+                          {tracks
+                            .filter(t => t.column === 'vault')
+                            .reduce((sum, t) => sum + (t.totalEarnings || 0), 0)
+                            .toFixed(2)}
                         </p>
                       ) : (
                         <div className="flex items-center gap-2 text-gray-500">
@@ -2157,7 +2357,7 @@ const StaffAdmin = () => {
                 {isOwner && (
                   <motion.button
                     type="button"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault()
                       navigate('/admin/staff')
                     }}
@@ -2170,8 +2370,8 @@ const StaffAdmin = () => {
                   </motion.button>
                 )}
               </div>
-              <motion.div 
-                onClick={(e) => {
+              <motion.div
+                onClick={e => {
                   e.preventDefault()
                   if (isOwner) navigate('/admin/staff')
                 }}
@@ -2187,24 +2387,30 @@ const StaffAdmin = () => {
                       <p>Loading staff metrics...</p>
                     </div>
                   ) : (
-                    allStaffMetrics.map((staff) => (
+                    allStaffMetrics.map(staff => (
                       <motion.div
                         key={staff.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className={`bg-gray-900/50 backdrop-blur-sm rounded-lg p-4 border ${
-                          staff.cognitiveLoad?.overallColor === 'green' ? 'border-green-500/30' :
-                          staff.cognitiveLoad?.overallColor === 'blue' ? 'border-blue-500/30' :
-                          staff.cognitiveLoad?.overallColor === 'yellow' ? 'border-yellow-500/30' :
-                          staff.cognitiveLoad?.overallColor === 'orange' ? 'border-orange-500/30' :
-                          'border-gray-800/50'
+                          staff.cognitiveLoad?.overallColor === 'green'
+                            ? 'border-green-500/30'
+                            : staff.cognitiveLoad?.overallColor === 'blue'
+                              ? 'border-blue-500/30'
+                              : staff.cognitiveLoad?.overallColor === 'yellow'
+                                ? 'border-yellow-500/30'
+                                : staff.cognitiveLoad?.overallColor === 'orange'
+                                  ? 'border-orange-500/30'
+                                  : 'border-gray-800/50'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${
-                              staff.isOnline ? 'bg-green-500' : 'bg-gray-500'
-                            }`} />
+                            <div
+                              className={`w-2 h-2 rounded-full ${
+                                staff.isOnline ? 'bg-green-500' : 'bg-gray-500'
+                              }`}
+                            />
                             <p className="font-semibold text-white">{staff.name}</p>
                             <span className="text-xs px-2 py-0.5 bg-gray-800/50 text-gray-300 rounded">
                               {staff.role}
@@ -2214,13 +2420,19 @@ const StaffAdmin = () => {
                         <div className="space-y-2">
                           <div className="flex justify-between text-xs">
                             <span className="text-gray-400">Status:</span>
-                            <span className={`font-semibold ${
-                              staff.cognitiveLoad?.overallColor === 'green' ? 'text-green-400' :
-                              staff.cognitiveLoad?.overallColor === 'blue' ? 'text-blue-400' :
-                              staff.cognitiveLoad?.overallColor === 'yellow' ? 'text-yellow-400' :
-                              staff.cognitiveLoad?.overallColor === 'orange' ? 'text-orange-400' :
-                              'text-gray-400'
-                            }`}>
+                            <span
+                              className={`font-semibold ${
+                                staff.cognitiveLoad?.overallColor === 'green'
+                                  ? 'text-green-400'
+                                  : staff.cognitiveLoad?.overallColor === 'blue'
+                                    ? 'text-blue-400'
+                                    : staff.cognitiveLoad?.overallColor === 'yellow'
+                                      ? 'text-yellow-400'
+                                      : staff.cognitiveLoad?.overallColor === 'orange'
+                                        ? 'text-orange-400'
+                                        : 'text-gray-400'
+                              }`}
+                            >
                               {staff.cognitiveLoad?.overallStatus || 'N/A'}
                             </span>
                           </div>
@@ -2230,11 +2442,15 @@ const StaffAdmin = () => {
                           </div>
                           <div className="flex justify-between text-xs">
                             <span className="text-gray-400">Voting Rate:</span>
-                            <span className="text-white">{staff.staffMetrics?.votingParticipationRate || 0}%</span>
+                            <span className="text-white">
+                              {staff.staffMetrics?.votingParticipationRate || 0}%
+                            </span>
                           </div>
                           <div className="flex justify-between text-xs">
                             <span className="text-gray-400">Avg Energy:</span>
-                            <span className="text-white">{staff.staffMetrics?.avgEnergyAssigned || 0}</span>
+                            <span className="text-white">
+                              {staff.staffMetrics?.avgEnergyAssigned || 0}
+                            </span>
                           </div>
                         </div>
                       </motion.div>
@@ -2250,7 +2466,6 @@ const StaffAdmin = () => {
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white mb-4">Personal Reports</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -2280,7 +2495,9 @@ const StaffAdmin = () => {
                 </div>
                 <div>
                   <p className="text-xs text-gray-400">Voting Rate</p>
-                  <p className="text-lg font-bold text-white">{staffMetrics.votingParticipationRate}%</p>
+                  <p className="text-lg font-bold text-white">
+                    {staffMetrics.votingParticipationRate}%
+                  </p>
                 </div>
               </div>
             </motion.div>
@@ -2310,7 +2527,7 @@ const StaffAdmin = () => {
             <Gauge size={24} className="text-gray-300" />
             Listening Scores
           </h2>
-          
+
           {cognitiveLoad ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {/* Daily Activity */}
@@ -2324,7 +2541,9 @@ const StaffAdmin = () => {
                     <Clock size={18} className={getStatusColor(cognitiveLoad.daily.status)} />
                     <p className="text-sm font-semibold text-gray-300">Daily Activity</p>
                   </div>
-                  <span className={`text-xs font-bold px-2 py-1 rounded ${getStatusBgColor(cognitiveLoad.daily.status)} ${getStatusColor(cognitiveLoad.daily.status)}`}>
+                  <span
+                    className={`text-xs font-bold px-2 py-1 rounded ${getStatusBgColor(cognitiveLoad.daily.status)} ${getStatusColor(cognitiveLoad.daily.status)}`}
+                  >
                     {cognitiveLoad.daily.status}
                   </span>
                 </div>
@@ -2338,14 +2557,19 @@ const StaffAdmin = () => {
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.min(cognitiveLoad.daily.percentage, 100)}%` }}
                       className={`h-full ${
-                        cognitiveLoad.daily.color === 'green' ? 'bg-green-500' :
-                        cognitiveLoad.daily.color === 'blue' ? 'bg-blue-500' :
-                        cognitiveLoad.daily.color === 'yellow' ? 'bg-yellow-500' :
-                        'bg-orange-500'
+                        cognitiveLoad.daily.color === 'green'
+                          ? 'bg-green-500'
+                          : cognitiveLoad.daily.color === 'blue'
+                            ? 'bg-blue-500'
+                            : cognitiveLoad.daily.color === 'yellow'
+                              ? 'bg-yellow-500'
+                              : 'bg-orange-500'
                       }`}
                     />
                   </div>
-                  <p className="text-xs text-gray-500">Coverage: {cognitiveLoad.daily.percentage.toFixed(1)}%</p>
+                  <p className="text-xs text-gray-500">
+                    Coverage: {cognitiveLoad.daily.percentage.toFixed(1)}%
+                  </p>
                 </div>
               </motion.div>
 
@@ -2361,7 +2585,9 @@ const StaffAdmin = () => {
                     <TrendingUp size={18} className={getStatusColor(cognitiveLoad.weekly.status)} />
                     <p className="text-sm font-semibold text-gray-300">Weekly Momentum</p>
                   </div>
-                  <span className={`text-xs font-bold px-2 py-1 rounded ${getStatusBgColor(cognitiveLoad.weekly.status)} ${getStatusColor(cognitiveLoad.weekly.status)}`}>
+                  <span
+                    className={`text-xs font-bold px-2 py-1 rounded ${getStatusBgColor(cognitiveLoad.weekly.status)} ${getStatusColor(cognitiveLoad.weekly.status)}`}
+                  >
                     {cognitiveLoad.weekly.status}
                   </span>
                 </div>
@@ -2376,14 +2602,19 @@ const StaffAdmin = () => {
                       animate={{ width: `${Math.min(cognitiveLoad.weekly.percentage, 100)}%` }}
                       transition={{ delay: 0.1 }}
                       className={`h-full ${
-                        cognitiveLoad.weekly.color === 'green' ? 'bg-green-500' :
-                        cognitiveLoad.weekly.color === 'blue' ? 'bg-blue-500' :
-                        cognitiveLoad.weekly.color === 'yellow' ? 'bg-yellow-500' :
-                        'bg-orange-500'
+                        cognitiveLoad.weekly.color === 'green'
+                          ? 'bg-green-500'
+                          : cognitiveLoad.weekly.color === 'blue'
+                            ? 'bg-blue-500'
+                            : cognitiveLoad.weekly.color === 'yellow'
+                              ? 'bg-yellow-500'
+                              : 'bg-orange-500'
                       }`}
                     />
                   </div>
-                  <p className="text-xs text-gray-500">Coverage: {cognitiveLoad.weekly.percentage.toFixed(1)}%</p>
+                  <p className="text-xs text-gray-500">
+                    Coverage: {cognitiveLoad.weekly.percentage.toFixed(1)}%
+                  </p>
                 </div>
               </motion.div>
 
@@ -2399,7 +2630,9 @@ const StaffAdmin = () => {
                     <BarChart3 size={18} className={getStatusColor(cognitiveLoad.monthly.status)} />
                     <p className="text-sm font-semibold text-gray-300">Monthly Consistency</p>
                   </div>
-                  <span className={`text-xs font-bold px-2 py-1 rounded ${getStatusBgColor(cognitiveLoad.monthly.status)} ${getStatusColor(cognitiveLoad.monthly.status)}`}>
+                  <span
+                    className={`text-xs font-bold px-2 py-1 rounded ${getStatusBgColor(cognitiveLoad.monthly.status)} ${getStatusColor(cognitiveLoad.monthly.status)}`}
+                  >
                     {cognitiveLoad.monthly.status}
                   </span>
                 </div>
@@ -2414,14 +2647,19 @@ const StaffAdmin = () => {
                       animate={{ width: `${Math.min(cognitiveLoad.monthly.percentage, 100)}%` }}
                       transition={{ delay: 0.2 }}
                       className={`h-full ${
-                        cognitiveLoad.monthly.color === 'green' ? 'bg-green-500' :
-                        cognitiveLoad.monthly.color === 'blue' ? 'bg-blue-500' :
-                        cognitiveLoad.monthly.color === 'yellow' ? 'bg-yellow-500' :
-                        'bg-orange-500'
+                        cognitiveLoad.monthly.color === 'green'
+                          ? 'bg-green-500'
+                          : cognitiveLoad.monthly.color === 'blue'
+                            ? 'bg-blue-500'
+                            : cognitiveLoad.monthly.color === 'yellow'
+                              ? 'bg-yellow-500'
+                              : 'bg-orange-500'
                       }`}
                     />
                   </div>
-                  <p className="text-xs text-gray-500">Coverage: {cognitiveLoad.monthly.percentage.toFixed(1)}%</p>
+                  <p className="text-xs text-gray-500">
+                    Coverage: {cognitiveLoad.monthly.percentage.toFixed(1)}%
+                  </p>
                 </div>
               </motion.div>
             </div>
@@ -2465,10 +2703,10 @@ const StaffAdmin = () => {
                 <p className="text-gray-400 text-center py-8">No tracks being watched</p>
               ) : (
                 <div className="space-y-2">
-                  {watchedTracks.map((track) => (
+                  {watchedTracks.map(track => (
                     <div
                       key={track.id}
-                      onClick={(e) => {
+                      onClick={e => {
                         e.preventDefault()
                         navigate(`/phase/${track.column}`, { state: { scrollToTrackId: track.id } })
                       }}
@@ -2498,43 +2736,43 @@ const StaffAdmin = () => {
               className="grid gap-4 px-4 py-2 bg-gray-900/40 border-b border-gray-800/50 text-sm font-semibold text-gray-400 uppercase items-center"
             >
               <ResizableColumnHeader
-                onResize={(width) => handleResize(0, width)}
+                onResize={width => handleResize(0, width)}
                 minWidth={minWidths[0]}
               >
                 <div className="text-center">Link</div>
               </ResizableColumnHeader>
               <ResizableColumnHeader
-                onResize={(width) => handleResize(1, width)}
+                onResize={width => handleResize(1, width)}
                 minWidth={minWidths[1]}
               >
                 <div className="text-center">Watch</div>
               </ResizableColumnHeader>
               <ResizableColumnHeader
-                onResize={(width) => handleResize(2, width)}
+                onResize={width => handleResize(2, width)}
                 minWidth={minWidths[2]}
               >
                 <div className="text-left">Artist / Title</div>
               </ResizableColumnHeader>
               <ResizableColumnHeader
-                onResize={(width) => handleResize(3, width)}
+                onResize={width => handleResize(3, width)}
                 minWidth={minWidths[3]}
               >
                 <div className="text-center">Genre</div>
               </ResizableColumnHeader>
               <ResizableColumnHeader
-                onResize={(width) => handleResize(4, width)}
+                onResize={width => handleResize(4, width)}
                 minWidth={minWidths[4]}
               >
                 <div className="text-center">BPM</div>
               </ResizableColumnHeader>
               <ResizableColumnHeader
-                onResize={(width) => handleResize(5, width)}
+                onResize={width => handleResize(5, width)}
                 minWidth={minWidths[5]}
               >
                 <div className="text-center">Energy</div>
               </ResizableColumnHeader>
               <ResizableColumnHeader
-                onResize={(width) => handleResize(6, width)}
+                onResize={width => handleResize(6, width)}
                 minWidth={minWidths[6]}
                 isLast={true}
               >
@@ -2547,8 +2785,13 @@ const StaffAdmin = () => {
                   <p>No tracks advanced yet</p>
                 </div>
               ) : (
-                advancedTracks.map((track) => (
-                  <TrackRow key={track.id} track={track} useGridTemplate={true} columnWidths={columnWidths} />
+                advancedTracks.map(track => (
+                  <TrackRow
+                    key={track.id}
+                    track={track}
+                    useGridTemplate={true}
+                    columnWidths={columnWidths}
+                  />
                 ))
               )}
             </div>
@@ -2563,18 +2806,21 @@ const StaffAdmin = () => {
               Team Overview
             </h2>
             <div className="bg-gray-900/50 backdrop-blur-sm rounded-lg p-6 border border-gray-800">
-              <p className="text-gray-400 mb-4">View your team's activity status and login status.</p>
+              <p className="text-gray-400 mb-4">
+                View your team's activity status and login status.
+              </p>
               <div className="space-y-3">
                 {/* This would show a list of Scouts with their activity status */}
                 <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-800/50">
                   <p className="text-gray-300 text-sm">Team member list would appear here</p>
-                  <p className="text-gray-500 text-xs mt-2">Feature requires additional Supabase queries</p>
+                  <p className="text-gray-500 text-xs mt-2">
+                    Feature requires additional Supabase queries
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         )}
-
       </div>
 
       <Toast

@@ -56,7 +56,7 @@ const SignUp = () => {
     }
     loadPlans()
   }, [])
-  
+
   // Password requirements validation
   const passwordRequirements = {
     minLength: password.length >= 8,
@@ -66,10 +66,10 @@ const SignUp = () => {
     hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
     passwordsMatch: password === confirmPassword && confirmPassword.length > 0,
   }
-  
+
   const allRequirementsMet = Object.values(passwordRequirements).every(req => req === true)
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault()
     setError('')
     setEmailError('')
@@ -249,9 +249,7 @@ const SignUp = () => {
           >
             <Zap size={32} className="text-white" />
           </motion.div>
-          <h1 className="text-4xl font-bold mb-2 text-neon-purple">
-            SoundPath
-          </h1>
+          <h1 className="text-4xl font-bold mb-2 text-neon-purple">SoundPath</h1>
           <p className="text-gray-400 text-sm">Create Your Universal Account</p>
         </div>
 
@@ -264,9 +262,7 @@ const SignUp = () => {
         >
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Full Name
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
               <div className="relative">
                 <User
                   size={18}
@@ -275,7 +271,7 @@ const SignUp = () => {
                 <input
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={e => setName(e.target.value)}
                   required
                   className="w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple focus:ring-1 focus:ring-neon-purple transition-all"
                   placeholder="John Doe"
@@ -284,9 +280,7 @@ const SignUp = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Email
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
               <div className="relative">
                 <Mail
                   size={18}
@@ -295,11 +289,11 @@ const SignUp = () => {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => {
+                  onChange={e => {
                     setEmail(e.target.value)
                     setEmailError('')
                   }}
-                  onBlur={(e) => {
+                  onBlur={e => {
                     if (e.target.value) {
                       const validation = validateEmail(e.target.value)
                       if (!validation.valid) {
@@ -318,15 +312,11 @@ const SignUp = () => {
                   placeholder="you@example.com"
                 />
               </div>
-              {emailError && (
-                <p className="mt-1 text-sm text-red-400">{emailError}</p>
-              )}
+              {emailError && <p className="mt-1 text-sm text-red-400">{emailError}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Password
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
               <div className="relative">
                 <Lock
                   size={18}
@@ -335,34 +325,44 @@ const SignUp = () => {
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   required
                   minLength={8}
                   className="w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple focus:ring-1 focus:ring-neon-purple transition-all"
                   placeholder="••••••••"
                 />
               </div>
-              
+
               {/* Password Requirements */}
               {password.length > 0 && (
                 <div className="mt-2 space-y-1">
-                  <div className={`text-xs flex items-center gap-2 ${passwordRequirements.minLength ? 'text-green-400' : 'text-gray-500'}`}>
+                  <div
+                    className={`text-xs flex items-center gap-2 ${passwordRequirements.minLength ? 'text-green-400' : 'text-gray-500'}`}
+                  >
                     <span>{passwordRequirements.minLength ? '✓' : '○'}</span>
                     <span>At least 8 characters</span>
                   </div>
-                  <div className={`text-xs flex items-center gap-2 ${passwordRequirements.hasUpperCase ? 'text-green-400' : 'text-gray-500'}`}>
+                  <div
+                    className={`text-xs flex items-center gap-2 ${passwordRequirements.hasUpperCase ? 'text-green-400' : 'text-gray-500'}`}
+                  >
                     <span>{passwordRequirements.hasUpperCase ? '✓' : '○'}</span>
                     <span>One uppercase letter (A-Z)</span>
                   </div>
-                  <div className={`text-xs flex items-center gap-2 ${passwordRequirements.hasLowerCase ? 'text-green-400' : 'text-gray-500'}`}>
+                  <div
+                    className={`text-xs flex items-center gap-2 ${passwordRequirements.hasLowerCase ? 'text-green-400' : 'text-gray-500'}`}
+                  >
                     <span>{passwordRequirements.hasLowerCase ? '✓' : '○'}</span>
                     <span>One lowercase letter (a-z)</span>
                   </div>
-                  <div className={`text-xs flex items-center gap-2 ${passwordRequirements.hasNumber ? 'text-green-400' : 'text-gray-500'}`}>
+                  <div
+                    className={`text-xs flex items-center gap-2 ${passwordRequirements.hasNumber ? 'text-green-400' : 'text-gray-500'}`}
+                  >
                     <span>{passwordRequirements.hasNumber ? '✓' : '○'}</span>
                     <span>One number (0-9)</span>
                   </div>
-                  <div className={`text-xs flex items-center gap-2 ${passwordRequirements.hasSpecialChar ? 'text-green-400' : 'text-gray-500'}`}>
+                  <div
+                    className={`text-xs flex items-center gap-2 ${passwordRequirements.hasSpecialChar ? 'text-green-400' : 'text-gray-500'}`}
+                  >
                     <span>{passwordRequirements.hasSpecialChar ? '✓' : '○'}</span>
                     <span>One special character (!@#$%^&*...)</span>
                   </div>
@@ -382,7 +382,7 @@ const SignUp = () => {
                 <input
                   type="password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={e => setConfirmPassword(e.target.value)}
                   required
                   minLength={8}
                   className={`w-full pl-10 pr-4 py-3 bg-gray-900/50 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${
@@ -396,8 +396,12 @@ const SignUp = () => {
                 />
               </div>
               {confirmPassword.length > 0 && (
-                <p className={`text-xs mt-1 ${passwordRequirements.passwordsMatch ? 'text-green-400' : 'text-red-400'}`}>
-                  {passwordRequirements.passwordsMatch ? '✓ Passwords match' : '✗ Passwords do not match'}
+                <p
+                  className={`text-xs mt-1 ${passwordRequirements.passwordsMatch ? 'text-green-400' : 'text-red-400'}`}
+                >
+                  {passwordRequirements.passwordsMatch
+                    ? '✓ Passwords match'
+                    : '✗ Passwords do not match'}
                 </p>
               )}
             </div>
@@ -412,14 +416,18 @@ const SignUp = () => {
                   {/* Billing Interval Toggle - Always visible when plans exist */}
                   {plans.some(p => p.id !== 'free' && (p.price_monthly || p.price_yearly)) && (
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs font-medium transition-colors ${
-                        billingInterval === 'month' ? 'text-white' : 'text-gray-400'
-                      }`}>
+                      <span
+                        className={`text-xs font-medium transition-colors ${
+                          billingInterval === 'month' ? 'text-white' : 'text-gray-400'
+                        }`}
+                      >
                         Monthly
                       </span>
                       <button
                         type="button"
-                        onClick={() => setBillingInterval(billingInterval === 'month' ? 'year' : 'month')}
+                        onClick={() =>
+                          setBillingInterval(billingInterval === 'month' ? 'year' : 'month')
+                        }
                         className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-neon-purple focus:ring-offset-2 focus:ring-offset-gray-900 ${
                           billingInterval === 'year' ? 'bg-neon-purple' : 'bg-gray-700'
                         }`}
@@ -430,20 +438,23 @@ const SignUp = () => {
                           }`}
                         />
                       </button>
-                      <span className={`text-xs font-medium transition-colors ${
-                        billingInterval === 'year' ? 'text-white' : 'text-gray-400'
-                      }`}>
+                      <span
+                        className={`text-xs font-medium transition-colors ${
+                          billingInterval === 'year' ? 'text-white' : 'text-gray-400'
+                        }`}
+                      >
                         Yearly
                       </span>
                     </div>
                   )}
                 </div>
                 <div className="grid grid-cols-1 gap-3">
-                  {plans.map((plan) => {
+                  {plans.map(plan => {
                     const isSelected = selectedPlanId === plan.id
-                    const price = billingInterval === 'year' && plan.price_yearly 
-                      ? plan.price_yearly 
-                      : plan.price_monthly
+                    const price =
+                      billingInterval === 'year' && plan.price_yearly
+                        ? plan.price_yearly
+                        : plan.price_monthly
                     return (
                       <motion.button
                         key={plan.id}
@@ -460,11 +471,11 @@ const SignUp = () => {
                         {plan.id !== 'free' && <AlphaOnlyTag className="top-2 right-2" />}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                              isSelected
-                                ? 'border-neon-purple bg-neon-purple'
-                                : 'border-gray-600'
-                            }`}>
+                            <div
+                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                isSelected ? 'border-neon-purple bg-neon-purple' : 'border-gray-600'
+                              }`}
+                            >
                               {isSelected && <Check size={12} className="text-white" />}
                             </div>
                             <div>
@@ -482,7 +493,9 @@ const SignUp = () => {
                               )}
                             </div>
                             {plan.id !== 'free' && (
-                              <div className="text-[11px] text-gray-400 mt-1">Temporary Alpha Rate</div>
+                              <div className="text-[11px] text-gray-400 mt-1">
+                                Temporary Alpha Rate
+                              </div>
                             )}
                           </div>
                         </div>
@@ -491,13 +504,23 @@ const SignUp = () => {
                   })}
                 </div>
                 {/* Show savings message when yearly is selected */}
-                {billingInterval === 'year' && selectedPlanId && selectedPlanId !== 'free' && plans.find(p => p.id === selectedPlanId)?.price_yearly && (
-                  <div className="text-center pt-2">
-                    <span className="text-xs text-green-400 font-medium">
-                      Save {Math.round((1 - plans.find(p => p.id === selectedPlanId).price_yearly / (plans.find(p => p.id === selectedPlanId).price_monthly * 12)) * 100)}% with yearly billing
-                    </span>
-                  </div>
-                )}
+                {billingInterval === 'year' &&
+                  selectedPlanId &&
+                  selectedPlanId !== 'free' &&
+                  plans.find(p => p.id === selectedPlanId)?.price_yearly && (
+                    <div className="text-center pt-2">
+                      <span className="text-xs text-green-400 font-medium">
+                        Save{' '}
+                        {Math.round(
+                          (1 -
+                            plans.find(p => p.id === selectedPlanId).price_yearly /
+                              (plans.find(p => p.id === selectedPlanId).price_monthly * 12)) *
+                            100
+                        )}
+                        % with yearly billing
+                      </span>
+                    </div>
+                  )}
               </div>
             )}
 
@@ -541,7 +564,7 @@ const SignUp = () => {
               Already have an account?{' '}
               <button
                 type="button"
-                onClick={(e) => {
+                onClick={e => {
                   e.preventDefault()
                   navigate('/')
                 }}

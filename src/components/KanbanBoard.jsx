@@ -10,7 +10,7 @@ const KanbanBoard = ({ columns, tracks, onMoveTrack, onVote, showMoveToLabel, on
     })
   )
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = event => {
     const { active, over } = event
     if (!over) return
 
@@ -18,7 +18,7 @@ const KanbanBoard = ({ columns, tracks, onMoveTrack, onVote, showMoveToLabel, on
     const newColumnId = over.id
 
     // Check if dropped on a column
-    if (columns.some((col) => col.id === newColumnId)) {
+    if (columns.some(col => col.id === newColumnId)) {
       onMoveTrack(trackId, newColumnId)
     }
   }
@@ -26,8 +26,8 @@ const KanbanBoard = ({ columns, tracks, onMoveTrack, onVote, showMoveToLabel, on
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        {columns.map((column) => {
-          const columnTracks = tracks.filter((track) => track.column === column.id)
+        {columns.map(column => {
+          const columnTracks = tracks.filter(track => track.column === column.id)
           return (
             <Column
               key={column.id}

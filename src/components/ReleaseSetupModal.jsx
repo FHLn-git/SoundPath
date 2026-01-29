@@ -13,7 +13,7 @@ const ReleaseSetupModal = ({ isOpen, onClose, onConfirm, track }) => {
     }
   }, [isOpen])
 
-  const handleDateChange = (e) => {
+  const handleDateChange = e => {
     const date = e.target.value
     setTargetReleaseDate(date)
     if (date) {
@@ -50,7 +50,7 @@ const ReleaseSetupModal = ({ isOpen, onClose, onConfirm, track }) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <div className="glass-morphism rounded-lg p-6 w-full max-w-md border-2 border-neon-purple/30">
               <div className="flex items-center gap-3 mb-4">

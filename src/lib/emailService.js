@@ -11,7 +11,9 @@ export const sendEmail = async ({ to, subject, html, text }) => {
   // Try to use Resend via Edge Function first
   if (SUPABASE_URL && SUPABASE_ANON_KEY) {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       const accessToken = session?.access_token
       if (!accessToken) {
         return {
@@ -27,8 +29,8 @@ export const sendEmail = async ({ to, subject, html, text }) => {
         headers: {
           'Content-Type': 'application/json',
           // Supabase Edge Functions require apikey (anon) + Authorization (user JWT)
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${accessToken}`,
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           to,
@@ -51,7 +53,7 @@ export const sendEmail = async ({ to, subject, html, text }) => {
           success: false,
           error: errorMessage,
           resendError: true,
-          details: errorData?.details || null
+          details: errorData?.details || null,
         }
       }
 
@@ -60,41 +62,44 @@ export const sendEmail = async ({ to, subject, html, text }) => {
         return { success: true, id: data.id }
       } else {
         // Return the error from edge function instead of throwing
-        return { 
-          success: false, 
+        return {
+          success: false,
           error: data.error || 'Failed to send email via edge function',
-          resendError: true 
+          resendError: true,
         }
       }
     } catch (error) {
       console.error('Error sending email via Edge Function:', error)
       // Check if it's a network/CORS error
-      if (error.message.includes('Failed to fetch') || error.message.includes('CORS') || error.name === 'TypeError') {
+      if (
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('CORS') ||
+        error.name === 'TypeError'
+      ) {
         return {
           success: false,
           error: `Cannot reach edge function: ${error.message}. Make sure SUPABASE_URL is set correctly.`,
           resendError: true,
-          corsError: true
+          corsError: true,
         }
       }
       // Return the error instead of falling through silently
       return {
         success: false,
         error: error.message || 'Failed to send email via edge function',
-        resendError: true
+        resendError: true,
       }
     }
   }
 
   // Fallback: Use SECURITY DEFINER function to queue email (bypasses RLS)
   try {
-    const { data, error } = await supabase
-      .rpc('queue_email', {
-        to_email_param: Array.isArray(to) ? to.join(',') : to,
-        subject_param: subject,
-        html_param: html,
-        text_param: text || '',
-      })
+    const { data, error } = await supabase.rpc('queue_email', {
+      to_email_param: Array.isArray(to) ? to.join(',') : to,
+      subject_param: subject,
+      html_param: html,
+      text_param: text || '',
+    })
 
     if (error) throw error
     return { success: true, queued: true, email_id: data }
@@ -110,7 +115,7 @@ export const emailTemplates = {
     const baseUrl = inviteUrl.split('?')[0].replace('/signup', '')
     const loginUrl = `${baseUrl}/`
     const launchpadLink = launchpadUrl || `${baseUrl}/launchpad`
-    
+
     return {
       subject: `You've been invited to join ${organizationName} on SoundPath`,
       html: `
@@ -279,8 +284,21 @@ Reactivate: ${reactivateUrl}
 }
 
 // Helper to send team invite email
-export const sendTeamInviteEmail = async ({ email, inviteUrl, launchpadUrl, organizationName, inviterName, role }) => {
-  const template = emailTemplates.teamInvite({ inviteUrl, launchpadUrl, organizationName, inviterName, role })
+export const sendTeamInviteEmail = async ({
+  email,
+  inviteUrl,
+  launchpadUrl,
+  organizationName,
+  inviterName,
+  role,
+}) => {
+  const template = emailTemplates.teamInvite({
+    inviteUrl,
+    launchpadUrl,
+    organizationName,
+    inviterName,
+    role,
+  })
   return await sendEmail({
     to: email,
     ...template,
@@ -288,7 +306,12 @@ export const sendTeamInviteEmail = async ({ email, inviteUrl, launchpadUrl, orga
 }
 
 // Helper to send track submission notification
-export const sendTrackSubmissionEmail = async ({ email, trackTitle, artistName, organizationName }) => {
+export const sendTrackSubmissionEmail = async ({
+  email,
+  trackTitle,
+  artistName,
+  organizationName,
+}) => {
   const template = emailTemplates.trackSubmitted({ trackTitle, artistName, organizationName })
   return await sendEmail({
     to: email,
@@ -297,7 +320,12 @@ export const sendTrackSubmissionEmail = async ({ email, trackTitle, artistName, 
 }
 
 // Helper to send trial ending notification
-export const sendTrialEndingEmail = async ({ email, organizationName, daysRemaining, upgradeUrl }) => {
+export const sendTrialEndingEmail = async ({
+  email,
+  organizationName,
+  daysRemaining,
+  upgradeUrl,
+}) => {
   const template = emailTemplates.trialEnding({ organizationName, daysRemaining, upgradeUrl })
   return await sendEmail({
     to: email,

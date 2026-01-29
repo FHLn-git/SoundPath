@@ -19,11 +19,14 @@ const ReviseModal = ({ isOpen, onClose, track, onSubmit }) => {
 
   const canSubmit = issue.trim() && (wholeSong || timestamp.trim()) && explanation.trim()
 
-  const generateRevisionPdf = (data) => {
+  const generateRevisionPdf = data => {
     const printWindow = window.open('', '_blank', 'width=900,height=700')
     if (!printWindow) return
 
-    const safe = (value) => String(value || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const safe = value =>
+      String(value || '')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
     const html = `
       <html>
         <head>
@@ -96,7 +99,7 @@ const ReviseModal = ({ isOpen, onClose, track, onSubmit }) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <div className="glass-morphism rounded-lg p-6 w-full max-w-md border-2 border-neon-purple/30">
               <div className="flex items-center gap-3 mb-4">
@@ -125,19 +128,21 @@ const ReviseModal = ({ isOpen, onClose, track, onSubmit }) => {
                   <input
                     type="text"
                     value={issue}
-                    onChange={(e) => setIssue(e.target.value)}
+                    onChange={e => setIssue(e.target.value)}
                     placeholder="e.g. Mix imbalance, arrangement, vocals"
                     className="w-full px-4 py-2 bg-gray-900/50 border border-neon-purple/30 rounded-lg focus:outline-none focus:border-neon-purple text-white placeholder-gray-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Timestamp *</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Timestamp *
+                  </label>
                   <div className="flex items-center gap-3">
                     <input
                       type="text"
                       value={timestamp}
-                      onChange={(e) => setTimestamp(e.target.value)}
+                      onChange={e => setTimestamp(e.target.value)}
                       placeholder="mm:ss"
                       disabled={wholeSong}
                       className="flex-1 px-4 py-2 bg-gray-900/50 border border-neon-purple/30 rounded-lg focus:outline-none focus:border-neon-purple text-white placeholder-gray-500 disabled:opacity-50"
@@ -146,7 +151,7 @@ const ReviseModal = ({ isOpen, onClose, track, onSubmit }) => {
                       <input
                         type="checkbox"
                         checked={wholeSong}
-                        onChange={(e) => setWholeSong(e.target.checked)}
+                        onChange={e => setWholeSong(e.target.checked)}
                         className="rounded"
                       />
                       Whole song
@@ -160,7 +165,7 @@ const ReviseModal = ({ isOpen, onClose, track, onSubmit }) => {
                   </label>
                   <textarea
                     value={explanation}
-                    onChange={(e) => setExplanation(e.target.value)}
+                    onChange={e => setExplanation(e.target.value)}
                     placeholder="Explain the issue and suggested changes..."
                     rows={5}
                     className="w-full px-4 py-2 bg-gray-900/50 border border-neon-purple/30 rounded-lg focus:outline-none focus:border-neon-purple text-white placeholder-gray-500 resize-none"

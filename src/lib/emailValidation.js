@@ -81,11 +81,11 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
  * @param {string} email - The email address to validate
  * @returns {Object} - { valid: boolean, error: string }
  */
-export const validateEmail = (email) => {
+export const validateEmail = email => {
   if (!email || typeof email !== 'string') {
     return {
       valid: false,
-      error: 'Email is required'
+      error: 'Email is required',
     }
   }
 
@@ -95,7 +95,7 @@ export const validateEmail = (email) => {
   if (!EMAIL_REGEX.test(trimmedEmail)) {
     return {
       valid: false,
-      error: 'Please enter a valid email address'
+      error: 'Please enter a valid email address',
     }
   }
 
@@ -104,7 +104,7 @@ export const validateEmail = (email) => {
   if (DISPOSABLE_EMAIL_DOMAINS.includes(domain)) {
     return {
       valid: false,
-      error: 'Disposable email addresses are not allowed. Please use a permanent email address.'
+      error: 'Disposable email addresses are not allowed. Please use a permanent email address.',
     }
   }
 
@@ -112,7 +112,7 @@ export const validateEmail = (email) => {
   if (trimmedEmail.length > 254) {
     return {
       valid: false,
-      error: 'Email address is too long'
+      error: 'Email address is too long',
     }
   }
 
@@ -120,7 +120,7 @@ export const validateEmail = (email) => {
   if (trimmedEmail.includes('..') || trimmedEmail.startsWith('.') || trimmedEmail.endsWith('.')) {
     return {
       valid: false,
-      error: 'Please enter a valid email address'
+      error: 'Please enter a valid email address',
     }
   }
 
@@ -129,13 +129,13 @@ export const validateEmail = (email) => {
   if (!domainParts || domainParts.length < 2 || domainParts[domainParts.length - 1].length < 2) {
     return {
       valid: false,
-      error: 'Please enter a valid email address'
+      error: 'Please enter a valid email address',
     }
   }
 
   return {
     valid: true,
-    error: null
+    error: null,
   }
 }
 
@@ -144,7 +144,7 @@ export const validateEmail = (email) => {
  * @param {string} email - The email address to validate
  * @returns {boolean} - true if format is valid
  */
-export const isValidEmailFormat = (email) => {
+export const isValidEmailFormat = email => {
   if (!email || typeof email !== 'string') return false
   return EMAIL_REGEX.test(email.trim())
 }

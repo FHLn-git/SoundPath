@@ -31,10 +31,10 @@ const PermissionsModal = ({ isOpen, onClose, staff, onSave, isUpdating }) => {
     }
   }, [staff])
 
-  const handleToggle = (key) => {
+  const handleToggle = key => {
     setPermissions(prev => ({
       ...prev,
-      [key]: !prev[key]
+      [key]: !prev[key],
     }))
   }
 
@@ -61,10 +61,7 @@ const PermissionsModal = ({ isOpen, onClose, staff, onSave, isUpdating }) => {
               <p className="text-sm text-gray-400">{staff.name}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -186,9 +183,11 @@ const PermissionsModal = ({ isOpen, onClose, staff, onSave, isUpdating }) => {
 
 const PermissionToggle = ({ label, description, checked, onChange, isEnterprise = false }) => {
   return (
-    <div className={`flex items-start justify-between p-3 rounded-lg ${
-      isEnterprise ? 'bg-neon-purple/10 border border-neon-purple/30' : 'bg-gray-900/30'
-    }`}>
+    <div
+      className={`flex items-start justify-between p-3 rounded-lg ${
+        isEnterprise ? 'bg-neon-purple/10 border border-neon-purple/30' : 'bg-gray-900/30'
+      }`}
+    >
       <div className="flex-1">
         <p className="text-white font-medium">{label}</p>
         <p className="text-xs text-gray-400 mt-1">{description}</p>

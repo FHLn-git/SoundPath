@@ -2,24 +2,25 @@ import { X, ArrowRight, Lock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const CapacityOverlay = ({ 
-  isOpen, 
-  onClose, 
-  currentCount = 0, 
-  maxCount = 0, 
+const CapacityOverlay = ({
+  isOpen,
+  onClose,
+  currentCount = 0,
+  maxCount = 0,
   tier = 'free',
-  featureName = 'tracks'
+  featureName = 'tracks',
 }) => {
   const navigate = useNavigate()
 
   if (!isOpen) return null
 
-  const tierDisplayName = {
-    'free': 'Free',
-    'agent': 'Agent',
-    'starter': 'Starter',
-    'pro': 'Pro'
-  }[tier] || 'Free'
+  const tierDisplayName =
+    {
+      free: 'Free',
+      agent: 'Agent',
+      starter: 'Starter',
+      pro: 'Pro',
+    }[tier] || 'Free'
 
   return (
     <AnimatePresence>
@@ -34,7 +35,7 @@ const CapacityOverlay = ({
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
           className="relative bg-gray-900 border border-gray-800 rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl"
         >
           <button
@@ -50,18 +51,21 @@ const CapacityOverlay = ({
             </div>
             <h2 className="text-2xl font-bold text-white mb-2">Capacity Reached</h2>
             <p className="text-gray-400 mb-4">
-              You are currently using <span className="text-white font-semibold">{currentCount}</span> of your <span className="text-white font-semibold">{maxCount}</span> {tierDisplayName} tier {featureName} limit.
+              You are currently using{' '}
+              <span className="text-white font-semibold">{currentCount}</span> of your{' '}
+              <span className="text-white font-semibold">{maxCount}</span> {tierDisplayName} tier{' '}
+              {featureName} limit.
             </p>
-            <p className="text-gray-500 text-sm">
-              Upgrade to expand your SoundPath.
-            </p>
+            <p className="text-gray-500 text-sm">Upgrade to expand your SoundPath.</p>
           </div>
 
           {/* Usage Bar */}
           <div className="mb-6">
             <div className="flex justify-between text-sm text-gray-400 mb-2">
               <span>Usage</span>
-              <span>{currentCount} / {maxCount}</span>
+              <span>
+                {currentCount} / {maxCount}
+              </span>
             </div>
             <div className="w-full bg-gray-800 rounded-full h-2.5">
               <motion.div

@@ -11,7 +11,7 @@ const AddDemoModal = ({ isOpen, onClose, onAdd, vibeTags }) => {
     bpm: 128,
   })
 
-  const handleSubmit = (e) => {
+  const handleSubmit = e => {
     e.preventDefault()
     if (formData.artist && formData.title) {
       onAdd(formData)
@@ -25,7 +25,7 @@ const AddDemoModal = ({ isOpen, onClose, onAdd, vibeTags }) => {
     }
   }
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -48,7 +48,7 @@ const AddDemoModal = ({ isOpen, onClose, onAdd, vibeTags }) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <div className="bg-gray-900 rounded-lg p-6 w-full max-w-md border-2 border-gray-800 backdrop-blur-sm">
               <div className="flex items-center justify-between mb-6">
@@ -93,16 +93,14 @@ const AddDemoModal = ({ isOpen, onClose, onAdd, vibeTags }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Genre
-                  </label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Genre</label>
                   <select
                     name="genre"
                     value={formData.genre}
                     onChange={handleChange}
                     className="w-full px-4 py-2 bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:border-gray-700 text-white"
                   >
-                    {vibeTags.map((genre) => (
+                    {vibeTags.map(genre => (
                       <option key={genre} value={genre}>
                         {genre}
                       </option>
@@ -111,9 +109,7 @@ const AddDemoModal = ({ isOpen, onClose, onAdd, vibeTags }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Demo Link
-                  </label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Demo Link</label>
                   <input
                     type="url"
                     name="link"
@@ -125,9 +121,7 @@ const AddDemoModal = ({ isOpen, onClose, onAdd, vibeTags }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    BPM
-                  </label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">BPM</label>
                   <input
                     type="number"
                     name="bpm"

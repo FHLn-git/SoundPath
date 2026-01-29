@@ -21,7 +21,7 @@ const DeleteAccount = () => {
       setToast({
         isVisible: true,
         message: `Please type "${requiredText}" to confirm`,
-        type: 'error'
+        type: 'error',
       })
       return
     }
@@ -44,7 +44,7 @@ const DeleteAccount = () => {
       // Delete auth user
       if (user) {
         const { error: authError } = await supabase.auth.admin.deleteUser(user.id)
-        
+
         // If admin API not available, try regular delete
         if (authError && authError.message?.includes('admin')) {
           // Fallback: Sign out and let user contact support
@@ -53,7 +53,7 @@ const DeleteAccount = () => {
           setToast({
             isVisible: true,
             message: 'Account deletion initiated. Please contact support to complete the process.',
-            type: 'info'
+            type: 'info',
           })
           setTimeout(() => navigate('/'), 2000)
           return
@@ -68,7 +68,7 @@ const DeleteAccount = () => {
       setToast({
         isVisible: true,
         message: 'Your account has been deleted successfully',
-        type: 'success'
+        type: 'success',
       })
 
       // Redirect to landing page
@@ -80,7 +80,7 @@ const DeleteAccount = () => {
       setToast({
         isVisible: true,
         message: error.message || 'Failed to delete account. Please contact support.',
-        type: 'error'
+        type: 'error',
       })
       setDeleting(false)
       setShowConfirm(false)
@@ -117,7 +117,9 @@ const DeleteAccount = () => {
             <div className="flex items-start gap-3 mb-4">
               <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-gray-300">
-                <p className="font-semibold text-red-400 mb-2">Warning: This action is irreversible</p>
+                <p className="font-semibold text-red-400 mb-2">
+                  Warning: This action is irreversible
+                </p>
                 <p className="mb-3">Deleting your account will permanently remove:</p>
                 <ul className="list-disc list-inside space-y-1 ml-4">
                   <li>Your profile and account information</li>
@@ -169,7 +171,7 @@ const DeleteAccount = () => {
                 <input
                   type="text"
                   value={confirmText}
-                  onChange={(e) => setConfirmText(e.target.value)}
+                  onChange={e => setConfirmText(e.target.value)}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500"
                   placeholder={requiredText}
                   disabled={deleting}

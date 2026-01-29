@@ -28,7 +28,7 @@ const GapAlert = () => {
   const handleFillGap = () => {
     // Smart navigation: Check phases in priority order
     // Priority: Contracting -> The Office (team-review) -> Second Listen -> Inbox -> Artist Directory
-    
+
     const phasePriority = [
       { id: 'contracting', route: '/phase/contracting' },
       { id: 'team-review', route: '/phase/team-review' },
@@ -38,10 +38,8 @@ const GapAlert = () => {
 
     // Find the first phase that has tracks
     for (const phase of phasePriority) {
-      const phaseTracks = tracks.filter(
-        (t) => t.column === phase.id && !t.archived
-      )
-      
+      const phaseTracks = tracks.filter(t => t.column === phase.id && !t.archived)
+
       if (phaseTracks.length > 0) {
         // Navigate to the phase that has tracks
         navigate(phase.route)
@@ -50,11 +48,11 @@ const GapAlert = () => {
     }
 
     // If all phases are empty, navigate to Artist Directory with conversion rate filter
-    navigate('/artists', { 
-      state: { 
+    navigate('/artists', {
+      state: {
         sortBy: 'conversion-high',
-        autoFilter: true 
-      } 
+        autoFilter: true,
+      },
     })
   }
 
@@ -68,9 +66,7 @@ const GapAlert = () => {
       <div className="bg-gray-900/80 backdrop-blur-sm border-2 border-amber-500/60 rounded-lg p-4 flex items-center justify-between gap-4 shadow-lg shadow-amber-500/10">
         <div className="flex items-center gap-3 flex-1">
           <AlertTriangle className="text-amber-500 flex-shrink-0" size={20} />
-          <p className="text-sm font-mono text-gray-200 flex-1">
-            {getMessage()}
-          </p>
+          <p className="text-sm font-mono text-gray-200 flex-1">{getMessage()}</p>
         </div>
         <button
           onClick={handleFillGap}

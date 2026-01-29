@@ -1,9 +1,21 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { 
-  Settings, X, User, Lock, Link as LinkIcon, Users, 
-  Copy, Check, Shield, Mail, Save, AlertCircle, CreditCard, Bell
+import {
+  Settings,
+  X,
+  User,
+  Lock,
+  Link as LinkIcon,
+  Users,
+  Copy,
+  Check,
+  Shield,
+  Mail,
+  Save,
+  AlertCircle,
+  CreditCard,
+  Bell,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
@@ -33,7 +45,7 @@ const GlobalSettings = ({ isOpen, onClose }) => {
 
   const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
 
-  const urlBase64ToUint8Array = (base64String) => {
+  const urlBase64ToUint8Array = base64String => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
     const rawData = window.atob(base64)
@@ -44,7 +56,8 @@ const GlobalSettings = ({ isOpen, onClose }) => {
 
   const refreshPushStatus = async () => {
     try {
-      const supported = typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window
+      const supported =
+        typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window
       setPushSupported(supported)
       setPushPermission(typeof Notification !== 'undefined' ? Notification.permission : 'default')
       if (!supported) {
@@ -89,19 +102,17 @@ const GlobalSettings = ({ isOpen, onClose }) => {
       const auth = jsonSub?.keys?.auth
       if (!endpoint || !p256dh || !auth) throw new Error('Invalid push subscription')
 
-      const { error } = await supabase
-        .from('push_subscriptions')
-        .upsert(
-          {
-            auth_user_id: user.id,
-            endpoint,
-            p256dh,
-            auth,
-            user_agent: navigator.userAgent,
-            active: true,
-          },
-          { onConflict: 'endpoint' }
-        )
+      const { error } = await supabase.from('push_subscriptions').upsert(
+        {
+          auth_user_id: user.id,
+          endpoint,
+          p256dh,
+          auth,
+          user_agent: navigator.userAgent,
+          active: true,
+        },
+        { onConflict: 'endpoint' }
+      )
 
       if (error) throw error
 
@@ -109,7 +120,11 @@ const GlobalSettings = ({ isOpen, onClose }) => {
       await refreshPushStatus()
     } catch (error) {
       console.error('Enable push error:', error)
-      setToast({ isVisible: true, message: error.message || 'Failed to enable notifications', type: 'error' })
+      setToast({
+        isVisible: true,
+        message: error.message || 'Failed to enable notifications',
+        type: 'error',
+      })
     } finally {
       setIsSavingPush(false)
     }
@@ -134,7 +149,11 @@ const GlobalSettings = ({ isOpen, onClose }) => {
       await refreshPushStatus()
     } catch (error) {
       console.error('Disable push error:', error)
-      setToast({ isVisible: true, message: error.message || 'Failed to disable notifications', type: 'error' })
+      setToast({
+        isVisible: true,
+        message: error.message || 'Failed to disable notifications',
+        type: 'error',
+      })
     } finally {
       setIsSavingPush(false)
     }
@@ -202,9 +221,9 @@ const GlobalSettings = ({ isOpen, onClose }) => {
 
       // Separate by status
       const accepted = allConnections?.filter(c => c.status === 'accepted') || []
-      const pending = allConnections?.filter(c => 
-        c.status === 'pending' && c.recipient_id === staffProfile.id
-      ) || []
+      const pending =
+        allConnections?.filter(c => c.status === 'pending' && c.recipient_id === staffProfile.id) ||
+        []
       const blocked = allConnections?.filter(c => c.status === 'blocked') || []
 
       setConnections(accepted)
@@ -246,7 +265,9 @@ const GlobalSettings = ({ isOpen, onClose }) => {
   }, [isOpen, staffProfile])
 
   const userSubmissionUrl = userSlug ? `${window.location.origin}/submit/user/${userSlug}` : ''
-  const userEmbedCode = userSlug ? `<iframe src="${userSubmissionUrl}" width="100%" height="800" frameborder="0" style="border: none;"></iframe>` : ''
+  const userEmbedCode = userSlug
+    ? `<iframe src="${userSubmissionUrl}" width="100%" height="800" frameborder="0" style="border: none;"></iframe>`
+    : ''
 
   const handleCopyUrl = (url, type) => {
     navigator.clipboard.writeText(url).then(() => {
@@ -275,7 +296,7 @@ const GlobalSettings = ({ isOpen, onClose }) => {
   const handleSaveProfile = async () => {
     setIsSaving(true)
     const { error } = await updateStaffProfile({ name, bio })
-    
+
     if (error) {
       setToast({
         isVisible: true,
@@ -314,7 +335,7 @@ const GlobalSettings = ({ isOpen, onClose }) => {
     setIsChangingPassword(true)
     try {
       const { error } = await supabase.auth.updateUser({
-        password: newPassword
+        password: newPassword,
       })
 
       if (error) throw error
@@ -338,12 +359,12 @@ const GlobalSettings = ({ isOpen, onClose }) => {
     setIsChangingPassword(false)
   }
 
-  const handleAcceptConnection = async (connectionId) => {
+  const handleAcceptConnection = async connectionId => {
     if (!supabase) return
 
     try {
       const { error } = await supabase.rpc('accept_connection_request', {
-        connection_id_param: connectionId
+        connection_id_param: connectionId,
       })
 
       if (error) throw error
@@ -364,7 +385,7 @@ const GlobalSettings = ({ isOpen, onClose }) => {
     }
   }
 
-  const handleRejectConnection = async (connectionId) => {
+  const handleRejectConnection = async connectionId => {
     if (!supabase || !staffProfile) return
 
     try {
@@ -419,14 +440,11 @@ const GlobalSettings = ({ isOpen, onClose }) => {
     }
   }
 
-  const handleUnblockAgent = async (connectionId) => {
+  const handleUnblockAgent = async connectionId => {
     if (!supabase) return
 
     try {
-      const { error } = await supabase
-        .from('connections')
-        .delete()
-        .eq('id', connectionId)
+      const { error } = await supabase.from('connections').delete().eq('id', connectionId)
 
       if (error) throw error
 
@@ -450,14 +468,14 @@ const GlobalSettings = ({ isOpen, onClose }) => {
 
   return (
     <>
-      <div 
+      <div
         className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
         onClick={onClose}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
           className="bg-[#0B0E14] border border-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto backdrop-blur-sm"
         >
           {/* Header */}
@@ -468,7 +486,9 @@ const GlobalSettings = ({ isOpen, onClose }) => {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">Global Account Settings</h2>
-                <p className="text-gray-400 text-sm">Manage your personal account and preferences</p>
+                <p className="text-gray-400 text-sm">
+                  Manage your personal account and preferences
+                </p>
               </div>
             </div>
             <button
@@ -494,7 +514,7 @@ const GlobalSettings = ({ isOpen, onClose }) => {
                   <input
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={e => setName(e.target.value)}
                     className="w-full px-4 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white focus:outline-none focus:border-gray-700 font-mono"
                   />
                 </div>
@@ -512,7 +532,7 @@ const GlobalSettings = ({ isOpen, onClose }) => {
                   <label className="block text-sm font-medium text-gray-300 mb-2">Bio</label>
                   <textarea
                     value={bio}
-                    onChange={(e) => setBio(e.target.value)}
+                    onChange={e => setBio(e.target.value)}
                     rows={3}
                     className="w-full px-4 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white focus:outline-none focus:border-gray-700 font-mono"
                   />
@@ -539,31 +559,37 @@ const GlobalSettings = ({ isOpen, onClose }) => {
               </h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Current Password
+                  </label>
                   <input
                     type="password"
                     value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    onChange={e => setCurrentPassword(e.target.value)}
                     className="w-full px-4 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white focus:outline-none focus:border-gray-700 font-mono"
                     placeholder="Enter current password"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    New Password
+                  </label>
                   <input
                     type="password"
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
+                    onChange={e => setNewPassword(e.target.value)}
                     className="w-full px-4 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white focus:outline-none focus:border-gray-700 font-mono"
                     placeholder="Enter new password"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Confirm New Password</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Confirm New Password
+                  </label>
                   <input
                     type="password"
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={e => setConfirmPassword(e.target.value)}
                     className="w-full px-4 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white focus:outline-none focus:border-gray-700 font-mono"
                     placeholder="Confirm new password"
                   />
@@ -596,11 +622,14 @@ const GlobalSettings = ({ isOpen, onClose }) => {
                   Personal Submission Portal
                 </h3>
                 <p className="text-gray-400 text-sm mb-4">
-                  Share this URL or embed code to allow artists to submit demos directly to your personal inbox.
+                  Share this URL or embed code to allow artists to submit demos directly to your
+                  personal inbox.
                 </p>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Submission URL</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Submission URL
+                    </label>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
@@ -620,7 +649,9 @@ const GlobalSettings = ({ isOpen, onClose }) => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Embed Code</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Embed Code
+                    </label>
                     <motion.button
                       type="button"
                       onClick={() => handleCopyEmbed(userEmbedCode, 'user-embed')}
@@ -651,18 +682,23 @@ const GlobalSettings = ({ isOpen, onClose }) => {
                 <Users size={18} className="text-gray-400" />
                 Networking
               </h3>
-              
+
               {/* Pending Connection Requests */}
               {pendingRequests.length > 0 && (
                 <div className="mb-6">
-                  <h4 className="text-sm font-semibold text-gray-300 mb-3">Pending Connection Requests</h4>
+                  <h4 className="text-sm font-semibold text-gray-300 mb-3">
+                    Pending Connection Requests
+                  </h4>
                   <div className="space-y-2">
-                    {pendingRequests.map((request) => {
+                    {pendingRequests.map(request => {
                       const requesterId = request.requester_id
                       const requesterName = agentNames[requesterId] || 'Unknown Agent'
 
                       return (
-                        <div key={request.id} className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg border border-gray-800">
+                        <div
+                          key={request.id}
+                          className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg border border-gray-800"
+                        >
                           <span className="text-white text-sm">{requesterName}</span>
                           <div className="flex items-center gap-2">
                             <motion.button
@@ -700,14 +736,18 @@ const GlobalSettings = ({ isOpen, onClose }) => {
                   <p className="text-gray-500 text-sm">No connected agents</p>
                 ) : (
                   <div className="space-y-2">
-                    {connections.map((connection) => {
-                      const otherAgentId = connection.requester_id === staffProfile?.id 
-                        ? connection.recipient_id 
-                        : connection.requester_id
+                    {connections.map(connection => {
+                      const otherAgentId =
+                        connection.requester_id === staffProfile?.id
+                          ? connection.recipient_id
+                          : connection.requester_id
                       const otherAgentName = agentNames[otherAgentId] || `Agent ${otherAgentId}`
-                      
+
                       return (
-                        <div key={connection.id} className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg border border-gray-800">
+                        <div
+                          key={connection.id}
+                          className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg border border-gray-800"
+                        >
                           <span className="text-white text-sm">{otherAgentName}</span>
                           <motion.button
                             type="button"
@@ -732,14 +772,18 @@ const GlobalSettings = ({ isOpen, onClose }) => {
                     Blocked Agents ({blockedAgents.length})
                   </h4>
                   <div className="space-y-2">
-                    {blockedAgents.map((blocked) => {
-                      const otherAgentId = blocked.requester_id === staffProfile?.id 
-                        ? blocked.recipient_id 
-                        : blocked.requester_id
+                    {blockedAgents.map(blocked => {
+                      const otherAgentId =
+                        blocked.requester_id === staffProfile?.id
+                          ? blocked.recipient_id
+                          : blocked.requester_id
                       const otherAgentName = agentNames[otherAgentId] || `Agent ${otherAgentId}`
-                      
+
                       return (
-                        <div key={blocked.id} className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg border border-gray-800">
+                        <div
+                          key={blocked.id}
+                          className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg border border-gray-800"
+                        >
                           <span className="text-gray-500 text-sm">{otherAgentName}</span>
                           <motion.button
                             type="button"
@@ -765,7 +809,8 @@ const GlobalSettings = ({ isOpen, onClose }) => {
                 Browser Notifications
               </h3>
               <p className="text-gray-400 text-sm mb-4">
-                Enable desktop notifications (Web Push). High-frequency alerts are off by default; only enable what you need.
+                Enable desktop notifications (Web Push). High-frequency alerts are off by default;
+                only enable what you need.
               </p>
 
               {!pushSupported ? (
@@ -826,7 +871,7 @@ const GlobalSettings = ({ isOpen, onClose }) => {
                 Billing & Subscriptions
               </h3>
               <p className="text-gray-400 text-sm mb-4">
-                {memberships && memberships.length > 0 
+                {memberships && memberships.length > 0
                   ? 'View subscription tiers and manage billing for your labels.'
                   : 'View available subscription tiers and plans. Create or join a label to subscribe.'}
               </p>

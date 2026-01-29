@@ -31,7 +31,7 @@ const SecuritySettings = () => {
       setToast({
         isVisible: true,
         message: 'New passwords do not match',
-        type: 'error'
+        type: 'error',
       })
       return
     }
@@ -40,14 +40,14 @@ const SecuritySettings = () => {
       setToast({
         isVisible: true,
         message: 'Password must be at least 8 characters',
-        type: 'error'
+        type: 'error',
       })
       return
     }
 
     try {
       const { error } = await supabase.auth.updateUser({
-        password: passwordForm.newPassword
+        password: passwordForm.newPassword,
       })
 
       if (error) throw error
@@ -55,7 +55,7 @@ const SecuritySettings = () => {
       setToast({
         isVisible: true,
         message: 'Password updated successfully',
-        type: 'success'
+        type: 'success',
       })
 
       setPasswordForm({
@@ -67,24 +67,24 @@ const SecuritySettings = () => {
       setToast({
         isVisible: true,
         message: error.message || 'Failed to update password',
-        type: 'error'
+        type: 'error',
       })
     }
   }
 
-  const revokeSession = async (sessionId) => {
+  const revokeSession = async sessionId => {
     // Implementation would revoke the session
     setToast({
       isVisible: true,
       message: 'Session revoked',
-      type: 'success'
+      type: 'success',
     })
     loadSessions()
   }
 
-  const checkPasswordStrength = (password) => {
+  const checkPasswordStrength = password => {
     if (!password) return { strength: 0, label: '' }
-    
+
     let strength = 0
     if (password.length >= 8) strength++
     if (password.length >= 12) strength++
@@ -95,7 +95,7 @@ const SecuritySettings = () => {
     const labels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong']
     return {
       strength: Math.min(strength, 4),
-      label: labels[strength] || 'Very Weak'
+      label: labels[strength] || 'Very Weak',
     }
   }
 
@@ -127,7 +127,9 @@ const SecuritySettings = () => {
               <input
                 type="password"
                 value={passwordForm.currentPassword}
-                onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                onChange={e =>
+                  setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
+                }
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-600"
               />
             </div>
@@ -136,13 +138,13 @@ const SecuritySettings = () => {
               <input
                 type="password"
                 value={passwordForm.newPassword}
-                onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-600"
               />
               {passwordForm.newPassword && (
                 <div className="mt-2">
                   <div className="flex gap-1 mb-1">
-                    {[0, 1, 2, 3, 4].map((level) => (
+                    {[0, 1, 2, 3, 4].map(level => (
                       <div
                         key={level}
                         className={`h-1 flex-1 rounded ${
@@ -150,8 +152,8 @@ const SecuritySettings = () => {
                             ? level <= 1
                               ? 'bg-red-500'
                               : level <= 2
-                              ? 'bg-yellow-500'
-                              : 'bg-green-500'
+                                ? 'bg-yellow-500'
+                                : 'bg-green-500'
                             : 'bg-gray-700'
                         }`}
                       />
@@ -166,13 +168,18 @@ const SecuritySettings = () => {
               <input
                 type="password"
                 value={passwordForm.confirmPassword}
-                onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                onChange={e =>
+                  setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
+                }
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-600"
               />
             </div>
             <button
               onClick={updatePassword}
-              disabled={!passwordForm.newPassword || passwordForm.newPassword !== passwordForm.confirmPassword}
+              disabled={
+                !passwordForm.newPassword ||
+                passwordForm.newPassword !== passwordForm.confirmPassword
+              }
               className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Update Password
@@ -187,7 +194,9 @@ const SecuritySettings = () => {
               <Smartphone className="w-6 h-6 text-blue-400" />
               <div>
                 <h2 className="text-xl font-bold">Two-Factor Authentication</h2>
-                <p className="text-sm text-gray-400">Add an extra layer of security to your account</p>
+                <p className="text-sm text-gray-400">
+                  Add an extra layer of security to your account
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -205,11 +214,13 @@ const SecuritySettings = () => {
             </div>
           </div>
           <button
-            onClick={() => setToast({
-              isVisible: true,
-              message: '2FA setup coming soon',
-              type: 'info'
-            })}
+            onClick={() =>
+              setToast({
+                isVisible: true,
+                message: '2FA setup coming soon',
+                type: 'info',
+              })
+            }
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
           >
             {twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA'}
@@ -228,12 +239,19 @@ const SecuritySettings = () => {
             <p className="text-gray-400">No active sessions</p>
           ) : (
             <div className="space-y-3">
-              {sessions.map((session) => (
-                <div key={session.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+              {sessions.map(session => (
+                <div
+                  key={session.id}
+                  className="flex items-center justify-between p-3 bg-gray-800 rounded-lg"
+                >
                   <div>
                     <p className="font-semibold">{session.device || 'Unknown Device'}</p>
-                    <p className="text-sm text-gray-400">{session.location || 'Unknown Location'}</p>
-                    <p className="text-xs text-gray-500">Last active: {new Date(session.last_active).toLocaleString()}</p>
+                    <p className="text-sm text-gray-400">
+                      {session.location || 'Unknown Location'}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Last active: {new Date(session.last_active).toLocaleString()}
+                    </p>
                   </div>
                   <button
                     onClick={() => revokeSession(session.id)}

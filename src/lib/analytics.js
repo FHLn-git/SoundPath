@@ -22,11 +22,11 @@ export const initAnalytics = () => {
       if (typeof window !== 'undefined' && window.posthog) {
         window.posthog.init(apiKey, {
           api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com',
-          loaded: (posthog) => {
+          loaded: posthog => {
             analyticsProvider = 'posthog'
             analyticsInitialized = true
             console.log('✅ PostHog initialized')
-          }
+          },
         })
       }
     } else if (provider === 'mixpanel') {
@@ -78,7 +78,7 @@ export const identifyUser = (userId, traits = {}) => {
 export const trackPageView = (pageName, properties = {}) => {
   trackEvent('$pageview', {
     page: pageName,
-    ...properties
+    ...properties,
   })
 }
 
@@ -86,7 +86,7 @@ export const trackPageView = (pageName, properties = {}) => {
 export const trackFeatureUsage = (featureName, properties = {}) => {
   trackEvent('feature_used', {
     feature: featureName,
-    ...properties
+    ...properties,
   })
 }
 

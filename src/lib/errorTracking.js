@@ -8,7 +8,7 @@ let errorTrackingInitialized = false
 export const initErrorTracking = () => {
   // Only initialize once
   if (errorTrackingInitialized) return
-  
+
   // Initialize our custom error logger
   initErrorLogger()
   errorTrackingInitialized = true
@@ -22,20 +22,20 @@ export const captureException = (error, context = {}) => {
     context: {
       ...context,
       errorName: error?.name,
-      errorString: error?.toString()
+      errorString: error?.toString(),
     },
-    severity: 'error'
+    severity: 'error',
   })
 }
 
 export const captureMessage = (message, level = 'info') => {
   logError({
     message,
-    severity: level === 'error' ? 'error' : level === 'warning' ? 'warning' : 'info'
+    severity: level === 'error' ? 'error' : level === 'warning' ? 'warning' : 'info',
   })
 }
 
-export const setUserContext = (user) => {
+export const setUserContext = user => {
   // User context is automatically captured by error logger
   // No need to set it explicitly
 }

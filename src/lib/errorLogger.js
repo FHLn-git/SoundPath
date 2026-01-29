@@ -9,28 +9,28 @@ let errorLoggerInitialized = false
 export const initErrorLogger = () => {
   if (errorLoggerInitialized) return
   errorLoggerInitialized = true
-  
+
   // Set up global error handlers
   if (typeof window !== 'undefined') {
     // Catch unhandled errors
-    window.addEventListener('error', (event) => {
+    window.addEventListener('error', event => {
       logError({
         message: event.message || 'Unhandled error',
         stack: event.error?.stack,
         url: window.location.href,
         component: 'Global Error Handler',
-        severity: 'error'
+        severity: 'error',
       })
     })
 
     // Catch unhandled promise rejections
-    window.addEventListener('unhandledrejection', (event) => {
+    window.addEventListener('unhandledrejection', event => {
       logError({
         message: event.reason?.message || 'Unhandled promise rejection',
         stack: event.reason?.stack,
         url: window.location.href,
         component: 'Promise Rejection',
-        severity: 'error'
+        severity: 'error',
       })
     })
   }
@@ -39,7 +39,9 @@ export const initErrorLogger = () => {
 // Get current user context
 const getUserContext = async () => {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) return { userId: null, staffMemberId: null, organizationId: null }
 
     // Get staff member and organization
@@ -52,7 +54,7 @@ const getUserContext = async () => {
     return {
       userId: user.id,
       staffMemberId: staffMember?.id || null,
-      organizationId: staffMember?.organization_id || null
+      organizationId: staffMember?.organization_id || null,
     }
   } catch (error) {
     return { userId: null, staffMemberId: null, organizationId: null }
@@ -72,7 +74,7 @@ const getBrowserInfo = () => {
     viewportWidth: window.innerWidth,
     viewportHeight: window.innerHeight,
     url: window.location.href,
-    referrer: document.referrer
+    referrer: document.referrer,
   }
 }
 
@@ -86,7 +88,7 @@ export const logError = async ({
   severity = 'error',
   user = null,
   staffMember = null,
-  organization = null
+  organization = null,
 }) => {
   if (!supabase) {
     console.error('Error logger: Supabase not available', { message, stack })
@@ -121,7 +123,7 @@ export const logError = async ({
       p_user_agent: browserInfo?.userAgent || null,
       p_browser_info: browserInfo,
       p_error_context: context,
-      p_severity: severity
+      p_severity: severity,
     })
 
     if (error) {
@@ -140,7 +142,7 @@ export const logWarning = (message, context = null) => {
   return logError({
     message,
     context,
-    severity: 'warning'
+    severity: 'warning',
   })
 }
 
@@ -149,7 +151,7 @@ export const logInfo = (message, context = null) => {
   return logError({
     message,
     context,
-    severity: 'info'
+    severity: 'info',
   })
 }
 

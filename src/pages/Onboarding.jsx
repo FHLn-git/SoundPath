@@ -1,9 +1,16 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Building2, User, CheckCircle, ArrowRight, ArrowLeft, 
-  Mail, Lock, Zap, AlertCircle
+import {
+  Building2,
+  User,
+  CheckCircle,
+  ArrowRight,
+  ArrowLeft,
+  Mail,
+  Lock,
+  Zap,
+  AlertCircle,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { supabase } from '../lib/supabaseClient'
@@ -28,7 +35,7 @@ const Onboarding = () => {
   const [confirmPassword, setConfirmPassword] = useState('')
 
   // Auto-generate slug from label name
-  const generateSlug = (name) => {
+  const generateSlug = name => {
     return name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
@@ -36,7 +43,7 @@ const Onboarding = () => {
       .substring(0, 50)
   }
 
-  const handleLabelNameChange = (value) => {
+  const handleLabelNameChange = value => {
     setLabelName(value)
     if (value) {
       setLabelSlug(generateSlug(value))
@@ -44,15 +51,14 @@ const Onboarding = () => {
     }
   }
 
-  const checkSlugAvailability = async (slug) => {
+  const checkSlugAvailability = async slug => {
     if (!slug || !supabase) return
 
     setIsCheckingSlug(true)
     setSlugError('')
 
     try {
-      const { data, error } = await supabase
-        .rpc('check_slug_availability', { slug_to_check: slug })
+      const { data, error } = await supabase.rpc('check_slug_availability', { slug_to_check: slug })
 
       if (error) throw error
 
@@ -207,7 +213,9 @@ const Onboarding = () => {
       if (authError) {
         // Handle rate limit errors specifically
         if (authError.message?.includes('rate limit') || authError.message?.includes('too many')) {
-          throw new Error('Email rate limit exceeded. Please wait a few minutes and try again, or check your email for a confirmation link from a previous attempt.')
+          throw new Error(
+            'Email rate limit exceeded. Please wait a few minutes and try again, or check your email for a confirmation link from a previous attempt.'
+          )
         }
         throw authError
       }
@@ -257,19 +265,15 @@ const Onboarding = () => {
       if (staffError) throw staffError
 
       // Step 4: Update organization with owner_id
-      await supabase
-        .from('organizations')
-        .update({ owner_id: staffId })
-        .eq('id', orgData.id)
+      await supabase.from('organizations').update({ owner_id: staffId }).eq('id', orgData.id)
 
       // Step 5: Create membership for the owner using SECURITY DEFINER function
       // This bypasses RLS since user doesn't have membership yet
-      const { error: membershipError } = await supabase
-        .rpc('create_membership', {
-          user_id_param: staffId,
-          organization_id_param: orgData.id,
-          role_param: 'Owner',
-        })
+      const { error: membershipError } = await supabase.rpc('create_membership', {
+        user_id_param: staffId,
+        organization_id_param: orgData.id,
+        role_param: 'Owner',
+      })
 
       if (membershipError) {
         console.error('Error creating membership:', membershipError)
@@ -277,15 +281,13 @@ const Onboarding = () => {
       }
 
       // Step 6: Create free subscription for the organization
-      const { error: subError } = await supabase
-        .from('subscriptions')
-        .insert({
-          organization_id: orgData.id,
-          plan_id: 'free',
-          status: 'active',
-          current_period_start: new Date().toISOString(),
-          current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year for free plan
-        })
+      const { error: subError } = await supabase.from('subscriptions').insert({
+        organization_id: orgData.id,
+        plan_id: 'free',
+        status: 'active',
+        current_period_start: new Date().toISOString(),
+        current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year for free plan
+      })
 
       if (subError) {
         console.error('Error creating subscription:', subError)
@@ -355,11 +357,7 @@ const Onboarding = () => {
                       : 'bg-gray-700 text-gray-400'
                   }`}
                 >
-                  {currentStep > step.number ? (
-                    <CheckCircle size={24} />
-                  ) : (
-                    <step.icon size={24} />
-                  )}
+                  {currentStep > step.number ? <CheckCircle size={24} /> : <step.icon size={24} />}
                 </motion.div>
                 <span
                   className={`text-xs font-medium ${
@@ -405,7 +403,7 @@ const Onboarding = () => {
                   <input
                     type="text"
                     value={labelName}
-                    onChange={(e) => handleLabelNameChange(e.target.value)}
+                    onChange={e => handleLabelNameChange(e.target.value)}
                     className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple focus:ring-1 focus:ring-neon-purple transition-all"
                     placeholder="Midnight Records"
                     required
@@ -413,9 +411,7 @@ const Onboarding = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    URL Slug *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">URL Slug *</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                       soundpath.app/
@@ -423,7 +419,7 @@ const Onboarding = () => {
                     <input
                       type="text"
                       value={labelSlug}
-                      onChange={(e) => {
+                      onChange={e => {
                         const newSlug = generateSlug(e.target.value)
                         setLabelSlug(newSlug)
                         setSlugError('')
@@ -468,9 +464,7 @@ const Onboarding = () => {
               >
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-2">Owner Account</h2>
-                  <p className="text-gray-400 text-sm">
-                    Create your account to manage your label
-                  </p>
+                  <p className="text-gray-400 text-sm">Create your account to manage your label</p>
                 </div>
 
                 <div>
@@ -480,7 +474,7 @@ const Onboarding = () => {
                   <input
                     type="text"
                     value={ownerName}
-                    onChange={(e) => setOwnerName(e.target.value)}
+                    onChange={e => setOwnerName(e.target.value)}
                     className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple focus:ring-1 focus:ring-neon-purple transition-all"
                     placeholder="John Doe"
                     required
@@ -488,9 +482,7 @@ const Onboarding = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Email *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Email *</label>
                   <div className="relative">
                     <Mail
                       size={18}
@@ -499,7 +491,7 @@ const Onboarding = () => {
                     <input
                       type="email"
                       value={ownerEmail}
-                      onChange={(e) => setOwnerEmail(e.target.value)}
+                      onChange={e => setOwnerEmail(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple focus:ring-1 focus:ring-neon-purple transition-all"
                       placeholder="you@label.com"
                       required
@@ -508,9 +500,7 @@ const Onboarding = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Password *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Password *</label>
                   <div className="relative">
                     <Lock
                       size={18}
@@ -519,16 +509,14 @@ const Onboarding = () => {
                     <input
                       type="password"
                       value={ownerPassword}
-                      onChange={(e) => setOwnerPassword(e.target.value)}
+                      onChange={e => setOwnerPassword(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple focus:ring-1 focus:ring-neon-purple transition-all"
                       placeholder="••••••••"
                       required
                       minLength={8}
                     />
                   </div>
-                  <p className="mt-2 text-xs text-gray-500">
-                    Must be at least 8 characters
-                  </p>
+                  <p className="mt-2 text-xs text-gray-500">Must be at least 8 characters</p>
                 </div>
 
                 <div>
@@ -543,7 +531,7 @@ const Onboarding = () => {
                     <input
                       type="password"
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onChange={e => setConfirmPassword(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple focus:ring-1 focus:ring-neon-purple transition-all"
                       placeholder="••••••••"
                       required
@@ -589,8 +577,9 @@ const Onboarding = () => {
 
                 <div className="p-4 bg-blue-500/10 border border-blue-500/50 rounded-lg">
                   <p className="text-blue-400 text-sm">
-                    <strong>Note:</strong> After creating your label, you'll be redirected to the login page.
-                    A welcome track and default genres will be automatically added to your dashboard.
+                    <strong>Note:</strong> After creating your label, you'll be redirected to the
+                    login page. A welcome track and default genres will be automatically added to
+                    your dashboard.
                   </p>
                 </div>
               </motion.div>
@@ -641,7 +630,7 @@ const Onboarding = () => {
           <div className="mt-6 text-center">
             <button
               type="button"
-              onClick={(e) => {
+              onClick={e => {
                 e.preventDefault()
                 navigate('/')
               }}

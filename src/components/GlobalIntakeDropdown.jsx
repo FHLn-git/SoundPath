@@ -6,12 +6,12 @@ import { useAuth } from '../context/AuthContext'
 
 const ORIGIN = typeof window !== 'undefined' ? window.location.origin : ''
 
-const copyToClipboard = async (text) => {
+const copyToClipboard = async text => {
   if (!text) return
   await navigator.clipboard.writeText(text)
 }
 
-const buildUserSlugFallback = (name) => {
+const buildUserSlugFallback = name => {
   return (name || '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -37,8 +37,8 @@ const GlobalIntakeDropdown = ({
 
   const labelOrgs = useMemo(() => {
     const list = (memberships || [])
-      .filter((m) => Boolean(m?.organization_id))
-      .map((m) => ({
+      .filter(m => Boolean(m?.organization_id))
+      .map(m => ({
         organizationId: m.organization_id,
         organizationName: m.organization_name || 'Label',
       }))
@@ -84,7 +84,7 @@ const GlobalIntakeDropdown = ({
 
   useEffect(() => {
     if (!supabase) return
-    const orgIds = Array.from(new Set(labelOrgs.map((o) => o.organizationId))).filter(Boolean)
+    const orgIds = Array.from(new Set(labelOrgs.map(o => o.organizationId))).filter(Boolean)
     if (orgIds.length === 0) {
       setOrgSlugById({})
       return
@@ -102,7 +102,7 @@ const GlobalIntakeDropdown = ({
         if (error) return
 
         const map = {}
-        ;(data || []).forEach((row) => {
+        ;(data || []).forEach(row => {
           if (row?.id) map[row.id] = row?.slug || ''
         })
         setOrgSlugById(map)
@@ -125,7 +125,7 @@ const GlobalIntakeDropdown = ({
     }
   }, [])
 
-  const showCopied = (key) => {
+  const showCopied = key => {
     setCopiedKey(key)
     if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current)
     copiedTimeoutRef.current = setTimeout(() => setCopiedKey(null), 1200)
@@ -181,7 +181,7 @@ const GlobalIntakeDropdown = ({
           align="end"
           sideOffset={10}
           className={contentClass}
-          onCloseAutoFocus={(e) => e.preventDefault()}
+          onCloseAutoFocus={e => e.preventDefault()}
         >
           <div className={sectionLabelClass}>PERSONAL INBOX</div>
           <div className={rowClass}>
@@ -192,7 +192,7 @@ const GlobalIntakeDropdown = ({
             <button
               type="button"
               className={copyBtnClass}
-              onClick={(e) => {
+              onClick={e => {
                 e.preventDefault()
                 e.stopPropagation()
                 handleCopy('user', personalSubmissionUrl)
@@ -213,7 +213,7 @@ const GlobalIntakeDropdown = ({
             <div className="px-2 py-2 text-xs text-gray-500">No labels yet.</div>
           ) : (
             <div className="max-h-[280px] overflow-auto">
-              {labelOrgs.map((org) => {
+              {labelOrgs.map(org => {
                 const slug = orgSlugById[org.organizationId] || ''
                 const url = slug ? `${ORIGIN}/submit/label/${slug}` : ''
                 const key = `org-${org.organizationId}`
@@ -227,7 +227,7 @@ const GlobalIntakeDropdown = ({
                     <button
                       type="button"
                       className={copyBtnClass}
-                      onClick={(e) => {
+                      onClick={e => {
                         e.preventDefault()
                         e.stopPropagation()
                         handleCopy(key, url)
@@ -254,7 +254,7 @@ const GlobalIntakeDropdown = ({
               'border border-gray-800 bg-white/[0.02] hover:bg-white/[0.04] text-gray-100',
               manualAddDisabled ? 'opacity-60 cursor-not-allowed' : '',
             ].join(' ')}
-            onSelect={(e) => {
+            onSelect={e => {
               if (manualAddDisabled) {
                 e.preventDefault()
                 return
@@ -279,4 +279,3 @@ const GlobalIntakeDropdown = ({
 }
 
 export default GlobalIntakeDropdown
-

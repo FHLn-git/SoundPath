@@ -28,7 +28,7 @@ const UpgradeOverlay = ({
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
           className="relative bg-gray-900 border border-gray-800 rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl"
         >
           <button
@@ -44,7 +44,8 @@ const UpgradeOverlay = ({
             </div>
             <h2 className="text-2xl font-bold text-white mb-2">Upgrade to Unlock {featureName}</h2>
             <p className="text-gray-400">
-              {featureName} is available on {planName} tier and above. Upgrade now to access this powerful feature.
+              {featureName} is available on {planName} tier and above. Upgrade now to access this
+              powerful feature.
             </p>
           </div>
 
@@ -82,7 +83,11 @@ const UpgradeOverlay = ({
               disabled={showFinishUpgrading && finishUpgradingLoading}
               className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg text-white font-semibold transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {showFinishUpgrading ? (finishUpgradingLoading ? 'Redirecting…' : 'Finish Upgrading') : 'Secure Alpha Access'}
+              {showFinishUpgrading
+                ? finishUpgradingLoading
+                  ? 'Redirecting…'
+                  : 'Finish Upgrading'
+                : 'Secure Alpha Access'}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

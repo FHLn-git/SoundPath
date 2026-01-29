@@ -1,9 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { 
-  ArrowLeft, Users, Plus, Trash2, Edit2, Shield, 
-  TrendingUp, Clock, Zap, Music, AlertCircle, X, Lock
+import {
+  ArrowLeft,
+  Users,
+  Plus,
+  Trash2,
+  Edit2,
+  Shield,
+  TrendingUp,
+  Clock,
+  Zap,
+  Music,
+  AlertCircle,
+  X,
+  Lock,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
@@ -15,10 +26,10 @@ import Toast from '../components/Toast'
 
 const StaffManagement = () => {
   const navigate = useNavigate()
-  const { 
-    getAllStaffMetrics, 
-    addStaff, 
-    updateStaffRole, 
+  const {
+    getAllStaffMetrics,
+    addStaff,
+    updateStaffRole,
     removeStaff,
     updateStaffPermissions,
     tracks,
@@ -34,7 +45,8 @@ const StaffManagement = () => {
   const [isUpdatingPermissions, setIsUpdatingPermissions] = useState(false)
   const [toast, setToast] = useState({ isVisible: false, message: '', type: 'success' })
   const [newStaff, setNewStaff] = useState({ name: '', email: '', role: 'Scout' })
-  const { columnWidths, handleResize, getGridTemplate, minWidths } = useResizableColumns('staff-management')
+  const { columnWidths, handleResize, getGridTemplate, minWidths } =
+    useResizableColumns('staff-management')
 
   // Redirect if not Owner
   useEffect(() => {
@@ -59,23 +71,28 @@ const StaffManagement = () => {
   }, [isOwner, getAllStaffMetrics])
 
   // Calculate advanced metrics for each staff member
-  const calculateAdvancedMetrics = (staff) => {
+  const calculateAdvancedMetrics = staff => {
     // Hit Rate: % of tracks that were advanced and eventually got signed
     // For now, we calculate based on all tracks in pipeline vs signed
     // In a full implementation, we'd track which staff member advanced each track
-    const pipelineTracks = tracks.filter(t => 
-      (t.column === 'second-listen' || t.column === 'team-review' || 
-       t.column === 'contracting' || t.column === 'upcoming') && !t.archived
+    const pipelineTracks = tracks.filter(
+      t =>
+        (t.column === 'second-listen' ||
+          t.column === 'team-review' ||
+          t.column === 'contracting' ||
+          t.column === 'upcoming') &&
+        !t.archived
     )
     const signedTracks = tracks.filter(t => t.contractSigned && !t.archived)
-    const hitRate = pipelineTracks.length > 0 
-      ? ((signedTracks.length / pipelineTracks.length) * 100).toFixed(1)
-      : '0.0'
+    const hitRate =
+      pipelineTracks.length > 0
+        ? ((signedTracks.length / pipelineTracks.length) * 100).toFixed(1)
+        : '0.0'
 
     // Decision Velocity: Average time tracks stay in Inbox before being moved
     // Calculate based on tracks that have moved out of inbox
-    const movedTracks = tracks.filter(t => 
-      t.column !== 'inbox' && t.movedToSecondListen && !t.archived
+    const movedTracks = tracks.filter(
+      t => t.column !== 'inbox' && t.movedToSecondListen && !t.archived
     )
     let avgDays = '0.0'
     if (movedTracks.length > 0) {
@@ -96,9 +113,10 @@ const StaffManagement = () => {
       }
     })
     const genreEntries = Object.entries(genreCounts)
-    const genreSpecialty = genreEntries.length > 0
-      ? genreEntries.reduce((a, b) => (a[1] > b[1] ? a : b), genreEntries[0])[0]
-      : 'N/A'
+    const genreSpecialty =
+      genreEntries.length > 0
+        ? genreEntries.reduce((a, b) => (a[1] > b[1] ? a : b), genreEntries[0])[0]
+        : 'N/A'
 
     return {
       hitRate,
@@ -171,7 +189,7 @@ const StaffManagement = () => {
     }
   }
 
-  const handleUpdateRole = async (newRole) => {
+  const handleUpdateRole = async newRole => {
     if (!showRoleModal.staff) return
 
     const { error } = await updateStaffRole(showRoleModal.staff.id, newRole)
@@ -194,7 +212,7 @@ const StaffManagement = () => {
     }
   }
 
-  const handleSavePermissions = async (permissions) => {
+  const handleSavePermissions = async permissions => {
     if (!showPermissionsModal.staff) return
 
     setIsUpdatingPermissions(true)
@@ -220,16 +238,19 @@ const StaffManagement = () => {
     }
   }
 
-  const getFatigueColor = (cognitiveLoad) => {
+  const getFatigueColor = cognitiveLoad => {
     if (!cognitiveLoad) return 'gray'
     const color = cognitiveLoad.overallColor || 'green'
-    return color === 'green' ? 'green' :
-           color === 'blue' ? 'blue' :
-           color === 'yellow' || color === 'orange' ? 'yellow' :
-           'red'
+    return color === 'green'
+      ? 'green'
+      : color === 'blue'
+        ? 'blue'
+        : color === 'yellow' || color === 'orange'
+          ? 'yellow'
+          : 'red'
   }
 
-  const getFatigueStatus = (cognitiveLoad) => {
+  const getFatigueStatus = cognitiveLoad => {
     if (!cognitiveLoad) return 'N/A'
     return cognitiveLoad.overallStatus || 'Optimal'
   }
@@ -247,7 +268,7 @@ const StaffManagement = () => {
         <div className="flex items-center gap-4">
           <button
             type="button"
-            onClick={(e) => {
+            onClick={e => {
               e.preventDefault()
               navigate('/admin')
             }}
@@ -272,54 +293,54 @@ const StaffManagement = () => {
       <div className="flex-1 overflow-auto">
         <div className="bg-gray-900/30 rounded-lg border border-gray-800/50 overflow-hidden">
           {/* Table Header */}
-          <div 
+          <div
             className="grid gap-4 items-center text-sm font-semibold text-gray-400 uppercase tracking-wider py-2 px-4 border-b border-gray-800/50 bg-gray-900/50 text-left"
             style={{ gridTemplateColumns: gridTemplate }}
           >
             <ResizableColumnHeader
-              onResize={(width) => handleResize(0, width)}
+              onResize={width => handleResize(0, width)}
               minWidth={minWidths[0] || 150}
             >
               <span className="text-left">Name</span>
             </ResizableColumnHeader>
             <ResizableColumnHeader
-              onResize={(width) => handleResize(1, width)}
+              onResize={width => handleResize(1, width)}
               minWidth={minWidths[1] || 100}
             >
               <span className="text-left">Role</span>
             </ResizableColumnHeader>
             <ResizableColumnHeader
-              onResize={(width) => handleResize(2, width)}
+              onResize={width => handleResize(2, width)}
               minWidth={minWidths[2] || 80}
             >
               <span className="text-left">Hit Rate</span>
             </ResizableColumnHeader>
             <ResizableColumnHeader
-              onResize={(width) => handleResize(3, width)}
+              onResize={width => handleResize(3, width)}
               minWidth={minWidths[3] || 100}
             >
               <span className="text-left">Decision Velocity</span>
             </ResizableColumnHeader>
             <ResizableColumnHeader
-              onResize={(width) => handleResize(4, width)}
+              onResize={width => handleResize(4, width)}
               minWidth={minWidths[4] || 100}
             >
               <span className="text-left">Fatigue Status</span>
             </ResizableColumnHeader>
             <ResizableColumnHeader
-              onResize={(width) => handleResize(5, width)}
+              onResize={width => handleResize(5, width)}
               minWidth={minWidths[5] || 120}
             >
               <span className="text-left">Genre Specialty</span>
             </ResizableColumnHeader>
             <ResizableColumnHeader
-              onResize={(width) => handleResize(6, width)}
+              onResize={width => handleResize(6, width)}
               minWidth={minWidths[6] || 100}
             >
               <span className="text-left">Weekly Listens</span>
             </ResizableColumnHeader>
             <ResizableColumnHeader
-              onResize={(width) => handleResize(7, width)}
+              onResize={width => handleResize(7, width)}
               minWidth={minWidths[7] || 150}
               isLast={true}
             >
@@ -340,7 +361,7 @@ const StaffManagement = () => {
                 <p>No staff members found</p>
               </div>
             ) : (
-              staffList.map((staff) => {
+              staffList.map(staff => {
                 const advancedMetrics = calculateAdvancedMetrics(staff)
                 const fatigueColor = getFatigueColor(staff.cognitiveLoad)
                 const fatigueStatus = getFatigueStatus(staff.cognitiveLoad)
@@ -355,9 +376,11 @@ const StaffManagement = () => {
                   >
                     {/* Name */}
                     <div className="flex items-center gap-2 text-left">
-                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                        staff.isOnline ? 'bg-green-500' : 'bg-gray-500'
-                      }`} />
+                      <div
+                        className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                          staff.isOnline ? 'bg-green-500' : 'bg-gray-500'
+                        }`}
+                      />
                       <span className="text-white font-semibold truncate">{staff.name}</span>
                     </div>
 
@@ -401,18 +424,28 @@ const StaffManagement = () => {
 
                     {/* Fatigue Status */}
                     <div className="flex items-center gap-2 text-left">
-                      <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                        fatigueColor === 'green' ? 'bg-green-500' :
-                        fatigueColor === 'blue' ? 'bg-blue-500' :
-                        fatigueColor === 'yellow' ? 'bg-yellow-500' :
-                        'bg-red-500'
-                      }`} />
-                      <span className={`text-xs ${
-                        fatigueColor === 'green' ? 'text-green-400' :
-                        fatigueColor === 'blue' ? 'text-blue-400' :
-                        fatigueColor === 'yellow' ? 'text-yellow-400' :
-                        'text-red-400'
-                      }`}>
+                      <div
+                        className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                          fatigueColor === 'green'
+                            ? 'bg-green-500'
+                            : fatigueColor === 'blue'
+                              ? 'bg-blue-500'
+                              : fatigueColor === 'yellow'
+                                ? 'bg-yellow-500'
+                                : 'bg-red-500'
+                        }`}
+                      />
+                      <span
+                        className={`text-xs ${
+                          fatigueColor === 'green'
+                            ? 'text-green-400'
+                            : fatigueColor === 'blue'
+                              ? 'text-blue-400'
+                              : fatigueColor === 'yellow'
+                                ? 'text-yellow-400'
+                                : 'text-red-400'
+                        }`}
+                      >
                         {fatigueStatus}
                       </span>
                     </div>
@@ -424,9 +457,7 @@ const StaffManagement = () => {
                     </div>
 
                     {/* Weekly Listens */}
-                    <div className="text-white text-left">
-                      {staff.weeklyListens || 0}
-                    </div>
+                    <div className="text-white text-left">{staff.weeklyListens || 0}</div>
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 text-left">
@@ -478,7 +509,7 @@ const StaffManagement = () => {
                 <input
                   type="text"
                   value={newStaff.name}
-                  onChange={(e) => setNewStaff({ ...newStaff, name: e.target.value })}
+                  onChange={e => setNewStaff({ ...newStaff, name: e.target.value })}
                   className="w-full px-3 py-2 bg-gray-900/50 border border-gray-700 rounded text-white"
                   placeholder="Staff member name"
                 />
@@ -488,7 +519,7 @@ const StaffManagement = () => {
                 <input
                   type="email"
                   value={newStaff.email}
-                  onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
+                  onChange={e => setNewStaff({ ...newStaff, email: e.target.value })}
                   className="w-full px-3 py-2 bg-gray-900/50 border border-gray-700 rounded text-white"
                   placeholder="staff@label.com"
                 />
@@ -497,7 +528,7 @@ const StaffManagement = () => {
                 <label className="block text-sm text-gray-400 mb-2">Role</label>
                 <select
                   value={newStaff.role}
-                  onChange={(e) => setNewStaff({ ...newStaff, role: e.target.value })}
+                  onChange={e => setNewStaff({ ...newStaff, role: e.target.value })}
                   className="w-full px-3 py-2 bg-gray-900/50 border border-gray-700 rounded text-white"
                 >
                   <option value="Scout">Scout</option>
@@ -562,7 +593,7 @@ const StaffManagement = () => {
             </div>
             <p className="text-gray-400 mb-4">Update role for {showRoleModal.staff.name}</p>
             <div className="space-y-2">
-              {['Scout', 'Manager', 'Owner'].map((role) => (
+              {['Scout', 'Manager', 'Owner'].map(role => (
                 <button
                   key={role}
                   onClick={() => handleUpdateRole(role)}

@@ -5,7 +5,13 @@ import { Music, Send, CheckCircle, AlertCircle, Loader2, Mail } from 'lucide-rea
 import { supabase } from '../lib/supabaseClient'
 import { validateEmail } from '../lib/emailValidation'
 
-const DEFAULT_GENRES = ['Tech House', 'Deep House', 'Classic House', 'Piano House', 'Progressive House']
+const DEFAULT_GENRES = [
+  'Tech House',
+  'Deep House',
+  'Classic House',
+  'Piano House',
+  'Progressive House',
+]
 
 const PublicForm = () => {
   const { targetType, targetSlug } = useParams()
@@ -14,7 +20,7 @@ const PublicForm = () => {
   const [loading, setLoading] = useState(true)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
-  
+
   // Form state
   const [artistName, setArtistName] = useState('')
   const [email, setEmail] = useState('')
@@ -50,7 +56,7 @@ const PublicForm = () => {
 
           const branding = data.branding_settings || {}
           const genres = branding.submission_genres || DEFAULT_GENRES
-          
+
           setTargetInfo({
             type: 'label',
             id: data.id,
@@ -61,16 +67,22 @@ const PublicForm = () => {
           setAvailableGenres(genres)
         } else if (targetType === 'user') {
           // Use RPC function to lookup staff by slug (bypasses RLS)
-          const { data: staffData, error: staffError } = await supabase
-            .rpc('get_staff_by_slug', { slug_to_find: targetSlug })
+          const { data: staffData, error: staffError } = await supabase.rpc('get_staff_by_slug', {
+            slug_to_find: targetSlug,
+          })
 
           if (staffError) {
             console.error('Error looking up user by slug:', staffError)
-            
+
             // Check if function doesn't exist
-            if (staffError.message?.includes('Could not find the function') || 
-                staffError.message?.includes('function') && staffError.message?.includes('not found')) {
-              setError('Submission system not configured. Please contact the administrator to run the database migration.')
+            if (
+              staffError.message?.includes('Could not find the function') ||
+              (staffError.message?.includes('function') &&
+                staffError.message?.includes('not found'))
+            ) {
+              setError(
+                'Submission system not configured. Please contact the administrator to run the database migration.'
+              )
             } else {
               setError(`User inbox not found: ${staffError.message}`)
             }
@@ -111,7 +123,7 @@ const PublicForm = () => {
     fetchTarget()
   }, [targetType, targetSlug])
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault()
     setError('')
     setIsSubmitting(true)
@@ -122,7 +134,7 @@ const PublicForm = () => {
       setIsSubmitting(false)
       return
     }
-    
+
     // Validate email
     const emailValidation = validateEmail(email)
     if (!emailValidation.valid) {
@@ -131,7 +143,7 @@ const PublicForm = () => {
       setIsSubmitting(false)
       return
     }
-    
+
     if (!trackTitle.trim()) {
       setError('Track title is required')
       setIsSubmitting(false)
@@ -145,10 +157,11 @@ const PublicForm = () => {
 
     // Validate link is SoundCloud or Dropbox
     const linkLower = streamLink.trim().toLowerCase()
-    const isValidLink = linkLower.includes('soundcloud.com') || 
-                        linkLower.includes('dropbox.com') ||
-                        linkLower.includes('dl.dropboxusercontent.com')
-    
+    const isValidLink =
+      linkLower.includes('soundcloud.com') ||
+      linkLower.includes('dropbox.com') ||
+      linkLower.includes('dl.dropboxusercontent.com')
+
     if (!isValidLink) {
       setError('Only SoundCloud and Dropbox links are accepted')
       setIsSubmitting(false)
@@ -227,13 +240,14 @@ const PublicForm = () => {
         // trackData.notes = shortNote.trim()
       }
 
-      const { error: trackError } = await supabase
-        .from('tracks')
-        .insert(trackData)
+      const { error: trackError } = await supabase.from('tracks').insert(trackData)
 
       if (trackError) {
         // Friendly duplicate message (DB unique index)
-        if (trackError.code === '23505' || trackError.message?.toLowerCase().includes('duplicate')) {
+        if (
+          trackError.code === '23505' ||
+          trackError.message?.toLowerCase().includes('duplicate')
+        ) {
           throw new Error('This link was already submitted. Please send a different link.')
         }
         throw new Error(`Failed to submit track: ${trackError.message}`)
@@ -347,7 +361,7 @@ const PublicForm = () => {
               <input
                 type="text"
                 value={artistName}
-                onChange={(e) => setArtistName(e.target.value)}
+                onChange={e => setArtistName(e.target.value)}
                 required
                 className="w-full px-4 py-3 bg-gray-900/50 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700 transition-all font-mono"
                 placeholder="Your artist name"
@@ -367,11 +381,11 @@ const PublicForm = () => {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => {
+                  onChange={e => {
                     setEmail(e.target.value)
                     setEmailError('')
                   }}
-                  onBlur={(e) => {
+                  onBlur={e => {
                     if (e.target.value) {
                       const validation = validateEmail(e.target.value)
                       if (!validation.valid) {
@@ -390,9 +404,7 @@ const PublicForm = () => {
                   placeholder="your@email.com"
                 />
               </div>
-              {emailError && (
-                <p className="mt-1 text-sm text-red-400">{emailError}</p>
-              )}
+              {emailError && <p className="mt-1 text-sm text-red-400">{emailError}</p>}
             </div>
 
             {/* Track Title */}
@@ -403,7 +415,7 @@ const PublicForm = () => {
               <input
                 type="text"
                 value={trackTitle}
-                onChange={(e) => setTrackTitle(e.target.value)}
+                onChange={e => setTrackTitle(e.target.value)}
                 required
                 className="w-full px-4 py-3 bg-gray-900/50 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700 transition-all font-mono"
                 placeholder="Track name"
@@ -418,12 +430,14 @@ const PublicForm = () => {
               <input
                 type="url"
                 value={streamLink}
-                onChange={(e) => setStreamLink(e.target.value)}
+                onChange={e => setStreamLink(e.target.value)}
                 required
                 className="w-full px-4 py-3 bg-gray-900/50 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700 transition-all font-mono"
                 placeholder="SoundCloud or Dropbox link"
               />
-              <p className="text-xs text-gray-500 mt-1">Only SoundCloud and Dropbox links are accepted</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Only SoundCloud and Dropbox links are accepted
+              </p>
             </div>
 
             {/* Primary Genre & BPM Row */}
@@ -435,12 +449,12 @@ const PublicForm = () => {
                 </label>
                 <select
                   value={primaryGenre}
-                  onChange={(e) => setPrimaryGenre(e.target.value)}
+                  onChange={e => setPrimaryGenre(e.target.value)}
                   required
                   className="w-full px-4 py-3 bg-gray-900/50 border border-gray-800 rounded-lg text-white focus:outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700 transition-all font-mono"
                 >
                   <option value="">Select genre</option>
-                  {availableGenres.map((genre) => (
+                  {availableGenres.map(genre => (
                     <option key={genre} value={genre} className="bg-gray-950">
                       {genre}
                     </option>
@@ -456,7 +470,7 @@ const PublicForm = () => {
                 <input
                   type="number"
                   value={bpm}
-                  onChange={(e) => setBpm(e.target.value)}
+                  onChange={e => setBpm(e.target.value)}
                   required
                   min="1"
                   max="300"
@@ -473,7 +487,7 @@ const PublicForm = () => {
               </label>
               <textarea
                 value={shortNote}
-                onChange={(e) => setShortNote(e.target.value)}
+                onChange={e => setShortNote(e.target.value)}
                 rows={3}
                 className="w-full px-4 py-3 bg-gray-950/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple focus:ring-1 focus:ring-neon-purple transition-all font-mono resize-none"
                 placeholder="Any additional information about your track..."

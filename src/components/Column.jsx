@@ -2,7 +2,7 @@ import { useDroppable } from '@dnd-kit/core'
 import TrackCard from './TrackCard'
 
 const Column = ({ column, tracks, onMoveTrack, onVote, allColumns }) => {
-  const currentIndex = allColumns.findIndex((c) => c.id === column.id)
+  const currentIndex = allColumns.findIndex(c => c.id === column.id)
   const canMoveLeft = currentIndex > 0
   const canMoveRight = currentIndex < allColumns.length - 1
 

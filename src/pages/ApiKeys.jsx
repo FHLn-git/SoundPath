@@ -51,7 +51,7 @@ const ApiKeys = () => {
       setToast({
         isVisible: true,
         message: 'Failed to load API keys',
-        type: 'error'
+        type: 'error',
       })
     } finally {
       setLoading(false)
@@ -63,7 +63,8 @@ const ApiKeys = () => {
     const prefix = 'sk_live_'
     const randomBytes = new Uint8Array(32)
     crypto.getRandomValues(randomBytes)
-    const key = prefix + Array.from(randomBytes, byte => byte.toString(16).padStart(2, '0')).join('')
+    const key =
+      prefix + Array.from(randomBytes, byte => byte.toString(16).padStart(2, '0')).join('')
     return key
   }
 
@@ -74,7 +75,7 @@ const ApiKeys = () => {
       setToast({
         isVisible: true,
         message: 'Only Owners and Managers can create API keys',
-        type: 'error'
+        type: 'error',
       })
       return
     }
@@ -83,8 +84,9 @@ const ApiKeys = () => {
     if (!hasApiAccess) {
       setToast({
         isVisible: true,
-        message: 'API access is not available on your current plan. Please upgrade to Starter, Pro, or Enterprise.',
-        type: 'error'
+        message:
+          'API access is not available on your current plan. Please upgrade to Starter, Pro, or Enterprise.',
+        type: 'error',
       })
       return
     }
@@ -113,8 +115,8 @@ const ApiKeys = () => {
 
       setToast({
         isVisible: true,
-        message: 'API key created! Make sure to copy it now - you won\'t be able to see it again.',
-        type: 'success'
+        message: "API key created! Make sure to copy it now - you won't be able to see it again.",
+        type: 'success',
       })
 
       // Show the full key once for copying
@@ -128,12 +130,12 @@ const ApiKeys = () => {
       setToast({
         isVisible: true,
         message: 'Failed to create API key',
-        type: 'error'
+        type: 'error',
       })
     }
   }
 
-  const hashKey = async (key) => {
+  const hashKey = async key => {
     // Simple hash for demo - in production, use proper hashing
     const encoder = new TextEncoder()
     const data = encoder.encode(key)
@@ -142,14 +144,14 @@ const ApiKeys = () => {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
   }
 
-  const revokeApiKey = async (keyId) => {
+  const revokeApiKey = async keyId => {
     if (!supabase) return
 
     if (activeMembership?.role !== 'Owner' && activeMembership?.role !== 'Manager') {
       setToast({
         isVisible: true,
         message: 'Only Owners and Managers can revoke API keys',
-        type: 'error'
+        type: 'error',
       })
       return
     }
@@ -165,7 +167,7 @@ const ApiKeys = () => {
       setToast({
         isVisible: true,
         message: 'API key revoked',
-        type: 'success'
+        type: 'success',
       })
       loadApiKeys()
     } catch (error) {
@@ -173,7 +175,7 @@ const ApiKeys = () => {
       setToast({
         isVisible: true,
         message: 'Failed to revoke API key',
-        type: 'error'
+        type: 'error',
       })
     }
   }
@@ -184,7 +186,7 @@ const ApiKeys = () => {
     setTimeout(() => setCopiedKey(null), 2000)
   }
 
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     if (!dateString) return 'Never'
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -250,9 +252,7 @@ const ApiKeys = () => {
           <div className="bg-gray-900 rounded-lg p-12 border border-gray-800 text-center">
             <Key className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h2 className="text-xl font-bold mb-2">No API Keys</h2>
-            <p className="text-gray-400 mb-6">
-              Create an API key to start using the SoundPath API
-            </p>
+            <p className="text-gray-400 mb-6">Create an API key to start using the SoundPath API</p>
             {(activeMembership?.role === 'Owner' || activeMembership?.role === 'Manager') && (
               <button
                 onClick={() => setShowCreateModal(true)}
@@ -276,10 +276,12 @@ const ApiKeys = () => {
                 </tr>
               </thead>
               <tbody>
-                {apiKeys.map((key) => {
+                {apiKeys.map(key => {
                   const isVisible = visibleKeys[key.id]
-                  const displayKey = isVisible ? key.key_prefix + '...' + (isVisible.substring(isVisible.length - 4)) : key.key_prefix + '••••••••'
-                  
+                  const displayKey = isVisible
+                    ? key.key_prefix + '...' + isVisible.substring(isVisible.length - 4)
+                    : key.key_prefix + '••••••••'
+
                   return (
                     <tr key={key.id} className="border-b border-gray-800 hover:bg-gray-800/50">
                       <td className="py-4 px-6 font-semibold">{key.name}</td>
@@ -306,7 +308,7 @@ const ApiKeys = () => {
                                 setToast({
                                   isVisible: true,
                                   message: 'API key can only be viewed once when created',
-                                  type: 'info'
+                                  type: 'info',
                                 })
                               }}
                               className="text-gray-400 hover:text-white"
@@ -322,9 +324,7 @@ const ApiKeys = () => {
                       <td className="py-4 px-6 text-gray-400">
                         {key.expires_at ? formatDate(key.expires_at) : 'Never'}
                       </td>
-                      <td className="py-4 px-6 text-gray-400">
-                        {formatDate(key.created_at)}
-                      </td>
+                      <td className="py-4 px-6 text-gray-400">{formatDate(key.created_at)}</td>
                       <td className="py-4 px-6 text-right">
                         <button
                           onClick={() => revokeApiKey(key.id)}
@@ -352,7 +352,7 @@ const ApiKeys = () => {
                   <input
                     type="text"
                     value={newKeyName}
-                    onChange={(e) => setNewKeyName(e.target.value)}
+                    onChange={e => setNewKeyName(e.target.value)}
                     placeholder="e.g., Production API Key"
                     className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gray-600"
                   />
@@ -362,7 +362,7 @@ const ApiKeys = () => {
                   <input
                     type="date"
                     value={newKeyExpires}
-                    onChange={(e) => setNewKeyExpires(e.target.value)}
+                    onChange={e => setNewKeyExpires(e.target.value)}
                     className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-600"
                   />
                 </div>

@@ -2,7 +2,18 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useBilling } from '../context/BillingContext'
 import { supabase } from '../lib/supabaseClient'
-import { Webhook, Plus, Trash2, Edit, Eye, Check, X, AlertCircle, Loader2, Copy } from 'lucide-react'
+import {
+  Webhook,
+  Plus,
+  Trash2,
+  Edit,
+  Eye,
+  Check,
+  X,
+  AlertCircle,
+  Loader2,
+  Copy,
+} from 'lucide-react'
 import Toast from '../components/Toast'
 import { useUsageLimits } from '../hooks/useUsageLimits'
 
@@ -67,7 +78,7 @@ const Webhooks = () => {
         const stats = {}
         for (const webhook of data) {
           const { data: statsData } = await supabase.rpc('get_webhook_stats', {
-            webhook_id: webhook.id
+            webhook_id: webhook.id,
           })
           if (statsData && statsData.length > 0) {
             stats[webhook.id] = statsData[0]
@@ -80,7 +91,7 @@ const Webhooks = () => {
       setToast({
         isVisible: true,
         message: 'Failed to load webhooks',
-        type: 'error'
+        type: 'error',
       })
     } finally {
       setLoading(false)
@@ -100,7 +111,7 @@ const Webhooks = () => {
       setToast({
         isVisible: true,
         message: 'Only Owners and Managers can create webhooks',
-        type: 'error'
+        type: 'error',
       })
       return
     }
@@ -109,8 +120,9 @@ const Webhooks = () => {
     if (!hasWebhookAccess) {
       setToast({
         isVisible: true,
-        message: 'Webhooks are not available on your current plan. Please upgrade to Pro or Enterprise.',
-        type: 'error'
+        message:
+          'Webhooks are not available on your current plan. Please upgrade to Pro or Enterprise.',
+        type: 'error',
       })
       return
     }
@@ -134,8 +146,9 @@ const Webhooks = () => {
 
       setToast({
         isVisible: true,
-        message: 'Webhook created successfully! Make sure to save the secret - you won\'t be able to see it again.',
-        type: 'success'
+        message:
+          "Webhook created successfully! Make sure to save the secret - you won't be able to see it again.",
+        type: 'success',
       })
 
       setShowCreateModal(false)
@@ -146,7 +159,7 @@ const Webhooks = () => {
       setToast({
         isVisible: true,
         message: 'Failed to create webhook',
-        type: 'error'
+        type: 'error',
       })
     }
   }
@@ -170,7 +183,7 @@ const Webhooks = () => {
       setToast({
         isVisible: true,
         message: 'Webhook updated successfully',
-        type: 'success'
+        type: 'success',
       })
 
       setEditingWebhook(null)
@@ -181,19 +194,19 @@ const Webhooks = () => {
       setToast({
         isVisible: true,
         message: 'Failed to update webhook',
-        type: 'error'
+        type: 'error',
       })
     }
   }
 
-  const deleteWebhook = async (webhookId) => {
+  const deleteWebhook = async webhookId => {
     if (!supabase) return
 
     if (activeMembership?.role !== 'Owner' && activeMembership?.role !== 'Manager') {
       setToast({
         isVisible: true,
         message: 'Only Owners and Managers can delete webhooks',
-        type: 'error'
+        type: 'error',
       })
       return
     }
@@ -201,17 +214,14 @@ const Webhooks = () => {
     if (!confirm('Are you sure you want to delete this webhook?')) return
 
     try {
-      const { error } = await supabase
-        .from('webhooks')
-        .delete()
-        .eq('id', webhookId)
+      const { error } = await supabase.from('webhooks').delete().eq('id', webhookId)
 
       if (error) throw error
 
       setToast({
         isVisible: true,
         message: 'Webhook deleted',
-        type: 'success'
+        type: 'success',
       })
       loadWebhooks()
     } catch (error) {
@@ -219,26 +229,26 @@ const Webhooks = () => {
       setToast({
         isVisible: true,
         message: 'Failed to delete webhook',
-        type: 'error'
+        type: 'error',
       })
     }
   }
 
-  const toggleEvent = (event) => {
+  const toggleEvent = event => {
     if (formData.events.includes(event)) {
       setFormData({
         ...formData,
-        events: formData.events.filter(e => e !== event)
+        events: formData.events.filter(e => e !== event),
       })
     } else {
       setFormData({
         ...formData,
-        events: [...formData.events, event]
+        events: [...formData.events, event],
       })
     }
   }
 
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     if (!dateString) return 'Never'
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -249,7 +259,7 @@ const Webhooks = () => {
     })
   }
 
-  const startEdit = (webhook) => {
+  const startEdit = webhook => {
     setEditingWebhook(webhook)
     setFormData({
       url: webhook.url,
@@ -287,7 +297,9 @@ const Webhooks = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">Webhooks</h1>
-            <p className="text-gray-400">Configure webhooks to receive real-time event notifications</p>
+            <p className="text-gray-400">
+              Configure webhooks to receive real-time event notifications
+            </p>
           </div>
           {(activeMembership?.role === 'Owner' || activeMembership?.role === 'Manager') && (
             <button
@@ -338,7 +350,7 @@ const Webhooks = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {webhooks.map((webhook) => {
+            {webhooks.map(webhook => {
               const stats = webhookStats[webhook.id] || {}
               return (
                 <div key={webhook.id} className="bg-gray-900 rounded-lg border border-gray-800 p-6">
@@ -411,7 +423,7 @@ const Webhooks = () => {
                   <input
                     type="url"
                     value={formData.url}
-                    onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                    onChange={e => setFormData({ ...formData, url: e.target.value })}
                     placeholder="https://your-server.com/webhook"
                     className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gray-600"
                     required
@@ -420,7 +432,7 @@ const Webhooks = () => {
                 <div>
                   <label className="block text-sm font-semibold mb-2">Events</label>
                   <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-gray-800 rounded-lg">
-                    {availableEvents.map((event) => (
+                    {availableEvents.map(event => (
                       <label key={event} className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
@@ -438,7 +450,7 @@ const Webhooks = () => {
                     <input
                       type="checkbox"
                       checked={formData.active}
-                      onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                      onChange={e => setFormData({ ...formData, active: e.target.checked })}
                       className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-300">Active</span>
@@ -447,8 +459,9 @@ const Webhooks = () => {
                 {!editingWebhook && (
                   <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
                     <p className="text-sm text-yellow-400">
-                      <strong>Important:</strong> After creating the webhook, you'll receive a secret key.
-                      Use this secret to verify webhook signatures. Save it securely - you won't be able to see it again.
+                      <strong>Important:</strong> After creating the webhook, you'll receive a
+                      secret key. Use this secret to verify webhook signatures. Save it securely -
+                      you won't be able to see it again.
                     </p>
                   </div>
                 )}

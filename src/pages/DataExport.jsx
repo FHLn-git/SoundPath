@@ -15,7 +15,7 @@ const DataExport = () => {
       setToast({
         isVisible: true,
         message: 'You must be logged in to export your data',
-        type: 'error'
+        type: 'error',
       })
       return
     }
@@ -29,15 +29,15 @@ const DataExport = () => {
         user: {
           id: user.id,
           email: user.email,
-          createdAt: user.created_at
+          createdAt: user.created_at,
         },
         staffProfile: {
           id: staffProfile.id,
           name: staffProfile.name,
           role: staffProfile.role,
           bio: staffProfile.bio,
-          lastActiveAt: staffProfile.last_active_at
-        }
+          lastActiveAt: staffProfile.last_active_at,
+        },
       }
 
       // Export personal tracks (if any)
@@ -56,7 +56,8 @@ const DataExport = () => {
       // Export memberships
       const { data: memberships, error: membershipsError } = await supabase
         .from('memberships')
-        .select(`
+        .select(
+          `
           *,
           organizations (
             id,
@@ -64,7 +65,8 @@ const DataExport = () => {
             slug,
             created_at
           )
-        `)
+        `
+        )
         .eq('staff_member_id', staffProfile.id)
 
       if (!membershipsError && memberships) {
@@ -97,14 +99,14 @@ const DataExport = () => {
       setToast({
         isVisible: true,
         message: 'Your data has been exported successfully',
-        type: 'success'
+        type: 'success',
       })
     } catch (error) {
       console.error('Error exporting data:', error)
       setToast({
         isVisible: true,
         message: 'Failed to export data. Please try again or contact support.',
-        type: 'error'
+        type: 'error',
       })
     } finally {
       setExporting(false)
@@ -132,8 +134,8 @@ const DataExport = () => {
             <div>
               <h2 className="text-2xl font-bold mb-2">Export Your Data</h2>
               <p className="text-gray-400">
-                Download a copy of all your personal data stored in SoundPath. This includes your profile
-                information, tracks, memberships, and votes.
+                Download a copy of all your personal data stored in SoundPath. This includes your
+                profile information, tracks, memberships, and votes.
               </p>
             </div>
           </div>
@@ -154,9 +156,9 @@ const DataExport = () => {
               <div className="text-sm text-gray-300">
                 <p className="font-semibold text-yellow-400 mb-1">Note:</p>
                 <p>
-                  The export will only include data you have access to. Organization-level data (tracks
-                  belonging to organizations you're a member of) may be limited based on your role and
-                  permissions.
+                  The export will only include data you have access to. Organization-level data
+                  (tracks belonging to organizations you're a member of) may be limited based on
+                  your role and permissions.
                 </p>
               </div>
             </div>

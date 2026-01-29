@@ -1,5 +1,15 @@
 import { motion } from 'framer-motion'
-import { ThumbsUp, ThumbsDown, Calendar, CheckCircle, DollarSign, Eye, ArrowRight, X, Edit } from 'lucide-react'
+import {
+  ThumbsUp,
+  ThumbsDown,
+  Calendar,
+  CheckCircle,
+  DollarSign,
+  Eye,
+  ArrowRight,
+  X,
+  Edit,
+} from 'lucide-react'
 import EnergyMeter from './EnergyMeter'
 import EnergyEditor from './EnergyEditor'
 import LinkShield from './LinkShield'
@@ -18,8 +28,8 @@ const TrackRow = ({
   onContractSignedChange = null,
 }) => {
   const { voteOnTrack, currentStaff, updateTrack, toggleWatched } = useApp()
-  const { 
-    canAdvanceBeyondSecondListen, 
+  const {
+    canAdvanceBeyondSecondListen,
     staffProfile,
     canVote,
     canSetEnergy,
@@ -27,7 +37,9 @@ const TrackRow = ({
     canAdvanceOffice,
     canAdvanceContract,
   } = useAuth()
-  const daysInPipeline = Math.floor((new Date() - new Date(track.createdAt)) / (1000 * 60 * 60 * 24))
+  const daysInPipeline = Math.floor(
+    (new Date() - new Date(track.createdAt)) / (1000 * 60 * 60 * 24)
+  )
   const hasVoted = track.staffVotes?.[currentStaff.id] !== undefined
   const userVote = track.staffVotes?.[currentStaff.id] || 0
   const isWatched = track.watched || false
@@ -35,7 +47,7 @@ const TrackRow = ({
   // Calculate track age for Inbox display
   const getTrackAge = () => {
     if (!track.createdAt) return { text: 'New', days: 0, color: 'text-green-400' }
-    
+
     const days = daysInPipeline
     if (days < 7) {
       return { text: `${days}d`, days, color: 'text-green-400' }
@@ -53,7 +65,7 @@ const TrackRow = ({
   // Calculate Consensus Score (sum of all votes)
   const consensusScore = track.votes || 0
 
-  const handleVote = (vote) => {
+  const handleVote = vote => {
     // Voting is now in Team Review phase
     if (showPhaseControls && track.column === 'team-review') {
       if (hasVoted && userVote === vote) {
@@ -65,17 +77,17 @@ const TrackRow = ({
     }
   }
 
-  const handleEnergyChange = (energy) => {
+  const handleEnergyChange = energy => {
     updateTrack(track.id, { energy })
   }
 
-  const handleWatchToggle = (e) => {
+  const handleWatchToggle = e => {
     e.preventDefault()
     e.stopPropagation()
     toggleWatched(track.id)
   }
 
-  const handleAdvanceClick = (e) => {
+  const handleAdvanceClick = e => {
     e.preventDefault()
     e.stopPropagation()
     if (onAdvance) {
@@ -83,7 +95,7 @@ const TrackRow = ({
     }
   }
 
-  const handleRejectClick = (e) => {
+  const handleRejectClick = e => {
     e.preventDefault()
     e.stopPropagation()
     if (onReject) {
@@ -91,7 +103,7 @@ const TrackRow = ({
     }
   }
 
-  const handleReviseClick = (e) => {
+  const handleReviseClick = e => {
     e.preventDefault()
     e.stopPropagation()
     if (onRevise) {
@@ -132,15 +144,16 @@ const TrackRow = ({
   // Determine if this is a simple list view (like artist detail page) vs phase view
   const isSimpleView = !showPhaseControls && !onAdvance && !onReject
 
-  const gridStyle = showPhaseControls || useGridTemplate
-    ? columnWidths
-      ? { gridTemplateColumns: columnWidths.join(' ') }
-      : isSimpleView && useGridTemplate
-      ? { gridTemplateColumns: '60px 60px 2fr 1fr 1fr 100px 100px' } // Artist detail page
-      : isInbox
-      ? { gridTemplateColumns: '60px 60px 2fr 1fr 1fr 80px 200px' }
-      : { gridTemplateColumns: '60px 60px 2fr 1fr 1fr 100px 200px' }
-    : null
+  const gridStyle =
+    showPhaseControls || useGridTemplate
+      ? columnWidths
+        ? { gridTemplateColumns: columnWidths.join(' ') }
+        : isSimpleView && useGridTemplate
+          ? { gridTemplateColumns: '60px 60px 2fr 1fr 1fr 100px 100px' } // Artist detail page
+          : isInbox
+            ? { gridTemplateColumns: '60px 60px 2fr 1fr 1fr 80px 200px' }
+            : { gridTemplateColumns: '60px 60px 2fr 1fr 1fr 100px 200px' }
+      : null
 
   return (
     <motion.div
@@ -165,9 +178,7 @@ const TrackRow = ({
         type="button"
         onClick={handleWatchToggle}
         className={`p-1.5 rounded transition-colors ${
-          isWatched
-            ? 'text-white hover:bg-gray-800/50'
-            : 'text-gray-500 hover:bg-gray-800/50'
+          isWatched ? 'text-white hover:bg-gray-800/50' : 'text-gray-500 hover:bg-gray-800/50'
         }`}
         title={isWatched ? 'Watching' : 'Watch'}
       >
@@ -199,7 +210,10 @@ const TrackRow = ({
       {/* Track Age (Inbox only) */}
       {isInbox ? (
         <div className="flex justify-center items-center">
-          <span className={`font-semibold text-sm ${trackAge.color}`} title={`${trackAge.days} days in inbox`}>
+          <span
+            className={`font-semibold text-sm ${trackAge.color}`}
+            title={`${trackAge.days} days in inbox`}
+          >
             {trackAge.text}
           </span>
         </div>
@@ -211,7 +225,7 @@ const TrackRow = ({
             <input
               type="checkbox"
               checked={track.contractSigned || false}
-              onChange={(e) => {
+              onChange={e => {
                 if (onContractSignedChange) {
                   onContractSignedChange(track, e.target.checked)
                 } else {
@@ -223,7 +237,9 @@ const TrackRow = ({
             <CheckCircle size={12} />
           </label>
           <span className="text-xs text-gray-400">
-            {track.targetReleaseDate ? new Date(track.targetReleaseDate).toLocaleDateString() : 'No date'}
+            {track.targetReleaseDate
+              ? new Date(track.targetReleaseDate).toLocaleDateString()
+              : 'No date'}
           </span>
         </div>
       ) : isUpcoming ? (
@@ -249,7 +265,7 @@ const TrackRow = ({
                   <>
                     <button
                       type="button"
-                      onClick={(e) => {
+                      onClick={e => {
                         e.preventDefault()
                         e.stopPropagation()
                         handleVote(1)
@@ -259,8 +275,8 @@ const TrackRow = ({
                         userVote === 1
                           ? 'bg-green-500/30 text-green-400'
                           : hasVoted
-                          ? 'opacity-50 cursor-not-allowed'
-                          : 'hover:bg-green-500/20 text-gray-400'
+                            ? 'opacity-50 cursor-not-allowed'
+                            : 'hover:bg-green-500/20 text-gray-400'
                       }`}
                       title={hasVoted ? 'You have already voted' : 'Vote up'}
                     >
@@ -268,7 +284,7 @@ const TrackRow = ({
                     </button>
                     <button
                       type="button"
-                      onClick={(e) => {
+                      onClick={e => {
                         e.preventDefault()
                         e.stopPropagation()
                         handleVote(-1)
@@ -278,8 +294,8 @@ const TrackRow = ({
                         userVote === -1
                           ? 'bg-red-500/30 text-red-400'
                           : hasVoted
-                          ? 'opacity-50 cursor-not-allowed'
-                          : 'hover:bg-red-500/20 text-gray-400'
+                            ? 'opacity-50 cursor-not-allowed'
+                            : 'hover:bg-red-500/20 text-gray-400'
                       }`}
                       title={hasVoted ? 'You have already voted' : 'Vote down'}
                     >
@@ -294,8 +310,8 @@ const TrackRow = ({
                     consensusScore > 0
                       ? 'text-green-400'
                       : consensusScore < 0
-                      ? 'text-red-400'
-                      : 'text-gray-400'
+                        ? 'text-red-400'
+                        : 'text-gray-400'
                   }`}
                 >
                   {consensusScore > 0 ? '+' : ''}
@@ -308,8 +324,8 @@ const TrackRow = ({
                   track.votes > 0
                     ? 'text-green-400'
                     : track.votes < 0
-                    ? 'text-red-400'
-                    : 'text-gray-400'
+                      ? 'text-red-400'
+                      : 'text-gray-400'
                 }`}
               >
                 {track.votes > 0 ? '+' : ''}
@@ -320,53 +336,53 @@ const TrackRow = ({
         </div>
       )}
 
-          {/* Advance/Reject Buttons (only in phase views) */}
-          {showPhaseControls && (
-            <div className="flex items-center justify-end gap-2">
-              {/* Check granular permissions for advancement */}
-              {(() => {
-                let canAdvance = false
-                let permissionMessage = ''
-                
-                if (isInbox && canAdvanceLobby()) {
-                  canAdvance = true
-                } else if (isSecondListen && canAdvanceOffice()) {
-                  canAdvance = true
-                } else if (isTeamReview && canAdvanceContract()) {
-                  canAdvance = true
-                } else if (isContracting && canAdvanceContract()) {
-                  canAdvance = true
-                } else {
-                  permissionMessage = 'Insufficient permissions'
-                }
+      {/* Advance/Reject Buttons (only in phase views) */}
+      {showPhaseControls && (
+        <div className="flex items-center justify-end gap-2">
+          {/* Check granular permissions for advancement */}
+          {(() => {
+            let canAdvance = false
+            let permissionMessage = ''
 
-                return canAdvance ? (
-                  <button
-                    type="button"
-                    onClick={handleAdvanceClick}
-                    disabled={actionButton.disabled}
-                    className={`px-2 py-1 rounded text-xs font-semibold transition-colors flex items-center gap-1 ${
-                      actionButton.disabled
-                        ? 'bg-gray-700/30 text-gray-500 cursor-not-allowed'
-                        : 'bg-green-500/20 hover:bg-green-500/30 text-green-400'
-                    }`}
-                    title={
-                      actionButton.disabled
-                        ? actionButton.text === 'Promote to Lobby' && isSecondListen
-                          ? 'Set Energy Level first'
-                          : actionButton.text === 'Schedule Release' && isContracting
-                          ? 'Sign contract first'
-                          : 'Cannot advance'
-                        : 'Advance to next phase'
-                    }
-                  >
-                    <ArrowRight size={12} />
-                    {actionButton.text}
-                  </button>
-                ) : permissionMessage ? (
-                  <span className="text-xs text-gray-500">{permissionMessage}</span>
-                ) : null
-              })()}
+            if (isInbox && canAdvanceLobby()) {
+              canAdvance = true
+            } else if (isSecondListen && canAdvanceOffice()) {
+              canAdvance = true
+            } else if (isTeamReview && canAdvanceContract()) {
+              canAdvance = true
+            } else if (isContracting && canAdvanceContract()) {
+              canAdvance = true
+            } else {
+              permissionMessage = 'Insufficient permissions'
+            }
+
+            return canAdvance ? (
+              <button
+                type="button"
+                onClick={handleAdvanceClick}
+                disabled={actionButton.disabled}
+                className={`px-2 py-1 rounded text-xs font-semibold transition-colors flex items-center gap-1 ${
+                  actionButton.disabled
+                    ? 'bg-gray-700/30 text-gray-500 cursor-not-allowed'
+                    : 'bg-green-500/20 hover:bg-green-500/30 text-green-400'
+                }`}
+                title={
+                  actionButton.disabled
+                    ? actionButton.text === 'Promote to Lobby' && isSecondListen
+                      ? 'Set Energy Level first'
+                      : actionButton.text === 'Schedule Release' && isContracting
+                        ? 'Sign contract first'
+                        : 'Cannot advance'
+                    : 'Advance to next phase'
+                }
+              >
+                <ArrowRight size={12} />
+                {actionButton.text}
+              </button>
+            ) : permissionMessage ? (
+              <span className="text-xs text-gray-500">{permissionMessage}</span>
+            ) : null
+          })()}
           {isTeamReview ? (
             <>
               <button
@@ -424,8 +440,8 @@ const TrackRow = ({
               Reject
             </button>
           )}
-          {isSecondListen && (
-            canSetEnergy() ? (
+          {isSecondListen &&
+            (canSetEnergy() ? (
               <EnergyEditor
                 energy={track.energy || 0}
                 onEnergyChange={handleEnergyChange}
@@ -433,8 +449,7 @@ const TrackRow = ({
               />
             ) : (
               <EnergyMeter energy={track.energy || 0} />
-            )
-          )}
+            ))}
         </div>
       )}
     </motion.div>

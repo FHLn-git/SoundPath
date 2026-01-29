@@ -40,7 +40,7 @@ export const useGapDetection = () => {
         month3End.setDate(month3End.getDate() + 90)
 
         // Format dates for Supabase query (YYYY-MM-DD)
-        const formatDate = (date) => date.toISOString().split('T')[0]
+        const formatDate = date => date.toISOString().split('T')[0]
 
         // Query all tracks in 'contracting' or 'upcoming' status
         const { data: tracks, error } = await supabase
@@ -58,19 +58,21 @@ export const useGapDetection = () => {
         // For 'upcoming': use release_date
         // For 'contracting': use target_release_date (or release_date if target is not set)
         const allReleaseDates = []
-        
+
         tracks?.forEach(track => {
           let releaseDate = null
-          
+
           if (track.status === 'upcoming' && track.release_date) {
             releaseDate = new Date(track.release_date)
           } else if (track.status === 'contracting') {
             // Prefer target_release_date for contracting, fallback to release_date
-            releaseDate = track.target_release_date 
+            releaseDate = track.target_release_date
               ? new Date(track.target_release_date)
-              : (track.release_date ? new Date(track.release_date) : null)
+              : track.release_date
+                ? new Date(track.release_date)
+                : null
           }
-          
+
           if (releaseDate && !isNaN(releaseDate.getTime())) {
             allReleaseDates.push(releaseDate)
           }
@@ -90,7 +92,7 @@ export const useGapDetection = () => {
         const month3Count = countInWindow(month3Start, month3End)
 
         // Get month names
-        const getMonthName = (date) => {
+        const getMonthName = date => {
           return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
         }
 
@@ -126,12 +128,9 @@ export const useGapDetection = () => {
       try {
         tracksChannel = supabase
           .channel('gap-detection-changes')
-          .on('postgres_changes', 
-            { event: '*', schema: 'public', table: 'tracks' },
-            () => {
-              checkGaps() // Re-check immediately on any track change
-            }
-          )
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'tracks' }, () => {
+            checkGaps() // Re-check immediately on any track change
+          })
           .subscribe()
       } catch (error) {
         console.warn('Could not set up real-time subscription for gap detection:', error)

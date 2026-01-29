@@ -21,10 +21,13 @@ const StaffingAlert = ({ companyHealth }) => {
               ⚠️ BOGGED DOWN: Submission volume exceeds human capacity.
             </p>
             <p className="text-xs font-mono text-gray-400">
-              Staff burnout risk is HIGH. Current company health score: {companyHealth.companyHealthScore}%
+              Staff burnout risk is HIGH. Current company health score:{' '}
+              {companyHealth.companyHealthScore}%
             </p>
             <p className="text-xs font-mono text-gray-500 mt-1">
-              {companyHealth.dailyDemos} demos today ÷ {companyHealth.totalStaff} staff = {companyHealth.demosPerStaff.toFixed(1)} demos/staff (Cap: {companyHealth.expectationCap}/day)
+              {companyHealth.dailyDemos} demos today ÷ {companyHealth.totalStaff} staff ={' '}
+              {companyHealth.demosPerStaff.toFixed(1)} demos/staff (Cap:{' '}
+              {companyHealth.expectationCap}/day)
             </p>
           </div>
         </div>

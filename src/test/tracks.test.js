@@ -8,19 +8,21 @@ vi.mock('../lib/supabaseClient', () => ({
     from: vi.fn(() => ({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
-          order: vi.fn(() => Promise.resolve({
-            data: [
-              {
-                id: '1',
-                title: 'Test Track',
-                artist_name: 'Test Artist',
-                status: 'inbox',
-              }
-            ],
-            error: null
-          }))
-        }))
-      }))
+          order: vi.fn(() =>
+            Promise.resolve({
+              data: [
+                {
+                  id: '1',
+                  title: 'Test Track',
+                  artist_name: 'Test Artist',
+                  status: 'inbox',
+                },
+              ],
+              error: null,
+            })
+          ),
+        })),
+      })),
     })),
   },
 }))

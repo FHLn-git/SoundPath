@@ -51,7 +51,7 @@ export const useUsageLimits = () => {
   }
 
   // Get remaining capacity
-  const getRemaining = (limitType) => {
+  const getRemaining = limitType => {
     if (!usage || !plan?.limits) return null
     const limit = plan.limits[limitType]
     if (!limit || limit === -1) return 'Unlimited'
@@ -60,7 +60,7 @@ export const useUsageLimits = () => {
   }
 
   // Check if at limit
-  const isAtLimit = (limitType) => {
+  const isAtLimit = limitType => {
     if (!usage || !plan?.limits) return false
     const limit = plan.limits[limitType]
     if (!limit || limit === -1) return false
@@ -69,7 +69,7 @@ export const useUsageLimits = () => {
   }
 
   // Get limit message
-  const getLimitMessage = (limitType) => {
+  const getLimitMessage = limitType => {
     if (!plan) return 'Loading...'
     const limit = plan.limits?.[limitType]
     if (!limit || limit === -1) return null

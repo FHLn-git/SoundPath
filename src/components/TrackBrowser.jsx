@@ -16,7 +16,7 @@ const TrackBrowser = ({ searchQuery = '' }) => {
   const { tracks, moveTrack } = useApp()
   const [selectedPhase, setSelectedPhase] = useState(null)
 
-  const handlePhaseClick = (phaseId) => {
+  const handlePhaseClick = phaseId => {
     if (selectedPhase === phaseId) {
       setSelectedPhase(null)
     } else {
@@ -25,10 +25,10 @@ const TrackBrowser = ({ searchQuery = '' }) => {
   }
 
   const handleMove = (trackId, direction) => {
-    const track = tracks.find((t) => t.id === trackId)
+    const track = tracks.find(t => t.id === trackId)
     if (!track) return
 
-    const currentIndex = PHASES.findIndex((p) => p.id === track.column)
+    const currentIndex = PHASES.findIndex(p => p.id === track.column)
     if (direction === 'right' && currentIndex < PHASES.length - 1) {
       moveTrack(trackId, PHASES[currentIndex + 1].id)
     } else if (direction === 'left' && currentIndex > 0) {
@@ -36,20 +36,18 @@ const TrackBrowser = ({ searchQuery = '' }) => {
     }
   }
 
-  const filteredTracks = selectedPhase
-    ? tracks.filter((t) => t.column === selectedPhase)
-    : tracks
+  const filteredTracks = selectedPhase ? tracks.filter(t => t.column === selectedPhase) : tracks
 
   const searchFilteredTracks = searchQuery
     ? filteredTracks.filter(
-        (t) =>
+        t =>
           t.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
           t.title.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : filteredTracks
 
   const tracksByPhase = PHASES.reduce((acc, phase) => {
-    acc[phase.id] = tracks.filter((t) => t.column === phase.id)
+    acc[phase.id] = tracks.filter(t => t.column === phase.id)
     return acc
   }, {})
 
@@ -57,7 +55,7 @@ const TrackBrowser = ({ searchQuery = '' }) => {
     <div className="flex flex-col h-full">
       {/* Phase Headers */}
       <div className="flex gap-2 mb-4 pb-4 border-b border-gray-800/50">
-        {PHASES.map((phase) => {
+        {PHASES.map(phase => {
           const count = tracksByPhase[phase.id]?.length || 0
           const isSelected = selectedPhase === phase.id
 
@@ -121,7 +119,7 @@ const TrackBrowser = ({ searchQuery = '' }) => {
                 <div>Energy</div>
                 <div>Votes</div>
               </div>
-              {searchFilteredTracks.map((track) => (
+              {searchFilteredTracks.map(track => (
                 <TrackRow key={track.id} track={track} onMove={handleMove} showPhaseControls />
               ))}
             </motion.div>
@@ -132,7 +130,7 @@ const TrackBrowser = ({ searchQuery = '' }) => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              {searchFilteredTracks.map((track) => (
+              {searchFilteredTracks.map(track => (
                 <TrackRow key={track.id} track={track} onMove={handleMove} />
               ))}
             </motion.div>

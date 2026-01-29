@@ -29,10 +29,7 @@ const UsageLimitAlert = ({ limitType, onDismiss }) => {
         <div className="flex-1">
           <div className="font-semibold text-yellow-400 mb-1">Usage Limit Reached</div>
           <div className="text-sm text-gray-300 mb-2">{message}</div>
-          <Link
-            to="/billing"
-            className="text-sm text-yellow-400 hover:text-yellow-300 underline"
-          >
+          <Link to="/billing" className="text-sm text-yellow-400 hover:text-yellow-300 underline">
             Upgrade your plan →
           </Link>
         </div>

@@ -17,7 +17,12 @@ const PersonalSigned = () => {
   const [showUpgradeOverlay, setShowUpgradeOverlay] = useState(false)
   const [hasPersonalInboxAccess, setHasPersonalInboxAccess] = useState(false)
   const [isFreeTier, setIsFreeTier] = useState(false)
-  const [showEditModal, setShowEditModal] = useState({ isOpen: false, track: null, signingLabel: '', releaseDate: '' })
+  const [showEditModal, setShowEditModal] = useState({
+    isOpen: false,
+    track: null,
+    signingLabel: '',
+    releaseDate: '',
+  })
 
   // Personal inbox access: Available to ALL authenticated users in personal view
   useEffect(() => {
@@ -87,7 +92,8 @@ const PersonalSigned = () => {
         setLoading(true)
         const { data, error } = await supabase
           .from('tracks')
-          .select(`
+          .select(
+            `
             *,
             artists (
               name
@@ -96,7 +102,8 @@ const PersonalSigned = () => {
               id,
               name
             )
-          `)
+          `
+          )
           .eq('recipient_user_id', staffProfile.id)
           .is('organization_id', null)
           .eq('archived', false)
@@ -169,11 +176,12 @@ const PersonalSigned = () => {
       })
 
       setShowEditModal({ isOpen: false, track: null, signingLabel: '', releaseDate: '' })
-      
+
       // Reload tracks
       const { data } = await supabase
         .from('tracks')
-        .select(`
+        .select(
+          `
           *,
           artists (
             name
@@ -182,7 +190,8 @@ const PersonalSigned = () => {
             id,
             name
           )
-        `)
+        `
+        )
         .eq('recipient_user_id', staffProfile.id)
         .is('organization_id', null)
         .eq('archived', false)
@@ -247,7 +256,8 @@ const PersonalSigned = () => {
             <h1 className="text-2xl font-bold text-white">Signed</h1>
           </div>
           <p className="text-gray-400 text-sm">
-            Your Hall of Fame - {signedTracks.length} {signedTracks.length === 1 ? 'track' : 'tracks'} signed
+            Your Hall of Fame - {signedTracks.length}{' '}
+            {signedTracks.length === 1 ? 'track' : 'tracks'} signed
           </p>
         </div>
       </div>
@@ -262,15 +272,11 @@ const PersonalSigned = () => {
             </div>
             <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-800">
               <p className="text-gray-500 text-xs mb-1">Total Earnings</p>
-              <p className="text-2xl font-bold text-green-400">
-                ${totalEarnings.toFixed(2)}
-              </p>
+              <p className="text-2xl font-bold text-green-400">${totalEarnings.toFixed(2)}</p>
             </div>
             <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-800">
               <p className="text-gray-500 text-xs mb-1">Total Plays</p>
-              <p className="text-2xl font-bold text-blue-400">
-                {totalPlays.toLocaleString()}
-              </p>
+              <p className="text-2xl font-bold text-blue-400">{totalPlays.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -279,9 +285,7 @@ const PersonalSigned = () => {
       {/* Content */}
       <div className="p-4 bg-[#0B0E14] relative">
         {/* Premium Overlay for Free Users */}
-        {isFreeTier && (
-          <PremiumOverlay />
-        )}
+        {isFreeTier && <PremiumOverlay />}
         {loading ? (
           <div className="text-center py-8">
             <p className="text-gray-400">Loading signed tracks...</p>
@@ -290,9 +294,7 @@ const PersonalSigned = () => {
           <div className="text-center py-12 bg-gray-900/30 rounded-lg border border-gray-800">
             <Trophy size={48} className="text-gray-600 mx-auto mb-4" />
             <p className="text-gray-500 text-lg mb-2">No signed tracks yet</p>
-            <p className="text-gray-600 text-sm">
-              Your signed talent will appear here
-            </p>
+            <p className="text-gray-600 text-sm">Your signed talent will appear here</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -307,7 +309,7 @@ const PersonalSigned = () => {
             </div>
 
             {/* Track Rows */}
-            {signedTracks.map((track) => (
+            {signedTracks.map(track => (
               <motion.div
                 key={track.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -326,7 +328,14 @@ const PersonalSigned = () => {
                     </div>
                   ) : (
                     <button
-                      onClick={() => setShowEditModal({ isOpen: true, track, signingLabel: '', releaseDate: track.releaseDate || '' })}
+                      onClick={() =>
+                        setShowEditModal({
+                          isOpen: true,
+                          track,
+                          signingLabel: '',
+                          releaseDate: track.releaseDate || '',
+                        })
+                      }
                       className="text-yellow-400 hover:text-yellow-300 text-xs underline"
                     >
                       Add Label
@@ -343,7 +352,14 @@ const PersonalSigned = () => {
                     </div>
                   ) : (
                     <button
-                      onClick={() => setShowEditModal({ isOpen: true, track, signingLabel: track.signingLabel || '', releaseDate: '' })}
+                      onClick={() =>
+                        setShowEditModal({
+                          isOpen: true,
+                          track,
+                          signingLabel: track.signingLabel || '',
+                          releaseDate: '',
+                        })
+                      }
                       className="text-yellow-400 hover:text-yellow-300 text-xs underline"
                     >
                       Add Date
@@ -375,7 +391,14 @@ const PersonalSigned = () => {
                     </a>
                   )}
                   <button
-                    onClick={() => setShowEditModal({ isOpen: true, track, signingLabel: track.signingLabel || '', releaseDate: track.releaseDate || '' })}
+                    onClick={() =>
+                      setShowEditModal({
+                        isOpen: true,
+                        track,
+                        signingLabel: track.signingLabel || '',
+                        releaseDate: track.releaseDate || '',
+                      })
+                    }
                     className="px-2 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-xs font-semibold text-white transition-colors"
                     title="Edit Details"
                   >
@@ -397,11 +420,16 @@ const PersonalSigned = () => {
             className="bg-gray-900/95 border border-gray-700 rounded-lg p-6 w-full max-w-md backdrop-blur-sm"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-white">
-                Edit Signed Track
-              </h3>
+              <h3 className="text-lg font-bold text-white">Edit Signed Track</h3>
               <button
-                onClick={() => setShowEditModal({ isOpen: false, track: null, signingLabel: '', releaseDate: '' })}
+                onClick={() =>
+                  setShowEditModal({
+                    isOpen: false,
+                    track: null,
+                    signingLabel: '',
+                    releaseDate: '',
+                  })
+                }
                 className="text-gray-400 hover:text-white"
               >
                 <X size={20} />
@@ -416,7 +444,9 @@ const PersonalSigned = () => {
                 <input
                   type="text"
                   value={showEditModal.signingLabel}
-                  onChange={(e) => setShowEditModal({ ...showEditModal, signingLabel: e.target.value })}
+                  onChange={e =>
+                    setShowEditModal({ ...showEditModal, signingLabel: e.target.value })
+                  }
                   placeholder="Label name"
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-600"
                   autoFocus
@@ -427,7 +457,9 @@ const PersonalSigned = () => {
                 <input
                   type="date"
                   value={showEditModal.releaseDate}
-                  onChange={(e) => setShowEditModal({ ...showEditModal, releaseDate: e.target.value })}
+                  onChange={e =>
+                    setShowEditModal({ ...showEditModal, releaseDate: e.target.value })
+                  }
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-600"
                 />
               </div>
@@ -440,7 +472,14 @@ const PersonalSigned = () => {
                 Save
               </button>
               <button
-                onClick={() => setShowEditModal({ isOpen: false, track: null, signingLabel: '', releaseDate: '' })}
+                onClick={() =>
+                  setShowEditModal({
+                    isOpen: false,
+                    track: null,
+                    signingLabel: '',
+                    releaseDate: '',
+                  })
+                }
                 className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-gray-400"
               >
                 Cancel

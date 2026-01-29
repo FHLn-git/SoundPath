@@ -1,7 +1,22 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useBilling } from '../context/BillingContext'
 import { useAuth } from '../context/AuthContext'
-import { ArrowLeft, Check, Users, BarChart3, Key, Webhook, Shield, Mail, Globe, Zap, Sparkles, Infinity, Loader2, Package } from 'lucide-react'
+import {
+  ArrowLeft,
+  Check,
+  Users,
+  BarChart3,
+  Key,
+  Webhook,
+  Shield,
+  Mail,
+  Globe,
+  Zap,
+  Sparkles,
+  Infinity,
+  Loader2,
+  Package,
+} from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 const PlanInfo = () => {
@@ -10,7 +25,7 @@ const PlanInfo = () => {
   const { plans, loading } = useBilling()
   const { activeOrgId, user, staffProfile } = useAuth()
   const [plan, setPlan] = useState(null)
-  
+
   // Determine back navigation based on authentication
   const getBackPath = () => {
     if (user && staffProfile) {
@@ -39,7 +54,10 @@ const PlanInfo = () => {
       <div className="min-h-screen bg-gray-950 text-white p-10">
         <div className="max-w-4xl mx-auto">
           <p>Plan not found</p>
-          <button onClick={() => navigate(getBackPath())} className="text-blue-400 hover:text-blue-300">
+          <button
+            onClick={() => navigate(getBackPath())}
+            className="text-blue-400 hover:text-blue-300"
+          >
             {user && staffProfile ? 'Back to Billing' : 'Back to Home'}
           </button>
         </div>
@@ -47,30 +65,31 @@ const PlanInfo = () => {
     )
   }
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = amount => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD',
     }).format(amount)
   }
 
-  const getPlanDetails = (planId) => {
+  const getPlanDetails = planId => {
     const details = {
       free: {
         heroTitle: 'Start Your Journey',
         heroSubtitle: 'Perfect for small labels getting started',
-        heroDescription: 'Get started with SoundPath completely free. Track your first tracks, manage your team, and experience the power of professional A&R workflow management.',
+        heroDescription:
+          'Get started with SoundPath completely free. Track your first tracks, manage your team, and experience the power of professional A&R workflow management.',
         keyBenefits: [
           'Start tracking immediately with no credit card required',
           'Perfect for testing the platform before committing',
           'Full access to core tracking features',
-          'Basic statistics to track your progress'
+          'Basic statistics to track your progress',
         ],
         useCases: [
           'New labels just launching',
           'Independent A&R scouts exploring the platform',
           'Small teams testing workflow tools',
-          'Artists managing their own submissions'
+          'Artists managing their own submissions',
         ],
         limitations: [
           'Total of 10 tracks (personal + owned labels combined)',
@@ -80,15 +99,16 @@ const PlanInfo = () => {
           'Basic statistics only',
           'No advanced analytics or reporting',
           'Personal Inbox requires upgrade to Agent tier or above',
-          'Pitched and Signed views require Agent tier or above'
+          'Pitched and Signed views require Agent tier or above',
         ],
         cta: 'Get Started Free',
-        ctaSubtext: 'No credit card required. Upgrade anytime.'
+        ctaSubtext: 'No credit card required. Upgrade anytime.',
       },
       agent: {
         heroTitle: 'Built for Independent A&R Agents',
         heroSubtitle: 'Your personal workspace, optimized for solo operations',
-        heroDescription: 'The Agent tier is designed specifically for A&R professionals working independently. Manage your personal pipeline, connect with artists, and build your network—all in one powerful workspace.',
+        heroDescription:
+          'The Agent tier is designed specifically for A&R professionals working independently. Manage your personal pipeline, connect with artists, and build your network—all in one powerful workspace.',
         keyBenefits: [
           '100 tracks in your personal workspace—plenty for active scouting',
           '10 tracks in your label pipeline (if you own a label)',
@@ -97,13 +117,13 @@ const PlanInfo = () => {
           'Personal Inbox for direct artist submissions',
           'Pitched and Signed views unlocked',
           'Basic analytics to track your success metrics',
-          'Perfect for independent scouts, A&R consultants, and freelance agents'
+          'Perfect for independent scouts, A&R consultants, and freelance agents',
         ],
         useCases: [
           'Independent A&R agents managing their own roster',
           'Freelance scouts working with multiple labels',
           'A&R consultants building their network',
-          'Solo professionals who need professional tools without team features'
+          'Solo professionals who need professional tools without team features',
         ],
         features: [
           'Personal workspace optimized for solo operations',
@@ -111,30 +131,31 @@ const PlanInfo = () => {
           'Direct artist submission inbox',
           'Pitched and Signed views for tracking your deals',
           'Basic analytics and reporting',
-          'Track management and organization tools'
+          'Track management and organization tools',
         ],
         cta: 'Start Your Agent Journey',
-        ctaSubtext: 'Perfect for independent professionals'
+        ctaSubtext: 'Perfect for independent professionals',
       },
       starter: {
         heroTitle: 'Scale Your Label Operations',
         heroSubtitle: 'The most popular choice for growing labels',
-        heroDescription: 'Starter is our most popular plan, chosen by labels that are serious about scaling their A&R operations. Get everything you need to manage a growing team, track more submissions, and make data-driven decisions.',
+        heroDescription:
+          'Starter is our most popular plan, chosen by labels that are serious about scaling their A&R operations. Get everything you need to manage a growing team, track more submissions, and make data-driven decisions.',
         keyBenefits: [
           '100 tracks in your personal workspace',
           '100 tracks in your label pipeline (independent limits)',
           'Up to 2 label ownerships',
           '5 team members including yourself—perfect for small to medium teams',
-          'Advanced Analytics to understand what works and what doesn\'t',
+          "Advanced Analytics to understand what works and what doesn't",
           'Personal Inbox for direct artist submissions',
           'Agent Network access to discover new talent',
-          'Everything you need to scale without breaking the bank'
+          'Everything you need to scale without breaking the bank',
         ],
         useCases: [
           'Growing labels with active A&R operations',
           'Teams that need collaboration tools',
           'Labels ready to invest in professional workflow',
-          'Organizations tracking multiple artists and projects'
+          'Organizations tracking multiple artists and projects',
         ],
         features: [
           'Advanced analytics dashboard',
@@ -142,15 +163,16 @@ const PlanInfo = () => {
           'Personal inbox for submissions',
           'Agent network integration',
           'Comprehensive track management',
-          'Real-time team updates'
+          'Real-time team updates',
         ],
         cta: 'Start Growing Today',
-        ctaSubtext: 'Join thousands of labels using Starter'
+        ctaSubtext: 'Join thousands of labels using Starter',
       },
       pro: {
         heroTitle: 'Powerful A&R Operations at Scale',
         heroSubtitle: 'For established labels that demand the best',
-        heroDescription: 'Pro gives you everything you need to run a professional A&R operation at scale. With 1,000 tracks, 15 team members, and powerful integrations, you\'ll have the tools to manage complex operations and make data-driven decisions.',
+        heroDescription:
+          "Pro gives you everything you need to run a professional A&R operation at scale. With 1,000 tracks, 15 team members, and powerful integrations, you'll have the tools to manage complex operations and make data-driven decisions.",
         keyBenefits: [
           '1,000 tracks in your personal workspace',
           '1,000 tracks in your label pipeline (independent limits)',
@@ -159,13 +181,13 @@ const PlanInfo = () => {
           'Global Trend Reports to spot industry patterns before competitors',
           'API Access for custom integrations and automation',
           'Webhooks for real-time notifications and workflow automation',
-          'Everything in Starter, plus advanced power features'
+          'Everything in Starter, plus advanced power features',
         ],
         useCases: [
           'Established labels with high submission volumes',
           'Labels with dedicated A&R departments',
           'Organizations needing custom integrations',
-          'Labels that want to stay ahead with trend analysis'
+          'Labels that want to stay ahead with trend analysis',
         ],
         features: [
           'Global Trend Reports and analytics',
@@ -173,28 +195,29 @@ const PlanInfo = () => {
           'Webhook notifications for automation',
           'Advanced team management',
           'Priority support',
-          'Custom branding options'
+          'Custom branding options',
         ],
         cta: 'Unlock Pro Features',
-        ctaSubtext: 'Perfect for established labels'
+        ctaSubtext: 'Perfect for established labels',
       },
       enterprise: {
         heroTitle: 'Fully Customizable A&R Platform',
         heroSubtitle: 'Tailored solutions for your unique needs',
-        heroDescription: 'Enterprise delivers a completely customized SoundPath experience. We build custom features, adapt workflows to your niche requirements, and scale without limits. Perfect for large labels and agencies with specific needs.',
+        heroDescription:
+          'Enterprise delivers a completely customized SoundPath experience. We build custom features, adapt workflows to your niche requirements, and scale without limits. Perfect for large labels and agencies with specific needs.',
         keyBenefits: [
           'Custom software features built for your workflow',
           'Niche solutions tailored to your specific needs',
           'Unlimited tracks, seats, and storage',
           'White-label branding and SSO security',
           'Dedicated customization team',
-          'Priority support with account management'
+          'Priority support with account management',
         ],
         useCases: [
           'Large labels with unique workflow requirements',
           'A&R agencies needing niche-specific features',
           'Organizations requiring custom software solutions',
-          'Enterprises with specialized A&R processes'
+          'Enterprises with specialized A&R processes',
         ],
         features: [
           'Custom feature development',
@@ -202,11 +225,11 @@ const PlanInfo = () => {
           'Unlimited tracks, seats, storage',
           'White-label branding & SSO',
           'Dedicated customization team',
-          'Priority support & account management'
+          'Priority support & account management',
         ],
         cta: 'Contact Sales',
-        ctaSubtext: 'Let\'s discuss your enterprise needs'
-      }
+        ctaSubtext: "Let's discuss your enterprise needs",
+      },
     }
     return details[planId] || details.free
   }
@@ -226,20 +249,22 @@ const PlanInfo = () => {
             <ArrowLeft className="w-4 h-4" />
             {user && staffProfile ? 'Back to Plans' : 'Back to Home'}
           </button>
-          
+
           <div className="max-w-4xl">
             <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
               {details.heroTitle}
             </h1>
             <p className="text-2xl text-gray-300 mb-6">{details.heroSubtitle}</p>
             <p className="text-lg text-gray-400 leading-relaxed mb-8">{details.heroDescription}</p>
-            
+
             {/* Pricing CTA */}
             <div className="flex items-center gap-6">
               <div>
                 <div className="text-4xl font-bold mb-1">
                   {plan.id === 'free' ? (
-                    <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Free</span>
+                    <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                      Free
+                    </span>
                   ) : plan.id === 'enterprise' ? (
                     <span className="text-purple-400">Custom Pricing</span>
                   ) : (
@@ -282,7 +307,10 @@ const PlanInfo = () => {
           <h2 className="text-3xl font-bold mb-6">Why Choose {plan.name}?</h2>
           <div className="grid md:grid-cols-2 gap-6">
             {details.keyBenefits.map((benefit, idx) => (
-              <div key={idx} className="flex items-start gap-3 p-4 bg-gray-900/50 rounded-lg border border-gray-800">
+              <div
+                key={idx}
+                className="flex items-start gap-3 p-4 bg-gray-900/50 rounded-lg border border-gray-800"
+              >
                 <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
                 <p className="text-gray-300">{benefit}</p>
               </div>
@@ -309,7 +337,10 @@ const PlanInfo = () => {
           <h2 className="text-3xl font-bold mb-6">Perfect For</h2>
           <div className="space-y-4">
             {details.useCases.map((useCase, idx) => (
-              <div key={idx} className="flex items-start gap-3 p-4 bg-gray-900/30 rounded-lg border border-gray-800">
+              <div
+                key={idx}
+                className="flex items-start gap-3 p-4 bg-gray-900/30 rounded-lg border border-gray-800"
+              >
                 <Zap className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
                 <p className="text-gray-300">{useCase}</p>
               </div>
@@ -323,7 +354,10 @@ const PlanInfo = () => {
             <h2 className="text-3xl font-bold mb-6">Plan Limits</h2>
             <div className="space-y-3">
               {details.limitations.map((limit, idx) => (
-                <div key={idx} className="flex items-start gap-3 p-4 bg-gray-900/30 rounded-lg border border-gray-800">
+                <div
+                  key={idx}
+                  className="flex items-start gap-3 p-4 bg-gray-900/30 rounded-lg border border-gray-800"
+                >
                   <p className="text-gray-400">{limit}</p>
                 </div>
               ))}
@@ -339,17 +373,29 @@ const PlanInfo = () => {
               <div className="space-y-4">
                 <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                   <h3 className="text-lg font-semibold text-white mb-2">Track Limits</h3>
-                  <p className="text-gray-300 mb-1">• Total of <span className="font-bold text-white">10 tracks</span> (personal + owned labels combined)</p>
-                  <p className="text-gray-400 text-sm">Personal tracks and label tracks share the same 10-track limit</p>
+                  <p className="text-gray-300 mb-1">
+                    • Total of <span className="font-bold text-white">10 tracks</span> (personal +
+                    owned labels combined)
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    Personal tracks and label tracks share the same 10-track limit
+                  </p>
                 </div>
                 <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                   <h3 className="text-lg font-semibold text-white mb-2">Label Ownership</h3>
-                  <p className="text-gray-300 mb-1">• Up to <span className="font-bold text-white">1 label</span> ownership</p>
+                  <p className="text-gray-300 mb-1">
+                    • Up to <span className="font-bold text-white">1 label</span> ownership
+                  </p>
                 </div>
                 <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                   <h3 className="text-lg font-semibold text-white mb-2">Staff Memberships</h3>
-                  <p className="text-gray-300 mb-1">• Up to <span className="font-bold text-white">3 staff memberships</span> (non-owner positions)</p>
-                  <p className="text-gray-400 text-sm">You can be staff on up to 3 labels in addition to your owned label</p>
+                  <p className="text-gray-300 mb-1">
+                    • Up to <span className="font-bold text-white">3 staff memberships</span>{' '}
+                    (non-owner positions)
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    You can be staff on up to 3 labels in addition to your owned label
+                  </p>
                 </div>
               </div>
             )}
@@ -357,17 +403,30 @@ const PlanInfo = () => {
               <div className="space-y-4">
                 <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                   <h3 className="text-lg font-semibold text-white mb-2">Track Limits</h3>
-                  <p className="text-gray-300 mb-1">• <span className="font-bold text-white">100 tracks</span> in your personal workspace</p>
-                  <p className="text-gray-300 mb-1">• <span className="font-bold text-white">10 tracks</span> in your label pipeline (if you own a label)</p>
-                  <p className="text-gray-400 text-sm">Personal and label tracks have independent limits</p>
+                  <p className="text-gray-300 mb-1">
+                    • <span className="font-bold text-white">100 tracks</span> in your personal
+                    workspace
+                  </p>
+                  <p className="text-gray-300 mb-1">
+                    • <span className="font-bold text-white">10 tracks</span> in your label pipeline
+                    (if you own a label)
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    Personal and label tracks have independent limits
+                  </p>
                 </div>
                 <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                   <h3 className="text-lg font-semibold text-white mb-2">Label Ownership</h3>
-                  <p className="text-gray-300 mb-1">• Up to <span className="font-bold text-white">1 label</span> ownership</p>
+                  <p className="text-gray-300 mb-1">
+                    • Up to <span className="font-bold text-white">1 label</span> ownership
+                  </p>
                 </div>
                 <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                   <h3 className="text-lg font-semibold text-white mb-2">Unlocked Features</h3>
-                  <p className="text-gray-300 mb-1">• <span className="font-bold text-white">Pitched</span> and <span className="font-bold text-white">Signed</span> views unlocked</p>
+                  <p className="text-gray-300 mb-1">
+                    • <span className="font-bold text-white">Pitched</span> and{' '}
+                    <span className="font-bold text-white">Signed</span> views unlocked
+                  </p>
                   <p className="text-gray-300 mb-1">• Personal Inbox access</p>
                   <p className="text-gray-300 mb-1">• Agent Network access</p>
                 </div>
@@ -377,17 +436,30 @@ const PlanInfo = () => {
               <div className="space-y-4">
                 <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                   <h3 className="text-lg font-semibold text-white mb-2">Track Limits</h3>
-                  <p className="text-gray-300 mb-1">• <span className="font-bold text-white">100 tracks</span> in your personal workspace</p>
-                  <p className="text-gray-300 mb-1">• <span className="font-bold text-white">100 tracks</span> in your label pipeline (per label)</p>
-                  <p className="text-gray-400 text-sm">Personal and label tracks have independent limits</p>
+                  <p className="text-gray-300 mb-1">
+                    • <span className="font-bold text-white">100 tracks</span> in your personal
+                    workspace
+                  </p>
+                  <p className="text-gray-300 mb-1">
+                    • <span className="font-bold text-white">100 tracks</span> in your label
+                    pipeline (per label)
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    Personal and label tracks have independent limits
+                  </p>
                 </div>
                 <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                   <h3 className="text-lg font-semibold text-white mb-2">Label Ownership</h3>
-                  <p className="text-gray-300 mb-1">• Up to <span className="font-bold text-white">2 labels</span> ownership</p>
+                  <p className="text-gray-300 mb-1">
+                    • Up to <span className="font-bold text-white">2 labels</span> ownership
+                  </p>
                 </div>
                 <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                   <h3 className="text-lg font-semibold text-white mb-2">Unlocked Features</h3>
-                  <p className="text-gray-300 mb-1">• <span className="font-bold text-white">Pitched</span> and <span className="font-bold text-white">Signed</span> views unlocked</p>
+                  <p className="text-gray-300 mb-1">
+                    • <span className="font-bold text-white">Pitched</span> and{' '}
+                    <span className="font-bold text-white">Signed</span> views unlocked
+                  </p>
                   <p className="text-gray-300 mb-1">• Personal Inbox access</p>
                   <p className="text-gray-300 mb-1">• Agent Network access</p>
                   <p className="text-gray-300 mb-1">• Advanced Analytics</p>
@@ -398,17 +470,30 @@ const PlanInfo = () => {
               <div className="space-y-4">
                 <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                   <h3 className="text-lg font-semibold text-white mb-2">Track Limits</h3>
-                  <p className="text-gray-300 mb-1">• <span className="font-bold text-white">1,000 tracks</span> in your personal workspace</p>
-                  <p className="text-gray-300 mb-1">• <span className="font-bold text-white">1,000 tracks</span> in your label pipeline (per label)</p>
-                  <p className="text-gray-400 text-sm">Personal and label tracks have independent limits</p>
+                  <p className="text-gray-300 mb-1">
+                    • <span className="font-bold text-white">1,000 tracks</span> in your personal
+                    workspace
+                  </p>
+                  <p className="text-gray-300 mb-1">
+                    • <span className="font-bold text-white">1,000 tracks</span> in your label
+                    pipeline (per label)
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    Personal and label tracks have independent limits
+                  </p>
                 </div>
                 <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                   <h3 className="text-lg font-semibold text-white mb-2">Label Ownership</h3>
-                  <p className="text-gray-300 mb-1">• Up to <span className="font-bold text-white">5 labels</span> ownership</p>
+                  <p className="text-gray-300 mb-1">
+                    • Up to <span className="font-bold text-white">5 labels</span> ownership
+                  </p>
                 </div>
                 <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                   <h3 className="text-lg font-semibold text-white mb-2">Unlocked Features</h3>
-                  <p className="text-gray-300 mb-1">• <span className="font-bold text-white">Pitched</span> and <span className="font-bold text-white">Signed</span> views unlocked</p>
+                  <p className="text-gray-300 mb-1">
+                    • <span className="font-bold text-white">Pitched</span> and{' '}
+                    <span className="font-bold text-white">Signed</span> views unlocked
+                  </p>
                   <p className="text-gray-300 mb-1">• Personal Inbox access</p>
                   <p className="text-gray-300 mb-1">• Agent Network access</p>
                   <p className="text-gray-300 mb-1">• Global Trend Reports</p>
@@ -420,14 +505,28 @@ const PlanInfo = () => {
               <div className="space-y-4">
                 <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                   <h3 className="text-lg font-semibold text-white mb-2">Custom Limits</h3>
-                  <p className="text-gray-300 mb-1">• <span className="font-bold text-white">Unlimited</span> tracks, seats, storage</p>
-                  <p className="text-gray-300 mb-1">• <span className="font-bold text-white">Custom</span> capacity limits tailored to you</p>
+                  <p className="text-gray-300 mb-1">
+                    • <span className="font-bold text-white">Unlimited</span> tracks, seats, storage
+                  </p>
+                  <p className="text-gray-300 mb-1">
+                    • <span className="font-bold text-white">Custom</span> capacity limits tailored
+                    to you
+                  </p>
                 </div>
                 <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                   <h3 className="text-lg font-semibold text-white mb-2">Custom Software</h3>
-                  <p className="text-gray-300 mb-1">• <span className="font-bold text-white">Custom features</span> built for your workflow</p>
-                  <p className="text-gray-300 mb-1">• <span className="font-bold text-white">Niche solutions</span> for specialized needs</p>
-                  <p className="text-gray-300 mb-1">• <span className="font-bold text-white">Workflow customization</span> to match your process</p>
+                  <p className="text-gray-300 mb-1">
+                    • <span className="font-bold text-white">Custom features</span> built for your
+                    workflow
+                  </p>
+                  <p className="text-gray-300 mb-1">
+                    • <span className="font-bold text-white">Niche solutions</span> for specialized
+                    needs
+                  </p>
+                  <p className="text-gray-300 mb-1">
+                    • <span className="font-bold text-white">Workflow customization</span> to match
+                    your process
+                  </p>
                 </div>
                 <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                   <h3 className="text-lg font-semibold text-white mb-2">Enterprise Features</h3>
@@ -477,10 +576,14 @@ const PlanInfo = () => {
                   <h3 className="text-xl font-semibold">Artist Directory Contacts</h3>
                 </div>
                 <p className="text-3xl font-bold text-gray-300">
-                  {plan.limits.max_contacts === -1 ? 'Unlimited' : plan.limits.max_contacts.toLocaleString()}
+                  {plan.limits.max_contacts === -1
+                    ? 'Unlimited'
+                    : plan.limits.max_contacts.toLocaleString()}
                 </p>
                 <p className="text-sm text-gray-400 mt-1">
-                  {plan.id === 'agent' ? 'Unlimited signed artists' : 'Unique artists in your directory'}
+                  {plan.id === 'agent'
+                    ? 'Unlimited signed artists'
+                    : 'Unique artists in your directory'}
                 </p>
               </div>
             )}
@@ -515,12 +618,14 @@ const PlanInfo = () => {
                 <span className="text-gray-300">Basic Analytics</span>
               </div>
             )}
-            {plan.features?.has_analytics && !plan.features?.has_limited_statistics && !plan.features?.has_basic_analytics && (
-              <div className="flex items-center gap-3 p-4 bg-gray-900/30 rounded-lg border border-gray-800">
-                <BarChart3 className="w-5 h-5 text-green-400" />
-                <span className="text-gray-300">Advanced Analytics</span>
-              </div>
-            )}
+            {plan.features?.has_analytics &&
+              !plan.features?.has_limited_statistics &&
+              !plan.features?.has_basic_analytics && (
+                <div className="flex items-center gap-3 p-4 bg-gray-900/30 rounded-lg border border-gray-800">
+                  <BarChart3 className="w-5 h-5 text-green-400" />
+                  <span className="text-gray-300">Advanced Analytics</span>
+                </div>
+              )}
             {plan.features?.has_global_trend_reports && (
               <div className="flex items-center gap-3 p-4 bg-gray-900/30 rounded-lg border border-gray-800">
                 <BarChart3 className="w-5 h-5 text-purple-400" />

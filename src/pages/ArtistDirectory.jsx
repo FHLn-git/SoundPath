@@ -27,21 +27,26 @@ const ArtistDirectory = () => {
   const [relationsLoading, setRelationsLoading] = useState(false)
   const navigate = useNavigate()
   const { columnWidths, handleResize, getGridTemplate, minWidths } = useResizableColumns('artists')
-  const { columnWidths: detailColumnWidths, handleResize: handleDetailResize, getGridTemplate: getDetailGridTemplate, minWidths: detailMinWidths } = useResizableColumns('artist-detail')
+  const {
+    columnWidths: detailColumnWidths,
+    handleResize: handleDetailResize,
+    getGridTemplate: getDetailGridTemplate,
+    minWidths: detailMinWidths,
+  } = useResizableColumns('artist-detail')
 
   // Check if user has access - only restrict free tier, allow all paid tiers and system admins
   useEffect(() => {
     const checkAccess = () => {
       // Check system admin status with fallback - check both isSystemAdmin and staffProfile.role
       const userIsSystemAdmin = Boolean(isSystemAdmin || staffProfile?.role === 'SystemAdmin')
-      
+
       // If system admin, always grant access
       if (userIsSystemAdmin) {
         setHasAccess(true)
         setShowUpgradeOverlay(false)
         return
       }
-      
+
       // For non-system admins, check plan tier
       // IMPORTANT: If plan is null (loading), default to allowing access to avoid blocking paid users
       // Only explicitly restrict if plan.id === 'free'
@@ -113,19 +118,17 @@ const ArtistDirectory = () => {
 
     // Search filter
     if (searchQuery) {
-      result = result.filter((a) =>
-        a.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      result = result.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()))
     }
 
     // Genre filter
     if (genreFilter !== 'all') {
-      result = result.filter((a) => a.dominantGenre === genreFilter)
+      result = result.filter(a => a.dominantGenre === genreFilter)
     }
 
     // Signed only filter
     if (signedOnly) {
-      result = result.filter((a) => a.totalSigned > 0)
+      result = result.filter(a => a.totalSigned > 0)
     }
 
     // Sorting
@@ -152,7 +155,7 @@ const ArtistDirectory = () => {
   }, [artists, searchQuery, genreFilter, signedOnly, sortBy])
 
   const handleMove = (trackId, direction) => {
-    const track = selectedArtist?.tracks.find((t) => t.id === trackId)
+    const track = selectedArtist?.tracks.find(t => t.id === trackId)
     if (!track) return
 
     const phases = ['inbox', 'second-listen', 'team-review', 'contracting', 'vault']
@@ -182,7 +185,9 @@ const ArtistDirectory = () => {
                   <TrendingUp size={16} className="text-green-400" />
                   <span className="text-gray-400">Conversion Rate:</span>
                   {canViewMetrics() ? (
-                    <span className="text-white font-semibold">{selectedArtist.conversionRate}%</span>
+                    <span className="text-white font-semibold">
+                      {selectedArtist.conversionRate}%
+                    </span>
                   ) : (
                     <div className="flex items-center gap-1 text-gray-500">
                       <Lock size={12} />
@@ -232,12 +237,16 @@ const ArtistDirectory = () => {
                 </div>
                 <div className="text-white text-lg font-bold">
                   {activeOrgId
-                    ? (relationsLoading ? '—' : `${relationsStats?.attention_rate ?? 0}%`)
+                    ? relationsLoading
+                      ? '—'
+                      : `${relationsStats?.attention_rate ?? 0}%`
                     : '—'}
                 </div>
                 {activeOrgId && (
                   <div className="text-[11px] text-gray-500 mt-1">
-                    {relationsLoading ? '' : `${relationsStats?.total_listened ?? 0} listened / ${relationsStats?.total_submitted ?? 0} submitted`}
+                    {relationsLoading
+                      ? ''
+                      : `${relationsStats?.total_listened ?? 0} listened / ${relationsStats?.total_submitted ?? 0} submitted`}
                   </div>
                 )}
               </div>
@@ -252,43 +261,43 @@ const ArtistDirectory = () => {
             className="mb-1 grid gap-4 px-4 py-2 bg-gray-900/40 border-b border-gray-800 text-xs font-semibold text-gray-500 uppercase items-center"
           >
             <ResizableColumnHeader
-              onResize={(width) => handleDetailResize(0, width)}
+              onResize={width => handleDetailResize(0, width)}
               minWidth={detailMinWidths[0]}
             >
               <div className="text-center">Link</div>
             </ResizableColumnHeader>
             <ResizableColumnHeader
-              onResize={(width) => handleDetailResize(1, width)}
+              onResize={width => handleDetailResize(1, width)}
               minWidth={detailMinWidths[1]}
             >
               <div className="text-center">Watch</div>
             </ResizableColumnHeader>
             <ResizableColumnHeader
-              onResize={(width) => handleDetailResize(2, width)}
+              onResize={width => handleDetailResize(2, width)}
               minWidth={detailMinWidths[2]}
             >
               <div className="text-left">Artist / Title</div>
             </ResizableColumnHeader>
             <ResizableColumnHeader
-              onResize={(width) => handleDetailResize(3, width)}
+              onResize={width => handleDetailResize(3, width)}
               minWidth={detailMinWidths[3]}
             >
               <div className="text-center">Genre</div>
             </ResizableColumnHeader>
             <ResizableColumnHeader
-              onResize={(width) => handleDetailResize(4, width)}
+              onResize={width => handleDetailResize(4, width)}
               minWidth={detailMinWidths[4]}
             >
               <div className="text-center">BPM</div>
             </ResizableColumnHeader>
             <ResizableColumnHeader
-              onResize={(width) => handleDetailResize(5, width)}
+              onResize={width => handleDetailResize(5, width)}
               minWidth={detailMinWidths[5]}
             >
               <div className="text-center">Energy</div>
             </ResizableColumnHeader>
             <ResizableColumnHeader
-              onResize={(width) => handleDetailResize(6, width)}
+              onResize={width => handleDetailResize(6, width)}
               minWidth={detailMinWidths[6]}
               isLast={true}
             >
@@ -296,8 +305,14 @@ const ArtistDirectory = () => {
             </ResizableColumnHeader>
           </div>
           {/* Track Rows */}
-          {selectedArtist.tracks.map((track) => (
-            <TrackRow key={track.id} track={track} onMove={handleMove} useGridTemplate={true} columnWidths={detailColumnWidths} />
+          {selectedArtist.tracks.map(track => (
+            <TrackRow
+              key={track.id}
+              track={track}
+              onMove={handleMove}
+              useGridTemplate={true}
+              columnWidths={detailColumnWidths}
+            />
           ))}
         </div>
       </div>
@@ -312,7 +327,8 @@ const ArtistDirectory = () => {
           <div className="text-center max-w-md">
             <h1 className="text-3xl font-bold text-white mb-4">Artist Directory</h1>
             <p className="text-gray-400 mb-6">
-              Artist Directory is available on Agent tier and above. Upgrade to unlock this feature and manage your artist relationships.
+              Artist Directory is available on Agent tier and above. Upgrade to unlock this feature
+              and manage your artist relationships.
             </p>
             <button
               onClick={() => navigate('/billing')}
@@ -342,17 +358,20 @@ const ArtistDirectory = () => {
       />
       <div className="p-4 border-b border-gray-800 bg-gray-950/50 backdrop-blur-sm">
         <h1 className="text-2xl font-bold text-white mb-2">Artist Directory</h1>
-        
+
         {/* Filters and Search Row */}
         <div className="flex items-center gap-3 mb-4">
           {/* Search */}
           <div className="relative flex-1 min-w-[250px]">
-            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <Search
+              className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={18}
+            />
             <input
               type="text"
               placeholder="Search artists..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-1.5 text-sm bg-gray-900/50 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gray-700 font-mono"
             />
           </div>
@@ -361,7 +380,7 @@ const ArtistDirectory = () => {
           <div className="relative">
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={e => setSortBy(e.target.value)}
               className="appearance-none pl-3 pr-8 py-1.5 text-sm bg-gray-900/50 border border-gray-800 rounded-lg text-white focus:outline-none focus:border-gray-700 font-mono cursor-pointer min-w-[180px]"
             >
               <option value="submissions-high">Submissions (High-Low)</option>
@@ -371,24 +390,30 @@ const ArtistDirectory = () => {
               <option value="conversion-high">Conversion Rate (High-Low)</option>
               <option value="conversion-low">Conversion Rate (Low-High)</option>
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+            <ChevronDown
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+              size={16}
+            />
           </div>
 
           {/* Genre Filter Dropdown */}
           <div className="relative">
             <select
               value={genreFilter}
-              onChange={(e) => setGenreFilter(e.target.value)}
+              onChange={e => setGenreFilter(e.target.value)}
               className="appearance-none pl-3 pr-8 py-1.5 text-sm bg-gray-900/50 border border-gray-800 rounded-lg text-white focus:outline-none focus:border-gray-700 font-mono cursor-pointer min-w-[140px]"
             >
               <option value="all">All Genres</option>
-              {GENRES.map((genre) => (
+              {GENRES.map(genre => (
                 <option key={genre} value={genre}>
                   {genre}
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+            <ChevronDown
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+              size={16}
+            />
           </div>
 
           {/* Signed Only Toggle */}
@@ -412,32 +437,20 @@ const ArtistDirectory = () => {
           style={{ gridTemplateColumns: getGridTemplate() }}
           className="mb-1 grid gap-4 px-4 py-2 bg-gray-900/40 border-b border-gray-800 text-xs font-semibold text-gray-500 uppercase items-center"
         >
-          <ResizableColumnHeader
-            onResize={(width) => handleResize(0, width)}
-            minWidth={minWidths[0]}
-          >
+          <ResizableColumnHeader onResize={width => handleResize(0, width)} minWidth={minWidths[0]}>
             <div className="text-left">Artist Name</div>
           </ResizableColumnHeader>
-          <ResizableColumnHeader
-            onResize={(width) => handleResize(1, width)}
-            minWidth={minWidths[1]}
-          >
+          <ResizableColumnHeader onResize={width => handleResize(1, width)} minWidth={minWidths[1]}>
             <div className="text-left">Primary Genre</div>
           </ResizableColumnHeader>
-          <ResizableColumnHeader
-            onResize={(width) => handleResize(2, width)}
-            minWidth={minWidths[2]}
-          >
+          <ResizableColumnHeader onResize={width => handleResize(2, width)} minWidth={minWidths[2]}>
             <div className="text-center">Subs</div>
           </ResizableColumnHeader>
-          <ResizableColumnHeader
-            onResize={(width) => handleResize(3, width)}
-            minWidth={minWidths[3]}
-          >
+          <ResizableColumnHeader onResize={width => handleResize(3, width)} minWidth={minWidths[3]}>
             <div className="text-center">Signed</div>
           </ResizableColumnHeader>
           <ResizableColumnHeader
-            onResize={(width) => handleResize(4, width)}
+            onResize={width => handleResize(4, width)}
             minWidth={minWidths[4]}
             isLast={true}
           >
@@ -446,12 +459,12 @@ const ArtistDirectory = () => {
         </div>
 
         {/* Table Rows */}
-          {filteredAndSortedArtists.length === 0 ? (
-            <div className="flex items-center justify-center py-8 text-gray-500">
-              <p>No artists found</p>
-            </div>
-          ) : (
-          filteredAndSortedArtists.map((artist) => (
+        {filteredAndSortedArtists.length === 0 ? (
+          <div className="flex items-center justify-center py-8 text-gray-500">
+            <p>No artists found</p>
+          </div>
+        ) : (
+          filteredAndSortedArtists.map(artist => (
             <motion.div
               key={artist.name}
               onClick={() => setSelectedArtist(artist)}
@@ -482,7 +495,9 @@ const ArtistDirectory = () => {
                 {canViewMetrics() ? (
                   <>
                     <TrendingUp size={14} className="text-green-400" />
-                    <span className="text-green-400 font-bold text-base">{artist.conversionRate}%</span>
+                    <span className="text-green-400 font-bold text-base">
+                      {artist.conversionRate}%
+                    </span>
                   </>
                 ) : (
                   <div className="flex items-center gap-1 text-gray-500">

@@ -14,13 +14,13 @@ const Contact = () => {
     name: staffProfile?.name || user?.email || '',
     email: user?.email || '',
     subject: '',
-    message: ''
+    message: '',
   })
   const [submitting, setSubmitting] = useState(false)
   const [toast, setToast] = useState({ isVisible: false, message: '', type: 'success' })
   const [emailError, setEmailError] = useState('')
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault()
     setSubmitting(true)
     setEmailError('')
@@ -32,7 +32,7 @@ const Contact = () => {
       setToast({
         isVisible: true,
         message: emailValidation.error,
-        type: 'error'
+        type: 'error',
       })
       setSubmitting(false)
       return
@@ -40,17 +40,15 @@ const Contact = () => {
 
     try {
       // Save to database (internal mail service)
-      const { error: dbError } = await supabase
-        .from('contact_form_submissions')
-        .insert({
-          name: formData.name,
-          email: formData.email,
-          subject: formData.subject,
-          message: formData.message,
-          status: 'unread',
-          user_id: user?.id || null,
-          staff_member_id: staffProfile?.id || null,
-        })
+      const { error: dbError } = await supabase.from('contact_form_submissions').insert({
+        name: formData.name,
+        email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
+        status: 'unread',
+        user_id: user?.id || null,
+        staff_member_id: staffProfile?.id || null,
+      })
 
       if (dbError) {
         console.error('Error saving contact form to database:', dbError)
@@ -77,7 +75,7 @@ const Contact = () => {
               
               Your message:
               ${formData.message}
-            `
+            `,
           })
         } catch (emailError) {
           console.error('Error sending confirmation email:', emailError)
@@ -88,10 +86,10 @@ const Contact = () => {
       setFormData({ name: '', email: '', subject: '', message: '' })
       setToast({
         isVisible: true,
-        message: 'Your message has been sent! We\'ll get back to you.',
-        type: 'success'
+        message: "Your message has been sent! We'll get back to you.",
+        type: 'success',
       })
-      
+
       // Redirect based on authentication status
       setTimeout(() => {
         if (user && staffProfile) {
@@ -107,7 +105,7 @@ const Contact = () => {
       setToast({
         isVisible: true,
         message: 'Failed to send message. Please try again.',
-        type: 'error'
+        type: 'error',
       })
     } finally {
       setSubmitting(false)
@@ -138,13 +136,11 @@ const Contact = () => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Name
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Name</label>
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
                 required
                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Your name"
@@ -152,17 +148,15 @@ const Contact = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Email
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) => {
+                onChange={e => {
                   setFormData({ ...formData, email: e.target.value })
                   setEmailError('')
                 }}
-                onBlur={(e) => {
+                onBlur={e => {
                   if (e.target.value) {
                     const validation = validateEmail(e.target.value)
                     if (!validation.valid) {
@@ -174,25 +168,21 @@ const Contact = () => {
                 }}
                 required
                 className={`w-full px-4 py-3 bg-gray-800 border rounded-lg text-white focus:outline-none focus:ring-2 ${
-                  emailError 
-                    ? 'border-red-500 focus:ring-red-500' 
+                  emailError
+                    ? 'border-red-500 focus:ring-red-500'
                     : 'border-gray-700 focus:ring-blue-500'
                 }`}
                 placeholder="your@email.com"
               />
-              {emailError && (
-                <p className="mt-1 text-sm text-red-400">{emailError}</p>
-              )}
+              {emailError && <p className="mt-1 text-sm text-red-400">{emailError}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Subject
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Subject</label>
               <input
                 type="text"
                 value={formData.subject}
-                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                onChange={e => setFormData({ ...formData, subject: e.target.value })}
                 required
                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="What can we help you with?"
@@ -200,12 +190,10 @@ const Contact = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Message
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Message</label>
               <textarea
                 value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                onChange={e => setFormData({ ...formData, message: e.target.value })}
                 required
                 rows={6}
                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"

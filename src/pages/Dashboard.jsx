@@ -1,5 +1,20 @@
 import { motion } from 'framer-motion'
-import { Plus, Eye, Calendar, TrendingUp, FileText, Users, Radio, Package, Package2, Inbox, Send, Building2, Network, Crown } from 'lucide-react'
+import {
+  Plus,
+  Eye,
+  Calendar,
+  TrendingUp,
+  FileText,
+  Users,
+  Radio,
+  Package,
+  Package2,
+  Inbox,
+  Send,
+  Building2,
+  Network,
+  Crown,
+} from 'lucide-react'
 import Toast from '../components/Toast'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
@@ -29,10 +44,12 @@ const Dashboard = () => {
   } = useApp()
   const { isOwner, staffProfile, memberships, activeOrgId, isSystemAdmin } = useAuth()
   const { hasFeature } = useBilling()
-  
+
   const activeOrg = memberships?.find(m => m.organization_id === activeOrgId) || null
   const isPersonalView = activeOrgId === null
-  const dashboardTitle = isPersonalView ? 'Personal Dashboard' : (activeOrg?.organization_name || 'Dashboard')
+  const dashboardTitle = isPersonalView
+    ? 'Personal Dashboard'
+    : activeOrg?.organization_name || 'Dashboard'
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [companyHealth, setCompanyHealth] = useState(null)
@@ -43,7 +60,7 @@ const Dashboard = () => {
   const [personalCapacityLock, setPersonalCapacityLock] = useState(false)
   const [personalCapacityCheck, setPersonalCapacityCheck] = useState(null)
   const navigate = useNavigate()
-  
+
   // Personal inbox crate state (like Launchpad)
   const [activeCrate, setActiveCrate] = useState('submissions')
   const [submissionsTracks, setSubmissionsTracks] = useState([])
@@ -60,11 +77,16 @@ const Dashboard = () => {
   // Get current crate tracks
   const currentCrateTracks = useMemo(() => {
     switch (activeCrate) {
-      case 'submissions': return submissionsTracks
-      case 'network': return networkTracks
-      case 'crate_a': return crateATracks
-      case 'crate_b': return crateBTracks
-      default: return submissionsTracks
+      case 'submissions':
+        return submissionsTracks
+      case 'network':
+        return networkTracks
+      case 'crate_a':
+        return crateATracks
+      case 'crate_b':
+        return crateBTracks
+      default:
+        return submissionsTracks
     }
   }, [activeCrate, submissionsTracks, networkTracks, crateATracks, crateBTracks])
 
@@ -87,7 +109,7 @@ const Dashboard = () => {
       // Check if user has network feature access
       const networkAccess = await hasFeature('network')
       setHasNetworkAccess(networkAccess)
-      
+
       // If no network access, user is on free tier
       setIsFreeTier(!networkAccess)
     }
@@ -114,7 +136,7 @@ const Dashboard = () => {
       // Check if user has network feature access
       const networkAccess = await hasFeature('network')
       setHasNetworkAccess(networkAccess)
-      
+
       // If no network access, user is on free tier
       setIsFreeTier(!networkAccess)
     }
@@ -135,11 +157,13 @@ const Dashboard = () => {
         setLoadingPersonalTracks(true)
         const { data, error } = await supabase
           .from('tracks')
-          .select(`
+          .select(
+            `
             *,
             artists (name),
             sender:staff_members!tracks_sender_id_fkey (id, name)
-          `)
+          `
+          )
           .eq('recipient_user_id', staffProfile.id)
           .is('organization_id', null)
           .eq('archived', false)
@@ -168,10 +192,43 @@ const Dashboard = () => {
         }))
 
         // Separate into crates (exclude pitched and signed tracks, exactly like PersonalOffice)
-        setSubmissionsTracks(transformedTracks.filter(t => t.source === 'public_form' && !t.peer_to_peer && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-        setNetworkTracks(transformedTracks.filter(t => (t.crate === 'network' || t.peer_to_peer) && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-        setCrateATracks(transformedTracks.filter(t => t.crate === 'crate_a' && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-        setCrateBTracks(transformedTracks.filter(t => t.crate === 'crate_b' && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
+        setSubmissionsTracks(
+          transformedTracks.filter(
+            t =>
+              t.source === 'public_form' &&
+              !t.peer_to_peer &&
+              t.crate !== 'pitched' &&
+              t.crate !== 'signed' &&
+              !t.contractSigned
+          )
+        )
+        setNetworkTracks(
+          transformedTracks.filter(
+            t =>
+              (t.crate === 'network' || t.peer_to_peer) &&
+              t.crate !== 'pitched' &&
+              t.crate !== 'signed' &&
+              !t.contractSigned
+          )
+        )
+        setCrateATracks(
+          transformedTracks.filter(
+            t =>
+              t.crate === 'crate_a' &&
+              t.crate !== 'pitched' &&
+              t.crate !== 'signed' &&
+              !t.contractSigned
+          )
+        )
+        setCrateBTracks(
+          transformedTracks.filter(
+            t =>
+              t.crate === 'crate_b' &&
+              t.crate !== 'pitched' &&
+              t.crate !== 'signed' &&
+              !t.contractSigned
+          )
+        )
       } catch (error) {
         console.error('Error loading personal inbox tracks:', error)
       } finally {
@@ -219,7 +276,7 @@ const Dashboard = () => {
   }, [isOwner, getCompanyHealth, activeOrgId, isPersonalView])
 
   // Handle pitching track - available to all users
-  const handlePitchTrack = async (trackId) => {
+  const handlePitchTrack = async trackId => {
     if (!supabase || !staffProfile) return
 
     try {
@@ -242,11 +299,13 @@ const Dashboard = () => {
       // Reload personal tracks
       const { data } = await supabase
         .from('tracks')
-        .select(`
+        .select(
+          `
           *,
           artists (name),
           sender:staff_members!tracks_sender_id_fkey (id, name)
-        `)
+        `
+        )
         .eq('recipient_user_id', staffProfile.id)
         .is('organization_id', null)
         .eq('archived', false)
@@ -272,10 +331,43 @@ const Dashboard = () => {
         contractSigned: track.contract_signed || false,
       }))
 
-      setSubmissionsTracks(transformedTracks.filter(t => t.source === 'public_form' && !t.peer_to_peer && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setNetworkTracks(transformedTracks.filter(t => (t.crate === 'network' || t.peer_to_peer) && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setCrateATracks(transformedTracks.filter(t => t.crate === 'crate_a' && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setCrateBTracks(transformedTracks.filter(t => t.crate === 'crate_b' && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
+      setSubmissionsTracks(
+        transformedTracks.filter(
+          t =>
+            t.source === 'public_form' &&
+            !t.peer_to_peer &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setNetworkTracks(
+        transformedTracks.filter(
+          t =>
+            (t.crate === 'network' || t.peer_to_peer) &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setCrateATracks(
+        transformedTracks.filter(
+          t =>
+            t.crate === 'crate_a' &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setCrateBTracks(
+        transformedTracks.filter(
+          t =>
+            t.crate === 'crate_b' &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
     } catch (error) {
       console.error('Error pitching track:', error)
       setToast({
@@ -342,11 +434,11 @@ const Dashboard = () => {
               {watchedTracks.length === 0 ? (
                 <p className="text-gray-500 text-sm">No tracks being watched</p>
               ) : (
-                watchedTracks.map((track) => (
+                watchedTracks.map(track => (
                   <div
                     key={track.id}
                     className="p-2 bg-gray-900/30 rounded hover:bg-gray-900/50 transition-colors cursor-pointer border border-gray-800"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault()
                       navigate(`/phase/${track.column}`, { state: { scrollToTrackId: track.id } })
                     }}
@@ -380,7 +472,7 @@ const Dashboard = () => {
               {upcomingReleases.length === 0 ? (
                 <p className="text-gray-500 text-sm">No upcoming releases scheduled</p>
               ) : (
-                upcomingReleases.map((track) => (
+                upcomingReleases.map(track => (
                   <div
                     key={track.id}
                     className="p-2 bg-gray-900/30 rounded hover:bg-gray-900/50 transition-colors border border-gray-800"
@@ -391,11 +483,13 @@ const Dashboard = () => {
                         <p className="text-gray-400 text-sm">{track.title}</p>
                       </div>
                       <div className="text-right">
-                        <p className={`font-semibold ${
-                          track.targetReleaseDate && !track.contractSigned
-                            ? 'text-red-400'
-                            : 'text-green-400'
-                        }`}>
+                        <p
+                          className={`font-semibold ${
+                            track.targetReleaseDate && !track.contractSigned
+                              ? 'text-red-400'
+                              : 'text-green-400'
+                          }`}
+                        >
                           {track.targetReleaseDate
                             ? new Date(track.targetReleaseDate).toLocaleDateString()
                             : 'TBD'}
@@ -436,7 +530,7 @@ const Dashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            onClick={(e) => {
+            onClick={e => {
               e.preventDefault()
               navigate('/phase/inbox')
             }}
@@ -479,7 +573,7 @@ const Dashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            onClick={(e) => {
+            onClick={e => {
               e.preventDefault()
               navigate('/phase/contracting')
             }}
@@ -538,9 +632,7 @@ const Dashboard = () => {
               >
                 <Network size={12} />
                 <span className="whitespace-nowrap">NETWORK ({networkTracks.length})</span>
-                {!hasNetworkAccess && (
-                  <Crown size={10} className="text-yellow-400 ml-1" />
-                )}
+                {!hasNetworkAccess && <Crown size={10} className="text-yellow-400 ml-1" />}
               </button>
               <button
                 onClick={() => setActiveCrate('crate_a')}
@@ -566,91 +658,102 @@ const Dashboard = () => {
               </button>
             </div>
 
-                {/* Track List - EXACTLY LIKE LAUNCHPAD (organized by phase columns) */}
-                <div className="bg-gray-900/40 border border-gray-800 rounded-lg p-2 relative">
-                  {/* Premium Overlay for Network Crate */}
-                  {activeCrate === 'network' && isFreeTier && (
-                    <PremiumOverlay />
-                  )}
-                  
-                  {loadingPersonalTracks ? (
-                    <div className="text-center py-8">
-                      <p className="text-gray-400">Loading tracks...</p>
-                    </div>
-                  ) : currentCrateTracks.length === 0 ? (
-                    <div className="bg-gray-900/40 border border-gray-800 rounded-lg p-4 text-center">
-                      <div>
-                        <Inbox size={24} className="text-gray-600 mx-auto mb-2" />
-                        <p className="text-gray-400 text-sm">No tracks in {activeCrate.replace('_', ' ')}</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 w-full max-w-none">
-                      {['inbox', 'second-listen', 'team-review', 'contracting', 'upcoming'].map((phase) => {
-                        const phaseTracks = currentCrateTracks.filter(t => t.column === phase)
-                        return (
-                          <div key={phase} className="bg-gray-900/50 rounded p-2 border border-gray-800 flex flex-col h-full">
-                            <h3 className="text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider flex-shrink-0">
-                              {phase.replace('-', ' ')} ({phaseTracks.length})
-                            </h3>
-                            <div className="space-y-1 flex-1 overflow-y-auto min-h-0">
-                              {phaseTracks.map((track) => (
-                                <div
-                                  key={track.id}
-                                  className="bg-gray-900/60 border border-gray-800 rounded p-1.5 hover:border-gray-700 transition-all cursor-pointer group"
-                                >
-                                  <div className="flex items-start justify-between mb-0.5">
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-white font-semibold text-xs truncate">{track.artist}</p>
-                                      <p className="text-gray-500 text-xs truncate">{track.title}</p>
-                                      {track.sender && (
-                                        <p className="text-blue-400/70 text-xs truncate">From: {track.sender.name}</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-1 mt-1">
-                                    {track.link && (
-                                      <a
-                                        href={track.link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-xs text-blue-400 hover:text-blue-300 px-1.5 py-0.5 rounded hover:bg-blue-500/10 transition-colors"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        Listen
-                                      </a>
+            {/* Track List - EXACTLY LIKE LAUNCHPAD (organized by phase columns) */}
+            <div className="bg-gray-900/40 border border-gray-800 rounded-lg p-2 relative">
+              {/* Premium Overlay for Network Crate */}
+              {activeCrate === 'network' && isFreeTier && <PremiumOverlay />}
+
+              {loadingPersonalTracks ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-400">Loading tracks...</p>
+                </div>
+              ) : currentCrateTracks.length === 0 ? (
+                <div className="bg-gray-900/40 border border-gray-800 rounded-lg p-4 text-center">
+                  <div>
+                    <Inbox size={24} className="text-gray-600 mx-auto mb-2" />
+                    <p className="text-gray-400 text-sm">
+                      No tracks in {activeCrate.replace('_', ' ')}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 w-full max-w-none">
+                  {['inbox', 'second-listen', 'team-review', 'contracting', 'upcoming'].map(
+                    phase => {
+                      const phaseTracks = currentCrateTracks.filter(t => t.column === phase)
+                      return (
+                        <div
+                          key={phase}
+                          className="bg-gray-900/50 rounded p-2 border border-gray-800 flex flex-col h-full"
+                        >
+                          <h3 className="text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider flex-shrink-0">
+                            {phase.replace('-', ' ')} ({phaseTracks.length})
+                          </h3>
+                          <div className="space-y-1 flex-1 overflow-y-auto min-h-0">
+                            {phaseTracks.map(track => (
+                              <div
+                                key={track.id}
+                                className="bg-gray-900/60 border border-gray-800 rounded p-1.5 hover:border-gray-700 transition-all cursor-pointer group"
+                              >
+                                <div className="flex items-start justify-between mb-0.5">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-white font-semibold text-xs truncate">
+                                      {track.artist}
+                                    </p>
+                                    <p className="text-gray-500 text-xs truncate">{track.title}</p>
+                                    {track.sender && (
+                                      <p className="text-blue-400/70 text-xs truncate">
+                                        From: {track.sender.name}
+                                      </p>
                                     )}
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        if (!isFreeTier) {
-                                          handlePitchTrack(track.id)
-                                        } else {
-                                          navigate('/billing')
-                                        }
-                                      }}
-                                      className={`text-xs px-1.5 py-0.5 rounded transition-colors flex items-center gap-1 ${
-                                        isFreeTier
-                                          ? 'text-gray-500 cursor-not-allowed opacity-60'
-                                          : 'text-orange-400 hover:text-orange-300 hover:bg-orange-500/10'
-                                      }`}
-                                      title={isFreeTier ? 'Upgrade to Pitch Tracks' : 'Pitch Track'}
-                                      disabled={isFreeTier}
-                                    >
-                                      <Send size={12} />
-                                      Pitch
-                                      {isFreeTier && <Crown size={10} className="text-yellow-400 ml-0.5" />}
-                                    </button>
                                   </div>
                                 </div>
-                              ))}
-                            </div>
+                                <div className="flex items-center gap-1 mt-1">
+                                  {track.link && (
+                                    <a
+                                      href={track.link}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs text-blue-400 hover:text-blue-300 px-1.5 py-0.5 rounded hover:bg-blue-500/10 transition-colors"
+                                      onClick={e => e.stopPropagation()}
+                                    >
+                                      Listen
+                                    </a>
+                                  )}
+                                  <button
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      if (!isFreeTier) {
+                                        handlePitchTrack(track.id)
+                                      } else {
+                                        navigate('/billing')
+                                      }
+                                    }}
+                                    className={`text-xs px-1.5 py-0.5 rounded transition-colors flex items-center gap-1 ${
+                                      isFreeTier
+                                        ? 'text-gray-500 cursor-not-allowed opacity-60'
+                                        : 'text-orange-400 hover:text-orange-300 hover:bg-orange-500/10'
+                                    }`}
+                                    title={isFreeTier ? 'Upgrade to Pitch Tracks' : 'Pitch Track'}
+                                    disabled={isFreeTier}
+                                  >
+                                    <Send size={12} />
+                                    Pitch
+                                    {isFreeTier && (
+                                      <Crown size={10} className="text-yellow-400 ml-0.5" />
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        )
-                      })}
-                    </div>
+                        </div>
+                      )
+                    }
                   )}
                 </div>
+              )}
+            </div>
           </motion.div>
         )}
 
@@ -669,11 +772,11 @@ const Dashboard = () => {
                 { id: 'second-listen', title: 'Second Listen', count: stats.secondListen },
                 { id: 'team-review', title: 'The Office', count: stats.teamReview },
                 { id: 'contracting', title: 'Contracting', count: stats.contracting },
-              ].map((phase) => (
+              ].map(phase => (
                 <motion.button
                   key={phase.id}
                   type="button"
-                  onClick={(e) => {
+                  onClick={e => {
                     e.preventDefault()
                     navigate(`/phase/${phase.id}`)
                   }}
@@ -693,7 +796,7 @@ const Dashboard = () => {
       <AddDemoModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onAdd={(data) => {
+        onAdd={data => {
           addTrack(data)
           setIsModalOpen(false)
         }}

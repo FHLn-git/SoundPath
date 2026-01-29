@@ -65,8 +65,10 @@ export const BillingProvider = ({ children }) => {
       setLoading(true)
 
       // Load subscription
-      const { data: subData, error: subError } = await supabase
-        .rpc('get_organization_subscription', { org_id: activeOrgId })
+      const { data: subData, error: subError } = await supabase.rpc(
+        'get_organization_subscription',
+        { org_id: activeOrgId }
+      )
 
       if (subError) throw subError
 
@@ -85,8 +87,9 @@ export const BillingProvider = ({ children }) => {
       }
 
       // Load usage
-      const { data: usageData, error: usageError } = await supabase
-        .rpc('get_organization_usage', { org_id: activeOrgId })
+      const { data: usageData, error: usageError } = await supabase.rpc('get_organization_usage', {
+        org_id: activeOrgId,
+      })
 
       if (!usageError && usageData && usageData.length > 0) {
         setUsage(usageData[0])
@@ -126,10 +129,10 @@ export const BillingProvider = ({ children }) => {
   // Check if organization has feature access
   // Checks the plan's features JSONB directly
   // CRITICAL: System admins must have full access to all features, bypassing all restrictions
-  const hasFeature = async (featureKey) => {
+  const hasFeature = async featureKey => {
     // Check system admin status with fallback - check both isSystemAdmin and staffProfile.role
     const userIsSystemAdmin = Boolean(isSystemAdmin || staffProfile?.role === 'SystemAdmin')
-    
+
     // System admins always have access to everything
     if (userIsSystemAdmin) {
       return true
@@ -140,11 +143,11 @@ export const BillingProvider = ({ children }) => {
     if (staffProfile?.user_status === 'trialing' && featureKey === 'global_trend_reports') {
       return false
     }
-    
+
     // For personal features (like personal_inbox), activeOrgId can be null
     // In that case, we check the free plan or user's personal subscription
     if (!supabase) return false
-    
+
     // If activeOrgId is null and it's a personal feature, check the user's tier plan
     if (!activeOrgId && (featureKey === 'personal_inbox' || featureKey === 'network')) {
       try {
@@ -152,7 +155,10 @@ export const BillingProvider = ({ children }) => {
 
         // Personal sampler access: any non-free tier (agent/starter/pro) can access personal inbox + network.
         // This is intentionally tier-based (not feature-flag based) to avoid misconfigured plan JSON blocking access.
-        if ((featureKey === 'personal_inbox' || featureKey === 'network') && tierPlanId !== 'free') {
+        if (
+          (featureKey === 'personal_inbox' || featureKey === 'network') &&
+          tierPlanId !== 'free'
+        ) {
           return true
         }
 
@@ -172,16 +178,16 @@ export const BillingProvider = ({ children }) => {
 
         if (features) {
           const featureMap = {
-            'api_access': 'has_api_access',
-            'webhooks': 'has_webhooks',
-            'analytics': 'has_analytics',
-            'advanced_analytics': 'has_analytics',
-            'sso': 'has_sso',
-            'custom_branding': 'has_custom_branding',
-            'white_label': 'has_white_label',
-            'global_trend_reports': 'has_global_trend_reports',
-            'personal_inbox': 'has_personal_inbox',
-            'network': 'has_network',
+            api_access: 'has_api_access',
+            webhooks: 'has_webhooks',
+            analytics: 'has_analytics',
+            advanced_analytics: 'has_analytics',
+            sso: 'has_sso',
+            custom_branding: 'has_custom_branding',
+            white_label: 'has_white_label',
+            global_trend_reports: 'has_global_trend_reports',
+            personal_inbox: 'has_personal_inbox',
+            network: 'has_network',
           }
           const planFeatureKey = featureMap[featureKey] || `has_${featureKey}`
           return features[planFeatureKey] === true
@@ -192,7 +198,7 @@ export const BillingProvider = ({ children }) => {
         return false
       }
     }
-    
+
     // For organization features, activeOrgId must be set
     if (!activeOrgId) return false
 
@@ -201,25 +207,27 @@ export const BillingProvider = ({ children }) => {
       if (plan?.features) {
         // Map feature keys to plan feature names
         const featureMap = {
-          'api_access': 'has_api_access',
-          'webhooks': 'has_webhooks',
-          'analytics': 'has_analytics',
-          'advanced_analytics': 'has_analytics',
-          'sso': 'has_sso',
-          'custom_branding': 'has_custom_branding',
-          'white_label': 'has_white_label',
-          'global_trend_reports': 'has_global_trend_reports',
-          'personal_inbox': 'has_personal_inbox',
-          'network': 'has_network',
+          api_access: 'has_api_access',
+          webhooks: 'has_webhooks',
+          analytics: 'has_analytics',
+          advanced_analytics: 'has_analytics',
+          sso: 'has_sso',
+          custom_branding: 'has_custom_branding',
+          white_label: 'has_white_label',
+          global_trend_reports: 'has_global_trend_reports',
+          personal_inbox: 'has_personal_inbox',
+          network: 'has_network',
         }
-        
+
         const planFeatureKey = featureMap[featureKey] || `has_${featureKey}`
         return plan.features[planFeatureKey] === true
       }
 
       // Fallback: Get plan from subscription if not loaded
-      const { data: subData, error: subError } = await supabase
-        .rpc('get_organization_subscription', { org_id: activeOrgId })
+      const { data: subData, error: subError } = await supabase.rpc(
+        'get_organization_subscription',
+        { org_id: activeOrgId }
+      )
 
       if (subError || !subData || subData.length === 0) {
         // No subscription, check free plan
@@ -228,19 +236,19 @@ export const BillingProvider = ({ children }) => {
           .select('features')
           .eq('id', 'free')
           .single()
-        
+
         if (freePlan?.features) {
           const featureMap = {
-            'api_access': 'has_api_access',
-            'webhooks': 'has_webhooks',
-            'analytics': 'has_analytics',
-            'advanced_analytics': 'has_analytics',
-            'sso': 'has_sso',
-            'custom_branding': 'has_custom_branding',
-            'white_label': 'has_white_label',
-            'global_trend_reports': 'has_global_trend_reports',
-            'personal_inbox': 'has_personal_inbox',
-            'network': 'has_network',
+            api_access: 'has_api_access',
+            webhooks: 'has_webhooks',
+            analytics: 'has_analytics',
+            advanced_analytics: 'has_analytics',
+            sso: 'has_sso',
+            custom_branding: 'has_custom_branding',
+            white_label: 'has_white_label',
+            global_trend_reports: 'has_global_trend_reports',
+            personal_inbox: 'has_personal_inbox',
+            network: 'has_network',
           }
           const planFeatureKey = featureMap[featureKey] || `has_${featureKey}`
           return freePlan.features[planFeatureKey] === true
@@ -258,18 +266,18 @@ export const BillingProvider = ({ children }) => {
       if (planError || !planData?.features) return false
 
       const featureMap = {
-        'api_access': 'has_api_access',
-        'webhooks': 'has_webhooks',
-        'analytics': 'has_analytics',
-        'advanced_analytics': 'has_analytics',
-        'sso': 'has_sso',
-        'custom_branding': 'has_custom_branding',
-        'white_label': 'has_white_label',
-        'global_trend_reports': 'has_global_trend_reports',
-        'personal_inbox': 'has_personal_inbox',
-        'network': 'has_network',
+        api_access: 'has_api_access',
+        webhooks: 'has_webhooks',
+        analytics: 'has_analytics',
+        advanced_analytics: 'has_analytics',
+        sso: 'has_sso',
+        custom_branding: 'has_custom_branding',
+        white_label: 'has_white_label',
+        global_trend_reports: 'has_global_trend_reports',
+        personal_inbox: 'has_personal_inbox',
+        network: 'has_network',
       }
-      
+
       const planFeatureKey = featureMap[featureKey] || `has_${featureKey}`
       return planData.features[planFeatureKey] === true
     } catch (error) {
@@ -279,15 +287,14 @@ export const BillingProvider = ({ children }) => {
   }
 
   // Check if within usage limit
-  const checkLimit = async (limitType) => {
+  const checkLimit = async limitType => {
     if (!supabase || !activeOrgId) return false
 
     try {
-      const { data, error } = await supabase
-        .rpc('check_usage_limit', {
-          org_id: activeOrgId,
-          limit_type: limitType
-        })
+      const { data, error } = await supabase.rpc('check_usage_limit', {
+        org_id: activeOrgId,
+        limit_type: limitType,
+      })
 
       if (error) throw error
       return data || false
@@ -298,7 +305,7 @@ export const BillingProvider = ({ children }) => {
   }
 
   // Get usage percentage
-  const getUsagePercentage = (limitType) => {
+  const getUsagePercentage = limitType => {
     if (!usage || !plan) return 0
 
     // Handle both 'max_tracks' and 'tracks' key formats
@@ -307,16 +314,16 @@ export const BillingProvider = ({ children }) => {
 
     // Map limit types to usage fields
     const usageFieldMap = {
-      'max_tracks': 'tracks_count',
-      'tracks': 'tracks_count',
-      'max_staff': 'staff_count',
-      'staff': 'staff_count',
-      'max_api_calls_per_month': 'api_calls_count',
-      'api_calls': 'api_calls_count',
-      'max_contacts': 'contacts_count',
-      'contacts': 'contacts_count',
-      'max_vault_tracks': 'vault_tracks_count',
-      'vault_tracks': 'vault_tracks_count',
+      max_tracks: 'tracks_count',
+      tracks: 'tracks_count',
+      max_staff: 'staff_count',
+      staff: 'staff_count',
+      max_api_calls_per_month: 'api_calls_count',
+      api_calls: 'api_calls_count',
+      max_contacts: 'contacts_count',
+      contacts: 'contacts_count',
+      max_vault_tracks: 'vault_tracks_count',
+      vault_tracks: 'vault_tracks_count',
     }
 
     const usageField = usageFieldMap[limitType] || `${limitType.replace('max_', '')}_count`

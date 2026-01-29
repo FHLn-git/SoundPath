@@ -26,9 +26,9 @@ const MIN_WIDTHS = {
   'artist-detail': [60, 60, 150, 80, 80, 80, 100],
 }
 
-export const useResizableColumns = (viewType) => {
+export const useResizableColumns = viewType => {
   const storageKey = `columnWidths_${viewType}`
-  
+
   const [columnWidths, setColumnWidths] = useState(() => {
     const saved = localStorage.getItem(storageKey)
     if (saved) {
@@ -47,19 +47,22 @@ export const useResizableColumns = (viewType) => {
     localStorage.setItem(storageKey, JSON.stringify(columnWidths))
   }, [columnWidths, storageKey])
 
-  const handleResize = useCallback((columnIndex, newWidth) => {
-    setColumnWidths((prev) => {
-      const updated = [...prev]
-      const minWidth = minWidths[columnIndex]
-      const pixelWidth = Math.max(minWidth, newWidth)
-      
-      // Always convert to pixels when resizing
-      // If it was fr, we use the actual measured width from the resize
-      updated[columnIndex] = `${pixelWidth}px`
-      
-      return updated
-    })
-  }, [minWidths])
+  const handleResize = useCallback(
+    (columnIndex, newWidth) => {
+      setColumnWidths(prev => {
+        const updated = [...prev]
+        const minWidth = minWidths[columnIndex]
+        const pixelWidth = Math.max(minWidth, newWidth)
+
+        // Always convert to pixels when resizing
+        // If it was fr, we use the actual measured width from the resize
+        updated[columnIndex] = `${pixelWidth}px`
+
+        return updated
+      })
+    },
+    [minWidths]
+  )
 
   const getGridTemplate = useCallback(() => {
     return columnWidths.join(' ')

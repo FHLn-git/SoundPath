@@ -1,5 +1,17 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Book, HelpCircle, Mail, FileText, Shield, Download, Trash2, CreditCard, Key, Users, ArrowLeft } from 'lucide-react'
+import {
+  Book,
+  HelpCircle,
+  Mail,
+  FileText,
+  Shield,
+  Download,
+  Trash2,
+  CreditCard,
+  Key,
+  Users,
+  ArrowLeft,
+} from 'lucide-react'
 
 const HelpCenter = () => {
   const navigate = useNavigate()
@@ -9,28 +21,64 @@ const HelpCenter = () => {
       title: 'Getting Started',
       icon: Book,
       items: [
-        { title: 'Creating Your Account', description: 'Learn how to sign up and set up your profile', link: '/faq' },
-        { title: 'Your First Demo Submission', description: 'Step-by-step guide to submitting demos', link: '/faq' },
-        { title: 'Understanding the Pipeline', description: 'Learn about the different phases', link: '/faq' }
-      ]
+        {
+          title: 'Creating Your Account',
+          description: 'Learn how to sign up and set up your profile',
+          link: '/faq',
+        },
+        {
+          title: 'Your First Demo Submission',
+          description: 'Step-by-step guide to submitting demos',
+          link: '/faq',
+        },
+        {
+          title: 'Understanding the Pipeline',
+          description: 'Learn about the different phases',
+          link: '/faq',
+        },
+      ],
     },
     {
       title: 'Account & Settings',
       icon: Users,
       items: [
-        { title: 'Managing Your Profile', description: 'Update your name, bio, and preferences', link: '/admin' },
-        { title: 'Organization Settings', description: 'Customize your organization\'s branding', link: '/admin' },
-        { title: 'Team Management', description: 'Invite and manage team members', link: '/admin/staff' }
-      ]
+        {
+          title: 'Managing Your Profile',
+          description: 'Update your name, bio, and preferences',
+          link: '/admin',
+        },
+        {
+          title: 'Organization Settings',
+          description: "Customize your organization's branding",
+          link: '/admin',
+        },
+        {
+          title: 'Team Management',
+          description: 'Invite and manage team members',
+          link: '/admin/staff',
+        },
+      ],
     },
     {
       title: 'Billing & Subscriptions',
       icon: CreditCard,
       items: [
-        { title: 'Understanding Plans', description: 'Compare features and limits', link: '/billing' },
-        { title: 'Upgrading Your Plan', description: 'How to upgrade or downgrade', link: '/billing' },
-        { title: 'Usage Limits', description: 'Learn about track and staff limits', link: '/billing' }
-      ]
+        {
+          title: 'Understanding Plans',
+          description: 'Compare features and limits',
+          link: '/billing',
+        },
+        {
+          title: 'Upgrading Your Plan',
+          description: 'How to upgrade or downgrade',
+          link: '/billing',
+        },
+        {
+          title: 'Usage Limits',
+          description: 'Learn about track and staff limits',
+          link: '/billing',
+        },
+      ],
     },
     {
       title: 'Privacy & Security',
@@ -38,8 +86,12 @@ const HelpCenter = () => {
       items: [
         { title: 'Privacy Policy', description: 'How we protect your data', link: '/privacy' },
         { title: 'Data Export', description: 'Download a copy of your data', link: '/data-export' },
-        { title: 'Delete Account', description: 'Permanently delete your account', link: '/delete-account' }
-      ]
+        {
+          title: 'Delete Account',
+          description: 'Permanently delete your account',
+          link: '/delete-account',
+        },
+      ],
     },
     {
       title: 'API & Integrations',
@@ -47,8 +99,8 @@ const HelpCenter = () => {
       items: [
         { title: 'API Keys', description: 'Create and manage API keys', link: '/api-keys' },
         { title: 'API Documentation', description: 'Learn how to use our API', link: '/api-keys' },
-        { title: 'Webhooks', description: 'Set up webhook integrations', link: '/api-keys' }
-      ]
+        { title: 'Webhooks', description: 'Set up webhook integrations', link: '/api-keys' },
+      ],
     },
     {
       title: 'Support',
@@ -56,16 +108,40 @@ const HelpCenter = () => {
       items: [
         { title: 'Contact Support', description: 'Get help from our team', link: '/contact' },
         { title: 'FAQ', description: 'Frequently asked questions', link: '/faq' },
-        { title: 'Report a Bug', description: 'Found an issue? Let us know', link: '/contact' }
-      ]
-    }
+        { title: 'Report a Bug', description: 'Found an issue? Let us know', link: '/contact' },
+      ],
+    },
   ]
 
   const quickLinks = [
-    { icon: HelpCircle, title: 'FAQ', description: 'Common questions answered', link: '/faq', color: 'blue' },
-    { icon: FileText, title: 'Terms of Service', description: 'Read our terms', link: '/terms', color: 'gray' },
-    { icon: Shield, title: 'Privacy Policy', description: 'How we handle your data', link: '/privacy', color: 'green' },
-    { icon: Download, title: 'Export Data', description: 'Download your data', link: '/data-export', color: 'blue' }
+    {
+      icon: HelpCircle,
+      title: 'FAQ',
+      description: 'Common questions answered',
+      link: '/faq',
+      color: 'blue',
+    },
+    {
+      icon: FileText,
+      title: 'Terms of Service',
+      description: 'Read our terms',
+      link: '/terms',
+      color: 'gray',
+    },
+    {
+      icon: Shield,
+      title: 'Privacy Policy',
+      description: 'How we handle your data',
+      link: '/privacy',
+      color: 'green',
+    },
+    {
+      icon: Download,
+      title: 'Export Data',
+      description: 'Download your data',
+      link: '/data-export',
+      color: 'blue',
+    },
   ]
 
   return (
@@ -95,7 +171,9 @@ const HelpCenter = () => {
               to={link.link}
               className="bg-gray-900 rounded-lg p-6 border border-gray-800 hover:border-gray-700 transition-colors group"
             >
-              <div className={`w-12 h-12 rounded-lg bg-${link.color}-500/20 flex items-center justify-center mb-4 group-hover:bg-${link.color}-500/30 transition-colors`}>
+              <div
+                className={`w-12 h-12 rounded-lg bg-${link.color}-500/20 flex items-center justify-center mb-4 group-hover:bg-${link.color}-500/30 transition-colors`}
+              >
                 <link.icon className={`w-6 h-6 text-${link.color}-400`} />
               </div>
               <h3 className="font-semibold text-lg mb-2">{link.title}</h3>

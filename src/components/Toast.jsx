@@ -24,10 +24,7 @@ const Toast = ({ message, isVisible, onClose, type = 'error', duration = 4000 })
           } text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-4 min-w-[300px] max-w-md`}
         >
           <p className="flex-1 font-semibold">{message}</p>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-white/20 rounded transition-colors"
-          >
+          <button onClick={onClose} className="p-1 hover:bg-white/20 rounded transition-colors">
             <X size={18} />
           </button>
         </motion.div>

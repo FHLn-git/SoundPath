@@ -7,9 +7,11 @@ import { supabase } from './supabaseClient'
 // Initialize Stripe with publishable key
 const getStripe = async () => {
   const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
-  
+
   if (!publishableKey) {
-    console.warn('⚠️ Stripe publishable key not configured. Set VITE_STRIPE_PUBLISHABLE_KEY in .env')
+    console.warn(
+      '⚠️ Stripe publishable key not configured. Set VITE_STRIPE_PUBLISHABLE_KEY in .env'
+    )
     return null
   }
 
@@ -43,22 +45,31 @@ export const createCheckoutSession = async (
   }
 
   // Get current user - this automatically refreshes the session if needed
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
   if (!user || userError) {
     console.error('User authentication check failed:', userError)
     throw new Error('User not authenticated. Please log in and try again.')
   }
-  
+
   console.log('User authenticated:', user.id)
 
   // Get current session - use getUser() result which already validated the session
   // Avoid calling refreshSession() as it triggers AuthContext side effects
-  let { data: { session }, error: sessionError } = await supabase.auth.getSession()
-  
+  let {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession()
+
   // Only refresh if absolutely necessary (session missing or expired)
   if (!session || sessionError || !session.access_token) {
     console.log('No valid session found, attempting to refresh...')
-    const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession()
+    const {
+      data: { session: refreshedSession },
+      error: refreshError,
+    } = await supabase.auth.refreshSession()
     if (!refreshedSession || refreshError || !refreshedSession.access_token) {
       console.error('Session refresh failed:', refreshError)
       throw new Error('Your session has expired. Please refresh the page or log in again.')
@@ -66,12 +77,12 @@ export const createCheckoutSession = async (
     session = refreshedSession
     console.log('Session refreshed successfully')
   }
-  
+
   // Verify session is still valid
   if (!session?.access_token) {
     throw new Error('No valid session token available. Please log in again.')
   }
-  
+
   // Don't proactively refresh - use the session we have
   // getUser() above already validated the session is valid
 
@@ -87,9 +98,8 @@ export const createCheckoutSession = async (
   }
 
   // Get Stripe price ID based on billing interval
-  const priceId = billingInterval === 'year' 
-    ? plan.stripe_price_id_yearly 
-    : plan.stripe_price_id_monthly
+  const priceId =
+    billingInterval === 'year' ? plan.stripe_price_id_yearly : plan.stripe_price_id_monthly
 
   if (!priceId) {
     throw new Error(`Stripe price ID not configured for plan: ${planId}`)
@@ -97,7 +107,9 @@ export const createCheckoutSession = async (
 
   // Validate that priceId is actually a price ID (starts with 'price_'), not a product ID
   if (!priceId.startsWith('price_')) {
-    throw new Error(`Invalid Stripe price ID format for plan ${planId}. Expected price ID (price_*), but got: ${priceId}. Please check your plan configuration in the database.`)
+    throw new Error(
+      `Invalid Stripe price ID format for plan ${planId}. Expected price ID (price_*), but got: ${priceId}. Please check your plan configuration in the database.`
+    )
   }
 
   // Get or create Stripe customer
@@ -120,8 +132,12 @@ export const createCheckoutSession = async (
     priceId,
     billingInterval,
     hasSessionToken: !!session.access_token,
-    sessionExpiresAt: session.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'N/A',
-    timeUntilExpiry: session.expires_at ? `${Math.round((session.expires_at * 1000 - Date.now()) / 1000)}s` : 'N/A'
+    sessionExpiresAt: session.expires_at
+      ? new Date(session.expires_at * 1000).toISOString()
+      : 'N/A',
+    timeUntilExpiry: session.expires_at
+      ? `${Math.round((session.expires_at * 1000 - Date.now()) / 1000)}s`
+      : 'N/A',
   })
 
   // Use supabase.functions.invoke() - it automatically handles JWT from the client's session
@@ -135,16 +151,16 @@ export const createCheckoutSession = async (
       customer_id: customerId,
       success_url: successUrl || `${window.location.origin}/billing?success=true`,
       cancel_url: cancelUrl || `${window.location.origin}/billing?canceled=true`,
-    }
+    },
   })
 
   if (error) {
     console.error('Error creating checkout session:', error)
     console.error('Full error object:', JSON.stringify(error, null, 2))
-    
+
     // Try to extract the actual error message from the Edge Function response
     let errorMessage = 'Failed to create checkout session'
-    
+
     // The error from supabase.functions.invoke() may have the response in different places
     // Try multiple ways to extract the error message
     try {
@@ -156,7 +172,7 @@ export const createCheckoutSession = async (
           console.error('Extracted error from response body:', errorData)
         }
       }
-      
+
       // Method 2: Check error.data
       if (errorMessage === 'Failed to create checkout session' && error.data) {
         if (typeof error.data === 'string') {
@@ -171,7 +187,7 @@ export const createCheckoutSession = async (
           errorMessage = error.data.error
         }
       }
-      
+
       // Method 3: Check error.message
       if (errorMessage === 'Failed to create checkout session' && error.message) {
         errorMessage = error.message
@@ -180,13 +196,18 @@ export const createCheckoutSession = async (
       console.warn('Error extracting error message:', e)
       // Fallback to generic message
     }
-    
+
     // If it's a JWT/auth error, don't retry with refreshSession as it causes side effects
     // Instead, tell the user to refresh the page
-    if (errorMessage.includes('JWT') || errorMessage.includes('401') || errorMessage.includes('Unauthorized') || errorMessage.includes('Invalid JWT')) {
+    if (
+      errorMessage.includes('JWT') ||
+      errorMessage.includes('401') ||
+      errorMessage.includes('Unauthorized') ||
+      errorMessage.includes('Invalid JWT')
+    ) {
       throw new Error('Authentication failed. Please refresh the page and try again.')
     }
-    
+
     throw new Error(errorMessage)
   }
 
@@ -203,10 +224,7 @@ export const createCheckoutSession = async (
  * @param {string} returnUrl - URL to return to after portal session
  * @returns {Promise<string|null>} - Portal session URL or null
  */
-export const createBillingPortalSession = async (
-  organizationId,
-  returnUrl = null
-) => {
+export const createBillingPortalSession = async (organizationId, returnUrl = null) => {
   if (!supabase) {
     throw new Error('Supabase client not initialized')
   }
@@ -223,9 +241,15 @@ export const createBillingPortalSession = async (
   }
 
   // Get and refresh session to ensure we have a valid JWT token
-  let { data: { session }, error: sessionError } = await supabase.auth.getSession()
+  let {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession()
   if (!session || sessionError) {
-    const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession()
+    const {
+      data: { session: refreshedSession },
+      error: refreshError,
+    } = await supabase.auth.refreshSession()
     if (!refreshedSession || refreshError) {
       throw new Error('Session expired. Please log in again.')
     }
@@ -246,8 +270,8 @@ export const createBillingPortalSession = async (
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session.access_token}`,
-      'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+      Authorization: `Bearer ${session.access_token}`,
+      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
     },
     body: JSON.stringify({
       organization_id: organizationId,
@@ -281,7 +305,7 @@ export const createBillingPortalSession = async (
  * Redirect to Stripe Checkout
  * @param {string} sessionUrl - Checkout session URL
  */
-export const redirectToCheckout = async (sessionUrl) => {
+export const redirectToCheckout = async sessionUrl => {
   if (!sessionUrl) {
     throw new Error('No checkout session URL provided')
   }
@@ -301,7 +325,9 @@ export const createPersonalOrganization = async () => {
   }
 
   // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     throw new Error('User not authenticated')
   }
@@ -359,13 +385,12 @@ export const createPersonalOrganization = async () => {
   }
 
   // Create membership using SECURITY DEFINER function (bypasses RLS)
-  const { error: membershipError } = await supabase
-    .rpc('create_membership', {
-      user_id_param: staffProfile.id,
-      organization_id_param: orgData.id,
-      role_param: 'Owner',
-      permissions_json_param: defaultPermissions,
-    })
+  const { error: membershipError } = await supabase.rpc('create_membership', {
+    user_id_param: staffProfile.id,
+    organization_id_param: orgData.id,
+    role_param: 'Owner',
+    permissions_json_param: defaultPermissions,
+  })
 
   if (membershipError) throw membershipError
 
@@ -391,11 +416,7 @@ export const handleSubscriptionChange = async (
   }
 
   // Create checkout session for the new plan
-  const sessionUrl = await createCheckoutSession(
-    finalOrgId,
-    newPlanId,
-    billingInterval
-  )
+  const sessionUrl = await createCheckoutSession(finalOrgId, newPlanId, billingInterval)
 
   // Redirect to checkout
   await redirectToCheckout(sessionUrl)

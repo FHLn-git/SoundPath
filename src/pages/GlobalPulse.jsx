@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { 
-  Activity, TrendingUp, Users, Building2, Zap, 
-  BarChart3, AlertTriangle, Eye, Heart, ArrowLeft,
-  ChevronDown
+import {
+  Activity,
+  TrendingUp,
+  Users,
+  Building2,
+  Zap,
+  BarChart3,
+  AlertTriangle,
+  Eye,
+  Heart,
+  ArrowLeft,
+  ChevronDown,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
@@ -67,7 +75,7 @@ const GlobalPulse = () => {
         supabase.rpc('get_global_demo_count', { hours_back: 168 }), // 7 days
         supabase.rpc('get_global_demo_count', { hours_back: 720 }), // 30 days
       ])
-      
+
       setMarketVelocity({
         last24h: count24h.data || 0,
         last7d: count7d.data || 0,
@@ -100,7 +108,6 @@ const GlobalPulse = () => {
         .select('id, name, slug')
         .order('name')
       setOrganizations(orgsList || [])
-
     } catch (error) {
       console.error('Error loading global pulse data:', error)
     } finally {
@@ -108,7 +115,7 @@ const GlobalPulse = () => {
     }
   }
 
-  const handleImpersonate = (orgId) => {
+  const handleImpersonate = orgId => {
     if (!orgId) {
       setIsImpersonating(false)
       setSelectedOrganization(null)
@@ -160,23 +167,26 @@ const GlobalPulse = () => {
           <h1 className="text-3xl font-bold text-white mb-2">Global Pulse</h1>
           <p className="text-gray-400">System-wide analytics and monitoring</p>
         </div>
-        
+
         {/* Label Switcher */}
         <div className="flex items-center gap-4">
           <div className="relative">
             <select
               value={selectedOrganization || ''}
-              onChange={(e) => handleImpersonate(e.target.value || null)}
+              onChange={e => handleImpersonate(e.target.value || null)}
               className="appearance-none bg-gray-950/50 border border-neon-purple/50 rounded-lg px-4 py-2 pr-10 text-white focus:outline-none focus:border-neon-purple cursor-pointer"
             >
               <option value="">View All (Global)</option>
-              {organizations.map((org) => (
+              {organizations.map(org => (
                 <option key={org.id} value={org.id}>
                   {org.name}
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+            <ChevronDown
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+              size={18}
+            />
           </div>
         </div>
       </div>
@@ -231,7 +241,10 @@ const GlobalPulse = () => {
               <p className="text-gray-400 text-sm">No genre data available</p>
             ) : (
               topGenres.map((genre, index) => (
-                <div key={genre.genre} className="flex items-center justify-between p-3 bg-gray-950/30 rounded-lg">
+                <div
+                  key={genre.genre}
+                  className="flex items-center justify-between p-3 bg-gray-950/30 rounded-lg"
+                >
                   <div className="flex items-center gap-3">
                     <span className="text-gray-400 text-sm w-8">#{index + 1}</span>
                     <span className="text-white font-semibold">{genre.genre || 'Unknown'}</span>
@@ -239,7 +252,9 @@ const GlobalPulse = () => {
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <p className="text-white font-bold">{genre.sign_rate?.toFixed(1)}%</p>
-                      <p className="text-xs text-gray-500">{genre.total_signed}/{genre.total_submissions}</p>
+                      <p className="text-xs text-gray-500">
+                        {genre.total_signed}/{genre.total_submissions}
+                      </p>
                     </div>
                     <div className="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
                       <div
@@ -272,7 +287,10 @@ const GlobalPulse = () => {
               <p className="text-gray-400 text-sm">No staff data available</p>
             ) : (
               staffEfficiency.slice(0, 10).map((staff, index) => (
-                <div key={staff.staff_id} className="flex items-center justify-between p-3 bg-gray-950/30 rounded-lg">
+                <div
+                  key={staff.staff_id}
+                  className="flex items-center justify-between p-3 bg-gray-950/30 rounded-lg"
+                >
                   <div className="flex items-center gap-3">
                     <span className="text-gray-400 text-sm w-8">#{index + 1}</span>
                     <div>
@@ -282,7 +300,9 @@ const GlobalPulse = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-white font-bold">{staff.hit_rate?.toFixed(1)}%</p>
-                    <p className="text-xs text-gray-500">{staff.total_signed}/{staff.total_advanced} hit rate</p>
+                    <p className="text-xs text-gray-500">
+                      {staff.total_signed}/{staff.total_advanced} hit rate
+                    </p>
                   </div>
                 </div>
               ))
@@ -306,11 +326,16 @@ const GlobalPulse = () => {
             <h2 className="text-xl font-bold text-white">🔥 Hot Trends Detected</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {hotTrends.map((trend) => (
-              <div key={trend.genre} className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+            {hotTrends.map(trend => (
+              <div
+                key={trend.genre}
+                className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg"
+              >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-white font-semibold">{trend.genre}</span>
-                  <span className="text-amber-400 font-bold">+{trend.change_percentage?.toFixed(1)}%</span>
+                  <span className="text-amber-400 font-bold">
+                    +{trend.change_percentage?.toFixed(1)}%
+                  </span>
                 </div>
                 <div className="text-xs text-gray-400">
                   <p>This week: {trend.current_week_count}</p>
@@ -338,8 +363,11 @@ const GlobalPulse = () => {
             <span className="text-gray-400 text-sm">(Watched by multiple labels)</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {hotArtists.map((artist) => (
-              <div key={artist.artist_name} className="p-4 bg-gray-950/30 rounded-lg border border-neon-purple/20">
+            {hotArtists.map(artist => (
+              <div
+                key={artist.artist_name}
+                className="p-4 bg-gray-950/30 rounded-lg border border-neon-purple/20"
+              >
                 <p className="text-white font-semibold mb-2">{artist.artist_name}</p>
                 <div className="space-y-1 text-xs">
                   <div className="flex items-center gap-2">
@@ -395,19 +423,26 @@ const GlobalPulse = () => {
                   </td>
                 </tr>
               ) : (
-                organizationMetrics.map((org) => (
-                  <tr key={org.organization_id} className="border-b border-gray-800/50 hover:bg-gray-950/30">
+                organizationMetrics.map(org => (
+                  <tr
+                    key={org.organization_id}
+                    className="border-b border-gray-800/50 hover:bg-gray-950/30"
+                  >
                     <td className="py-3 px-4 text-white font-semibold">{org.organization_name}</td>
                     <td className="py-3 px-4 text-gray-400 text-sm">{org.slug}</td>
                     <td className="py-3 px-4 text-right text-white">{org.staff_count}</td>
                     <td className="py-3 px-4 text-right text-white">{org.total_tracks}</td>
                     <td className="py-3 px-4 text-right text-green-400">{org.signed_tracks}</td>
                     <td className="py-3 px-4 text-right">
-                      <span className={`font-bold ${
-                        org.company_health_score >= 70 ? 'text-green-400' :
-                        org.company_health_score >= 50 ? 'text-yellow-400' :
-                        'text-red-400'
-                      }`}>
+                      <span
+                        className={`font-bold ${
+                          org.company_health_score >= 70
+                            ? 'text-green-400'
+                            : org.company_health_score >= 50
+                              ? 'text-yellow-400'
+                              : 'text-red-400'
+                        }`}
+                      >
                         {org.company_health_score?.toFixed(1)}%
                       </span>
                     </td>

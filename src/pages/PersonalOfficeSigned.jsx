@@ -29,7 +29,8 @@ const PersonalOfficeSigned = () => {
         // For now, we'll get all signed tracks where the agent was involved
         const { data, error } = await supabase
           .from('tracks')
-          .select(`
+          .select(
+            `
             *,
             artists (
               name
@@ -38,7 +39,8 @@ const PersonalOfficeSigned = () => {
               id,
               name
             )
-          `)
+          `
+          )
           .or(`recipient_user_id.eq.${staffProfile.id},sender_id.eq.${staffProfile.id}`)
           .eq('contract_signed', true)
           .eq('archived', false)
@@ -90,9 +92,7 @@ const PersonalOfficeSigned = () => {
             <Trophy size={24} className="text-yellow-400" />
             <h1 className="text-2xl font-bold text-white">Signed</h1>
           </div>
-          <p className="text-gray-400 text-sm">
-            Your Hall of Fame - Signed Talent
-          </p>
+          <p className="text-gray-400 text-sm">Your Hall of Fame - Signed Talent</p>
         </div>
       </div>
 
@@ -107,7 +107,10 @@ const PersonalOfficeSigned = () => {
             <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-800">
               <p className="text-gray-500 text-xs mb-1">Total Earnings</p>
               <p className="text-2xl font-bold text-green-400">
-                ${signedTracks.reduce((sum, t) => sum + (parseFloat(t.totalEarnings) || 0), 0).toFixed(2)}
+                $
+                {signedTracks
+                  .reduce((sum, t) => sum + (parseFloat(t.totalEarnings) || 0), 0)
+                  .toFixed(2)}
               </p>
             </div>
             <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-800">
@@ -130,13 +133,11 @@ const PersonalOfficeSigned = () => {
           <div className="text-center py-12 bg-gray-900/30 rounded-lg border border-gray-800">
             <Trophy size={48} className="text-gray-600 mx-auto mb-4" />
             <p className="text-gray-500 text-lg mb-2">No signed tracks yet</p>
-            <p className="text-gray-600 text-sm">
-              Your signed talent will appear here
-            </p>
+            <p className="text-gray-600 text-sm">Your signed talent will appear here</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {signedTracks.map((track) => (
+            {signedTracks.map(track => (
               <motion.div
                 key={track.id}
                 initial={{ opacity: 0, y: 10 }}

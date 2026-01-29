@@ -28,9 +28,7 @@ const PremiumOverlay = ({
           <Crown className="w-7 h-7 text-yellow-400" />
         </div>
         <h3 className="text-lg font-bold text-white mb-2">{resolvedTitle}</h3>
-        <p className="text-gray-400 text-sm mb-4 leading-relaxed">
-          {resolvedMessage}
-        </p>
+        <p className="text-gray-400 text-sm mb-4 leading-relaxed">{resolvedMessage}</p>
         <button
           onClick={() => navigate(ctaTo)}
           className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg text-white font-semibold text-sm transition-all flex items-center gap-2 mx-auto shadow-lg shadow-blue-500/25"

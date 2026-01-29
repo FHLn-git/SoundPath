@@ -1,10 +1,22 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Zap, Mail, Lock, ArrowRight, X, Menu, 
-  BarChart3, Users, Shield, Workflow, Clock, 
-  CheckCircle2, Star, ChevronRight, Check
+import {
+  Zap,
+  Mail,
+  Lock,
+  ArrowRight,
+  X,
+  Menu,
+  BarChart3,
+  Users,
+  Shield,
+  Workflow,
+  Clock,
+  CheckCircle2,
+  Star,
+  ChevronRight,
+  Check,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
@@ -116,13 +128,13 @@ const Landing = () => {
 
   // Redirect if already logged in
   const [hasRedirected, setHasRedirected] = useState(false)
-  
+
   useEffect(() => {
     if (authLoading) return
-    
+
     if (user && staffProfile && !hasRedirected) {
       setHasRedirected(true)
-      
+
       const pendingSub = sessionStorage.getItem('pendingSubscription')
       if (pendingSub) {
         try {
@@ -134,7 +146,7 @@ const Landing = () => {
           console.error('Error parsing pending subscription:', e)
         }
       }
-      
+
       if (!memberships || memberships.length === 0) {
         navigate('/launchpad', { replace: true })
       } else {
@@ -145,7 +157,7 @@ const Landing = () => {
 
   // Close modal on outside click
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = event => {
       if (loginModalRef.current && !loginModalRef.current.contains(event.target)) {
         setShowLoginModal(false)
       }
@@ -209,7 +221,7 @@ const Landing = () => {
     }
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault()
     setError('')
     setIsLoading(true)
@@ -230,7 +242,7 @@ const Landing = () => {
           message: 'Login successful! Redirecting...',
           type: 'success',
         })
-        
+
         setTimeout(() => {
           if (user) {
             if (!staffProfile) {
@@ -251,7 +263,7 @@ const Landing = () => {
     }
   }
 
-  const scrollToSection = (id) => {
+  const scrollToSection = id => {
     const element = document.getElementById(id)
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' })
@@ -266,32 +278,37 @@ const Landing = () => {
     {
       icon: Workflow,
       title: 'Streamlined A&R Workflow',
-      description: 'Manage your entire A&R process from submission to release in one unified platform.',
+      description:
+        'Manage your entire A&R process from submission to release in one unified platform.',
     },
     {
       icon: Users,
       title: 'Team Collaboration',
-      description: 'Work seamlessly with your team members, assign tasks, and track progress in real-time.',
+      description:
+        'Work seamlessly with your team members, assign tasks, and track progress in real-time.',
     },
     {
       icon: BarChart3,
       title: 'Analytics & Insights',
-      description: 'Get powerful insights into your submissions, track metrics, and make data-driven decisions.',
+      description:
+        'Get powerful insights into your submissions, track metrics, and make data-driven decisions.',
     },
     {
       icon: Shield,
       title: 'Enterprise Security',
-      description: 'Bank-level security with role-based access control and comprehensive audit logs.',
+      description:
+        'Bank-level security with role-based access control and comprehensive audit logs.',
     },
     {
       icon: Clock,
       title: 'Real-time Updates',
-      description: 'Stay in sync with instant notifications and real-time updates across all your projects.',
+      description:
+        'Stay in sync with instant notifications and real-time updates across all your projects.',
     },
     {
       icon: CheckCircle2,
       title: 'Customizable Workflows',
-      description: 'Tailor your workflow to match your label\'s unique process and requirements.',
+      description: "Tailor your workflow to match your label's unique process and requirements.",
     },
   ]
 
@@ -432,7 +449,8 @@ const Landing = () => {
               </span>
             </h1>
             <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-              Streamline your A&R workflow, manage submissions, collaborate with your team, and bring music to the world faster than ever.
+              Streamline your A&R workflow, manage submissions, collaborate with your team, and
+              bring music to the world faster than ever.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <motion.button
@@ -467,9 +485,7 @@ const Landing = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">
-              Everything You Need
-            </h2>
+            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">Everything You Need</h2>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
               Powerful features designed to make your A&R process more efficient and effective.
             </p>
@@ -490,12 +506,8 @@ const Landing = () => {
                   <div className="p-3 bg-neon-purple/20 rounded-lg w-fit mb-4">
                     <Icon size={24} className="text-neon-purple" />
                   </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-400">
-                    {feature.description}
-                  </p>
+                  <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
+                  <p className="text-gray-400">{feature.description}</p>
                 </motion.div>
               )
             })}
@@ -516,7 +528,9 @@ const Landing = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">Choose Your Alpha Plan</h2>
+            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+              Choose Your Alpha Plan
+            </h2>
             <p className="text-xl text-gray-400 max-w-3xl mx-auto">
               Temporary Alpha rates. Secure early access while capacity is limited.
             </p>
@@ -526,13 +540,17 @@ const Landing = () => {
             <>
               {/* Billing Interval Toggle */}
               <div className="flex items-center justify-center gap-4 mb-8">
-                <span className={`text-sm font-medium transition-colors ${billingInterval === 'month' ? 'text-white' : 'text-gray-500'}`}>
+                <span
+                  className={`text-sm font-medium transition-colors ${billingInterval === 'month' ? 'text-white' : 'text-gray-500'}`}
+                >
                   Monthly
                 </span>
                 <button
                   onClick={() => setBillingInterval(billingInterval === 'month' ? 'year' : 'month')}
                   className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-neon-purple focus:ring-offset-2 focus:ring-offset-gray-950 ${
-                    billingInterval === 'year' ? 'bg-gradient-to-r from-neon-purple to-recording-red' : 'bg-gray-700'
+                    billingInterval === 'year'
+                      ? 'bg-gradient-to-r from-neon-purple to-recording-red'
+                      : 'bg-gray-700'
                   }`}
                   aria-label="Toggle billing interval"
                 >
@@ -542,7 +560,9 @@ const Landing = () => {
                     }`}
                   />
                 </button>
-                <span className={`text-sm font-medium transition-colors ${billingInterval === 'year' ? 'text-white' : 'text-gray-500'}`}>
+                <span
+                  className={`text-sm font-medium transition-colors ${billingInterval === 'year' ? 'text-white' : 'text-gray-500'}`}
+                >
                   Yearly
                 </span>
               </div>
@@ -555,96 +575,110 @@ const Landing = () => {
                     const monthlyPrice = plan.price_monthly || 0
                     const yearlyPrice = plan.price_yearly || 0
                     const price = billingInterval === 'year' ? yearlyPrice : monthlyPrice
-                    const monthlyEquivalent = billingInterval === 'year' && yearlyPrice > 0 ? yearlyPrice / 12 : monthlyPrice
-                    const savings = billingInterval === 'year' && monthlyPrice > 0 && yearlyPrice > 0 
-                      ? Math.round(((monthlyPrice * 12 - yearlyPrice) / (monthlyPrice * 12)) * 100)
-                      : 0
-                    const savingsAmount = billingInterval === 'year' && monthlyPrice > 0 && yearlyPrice > 0
-                      ? Math.round(monthlyPrice * 12 - yearlyPrice)
-                      : 0
+                    const monthlyEquivalent =
+                      billingInterval === 'year' && yearlyPrice > 0
+                        ? yearlyPrice / 12
+                        : monthlyPrice
+                    const savings =
+                      billingInterval === 'year' && monthlyPrice > 0 && yearlyPrice > 0
+                        ? Math.round(
+                            ((monthlyPrice * 12 - yearlyPrice) / (monthlyPrice * 12)) * 100
+                          )
+                        : 0
+                    const savingsAmount =
+                      billingInterval === 'year' && monthlyPrice > 0 && yearlyPrice > 0
+                        ? Math.round(monthlyPrice * 12 - yearlyPrice)
+                        : 0
                     const isPopular = plan.id === 'starter'
                     return (
-                      <motion.div key={plan.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: index * 0.1 }}>
+                      <motion.div
+                        key={plan.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: index * 0.1 }}
+                      >
                         <AlphaPricingContainer
                           className={`p-0 ${isPopular ? 'ring-2 ring-neon-purple/15' : ''}`}
                         >
                           <div
                             className={`relative p-8 bg-gray-900/50 border rounded-lg flex flex-col ${
-                              isPopular
-                                ? 'border-neon-purple/50'
-                                : 'border-gray-800'
+                              isPopular ? 'border-neon-purple/50' : 'border-gray-800'
                             }`}
                           >
                             {plan.id !== 'free' && <AlphaOnlyTag />}
-                        {isPopular && (
-                          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                            <span className="px-4 py-1 bg-gradient-to-r from-neon-purple to-recording-red text-white text-sm font-semibold rounded-full">
-                              Most Popular
-                            </span>
-                          </div>
-                        )}
-                        <div className="text-center mb-6 flex-grow">
-                          <h3 className="text-2xl font-bold text-white mb-2">
-                            {plan.name}
-                          </h3>
-                          <div className="flex flex-col items-center justify-center gap-1">
-                            <div className="flex items-baseline justify-center gap-2">
-                              <span className="text-4xl font-bold text-white">
-                                {plan.id === 'free' ? 'Free' : `$${price.toFixed(2)}`}
-                              </span>
-                              {plan.id !== 'free' && (
-                                <span className="text-gray-400">
-                                  /{billingInterval === 'year' ? 'year' : 'month'}
+                            {isPopular && (
+                              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                                <span className="px-4 py-1 bg-gradient-to-r from-neon-purple to-recording-red text-white text-sm font-semibold rounded-full">
+                                  Most Popular
                                 </span>
-                              )}
-                            </div>
-                            {plan.id !== 'free' && (
-                              <div className="text-sm text-gray-300 mt-1">
-                                <span className="text-gray-300 font-medium">Temporary Alpha Rate</span>
                               </div>
                             )}
-                            {billingInterval === 'year' && plan.id !== 'free' && yearlyPrice > 0 && (
-                              <>
-                                <div className="text-sm text-gray-500 line-through">
-                                  ${(monthlyPrice * 12).toFixed(2)}/year
-                                </div>
-                                <div className="flex items-center gap-2 mt-1">
-                                  {plan.id === 'pro' ? (
-                                    <span className="px-2 py-0.5 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-semibold rounded">
-                                      Save $200 per year!
-                                    </span>
-                                  ) : (
-                                    <span className="text-sm text-gray-400">
-                                      ${monthlyEquivalent.toFixed(2)}/month
+                            <div className="text-center mb-6 flex-grow">
+                              <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+                              <div className="flex flex-col items-center justify-center gap-1">
+                                <div className="flex items-baseline justify-center gap-2">
+                                  <span className="text-4xl font-bold text-white">
+                                    {plan.id === 'free' ? 'Free' : `$${price.toFixed(2)}`}
+                                  </span>
+                                  {plan.id !== 'free' && (
+                                    <span className="text-gray-400">
+                                      /{billingInterval === 'year' ? 'year' : 'month'}
                                     </span>
                                   )}
                                 </div>
-                              </>
-                            )}
-                          </div>
-                          <p className="text-gray-400 text-sm mt-2">
-                            {plan.description}
-                          </p>
-                        </div>
-                        <div className="flex gap-3 mt-auto">
-                          <button
-                            onClick={() => navigate(`/plan/${plan.id}`)}
-                            className="flex-1 py-3 rounded-lg font-semibold transition-all bg-gray-800/50 text-gray-300 hover:bg-gray-800 border border-gray-700 hover:border-gray-600"
-                          >
-                            Learn More
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (plan.id !== 'free') {
-                                sessionStorage.setItem('pendingBillingInterval', billingInterval)
-                              }
-                              navigate('/signup')
-                            }}
-                            className="flex-1 py-3 rounded-lg font-semibold transition-all bg-gradient-to-r from-neon-purple to-recording-red text-white hover:opacity-90"
-                          >
-                            {plan.id === 'free' ? 'Get Started Free' : 'Secure Alpha Access'}
-                          </button>
-                        </div>
+                                {plan.id !== 'free' && (
+                                  <div className="text-sm text-gray-300 mt-1">
+                                    <span className="text-gray-300 font-medium">
+                                      Temporary Alpha Rate
+                                    </span>
+                                  </div>
+                                )}
+                                {billingInterval === 'year' &&
+                                  plan.id !== 'free' &&
+                                  yearlyPrice > 0 && (
+                                    <>
+                                      <div className="text-sm text-gray-500 line-through">
+                                        ${(monthlyPrice * 12).toFixed(2)}/year
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        {plan.id === 'pro' ? (
+                                          <span className="px-2 py-0.5 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-semibold rounded">
+                                            Save $200 per year!
+                                          </span>
+                                        ) : (
+                                          <span className="text-sm text-gray-400">
+                                            ${monthlyEquivalent.toFixed(2)}/month
+                                          </span>
+                                        )}
+                                      </div>
+                                    </>
+                                  )}
+                              </div>
+                              <p className="text-gray-400 text-sm mt-2">{plan.description}</p>
+                            </div>
+                            <div className="flex gap-3 mt-auto">
+                              <button
+                                onClick={() => navigate(`/plan/${plan.id}`)}
+                                className="flex-1 py-3 rounded-lg font-semibold transition-all bg-gray-800/50 text-gray-300 hover:bg-gray-800 border border-gray-700 hover:border-gray-600"
+                              >
+                                Learn More
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (plan.id !== 'free') {
+                                    sessionStorage.setItem(
+                                      'pendingBillingInterval',
+                                      billingInterval
+                                    )
+                                  }
+                                  navigate('/signup')
+                                }}
+                                className="flex-1 py-3 rounded-lg font-semibold transition-all bg-gradient-to-r from-neon-purple to-recording-red text-white hover:opacity-90"
+                              >
+                                {plan.id === 'free' ? 'Get Started Free' : 'Secure Alpha Access'}
+                              </button>
+                            </div>
                           </div>
                         </AlphaPricingContainer>
                       </motion.div>
@@ -669,13 +703,9 @@ const Landing = () => {
                     </div>
                     <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                       <div className="flex-1 text-center md:text-left">
-                        <h3 className="text-3xl font-bold text-white mb-3">
-                          Enterprise
-                        </h3>
+                        <h3 className="text-3xl font-bold text-white mb-3">Enterprise</h3>
                         <div className="flex items-baseline justify-center md:justify-start gap-2 mb-4">
-                          <span className="text-5xl font-bold text-white">
-                            Custom
-                          </span>
+                          <span className="text-5xl font-bold text-white">Custom</span>
                           <span className="text-xl text-gray-400">Pricing</span>
                         </div>
                         <p className="text-gray-300 text-lg mb-6 max-w-2xl font-semibold">
@@ -772,9 +802,7 @@ const Landing = () => {
                 </div>
                 <span className="text-xl font-bold text-white">{labelName}</span>
               </div>
-              <p className="text-gray-400 text-sm">
-                The A&R Command Center for modern labels.
-              </p>
+              <p className="text-gray-400 text-sm">The A&R Command Center for modern labels.</p>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">Product</h4>
@@ -886,10 +914,7 @@ const Landing = () => {
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-neon-purple to-recording-red mb-4">
                     <Zap size={32} className="text-white" />
                   </div>
-                  <h2
-                    className="text-3xl font-bold mb-2"
-                    style={{ color: primaryColor }}
-                  >
+                  <h2 className="text-3xl font-bold mb-2" style={{ color: primaryColor }}>
                     Welcome Back
                   </h2>
                   <p className="text-gray-400">Sign in to your {labelName} account</p>
@@ -898,32 +923,33 @@ const Landing = () => {
                 {(message === 'confirm-email' || message === 'confirm_email') && (
                   <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/50 rounded-lg">
                     <p className="text-blue-400 text-sm">
-                      <strong>✓ Account Created!</strong> Please check your email and click the confirmation link to activate your account, then sign in below.
+                      <strong>✓ Account Created!</strong> Please check your email and click the
+                      confirmation link to activate your account, then sign in below.
                     </p>
                   </div>
                 )}
-                
+
                 {message === 'account_created' && (
                   <div className="mb-6 p-4 bg-green-500/10 border border-green-500/50 rounded-lg">
                     <p className="text-green-400 text-sm">
-                      <strong>✓ Account Created!</strong> Please check your email to confirm your account (if required), then sign in below.
+                      <strong>✓ Account Created!</strong> Please check your email to confirm your
+                      account (if required), then sign in below.
                     </p>
                   </div>
                 )}
-                
+
                 {message === 'label_created' && (
                   <div className="mb-6 p-4 bg-green-500/10 border border-green-500/50 rounded-lg">
                     <p className="text-green-400 text-sm">
-                      <strong>✓ Label Created Successfully!</strong> Please sign in with your account credentials.
+                      <strong>✓ Label Created Successfully!</strong> Please sign in with your
+                      account credentials.
                     </p>
                   </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Email
-                    </label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
                     <div className="relative">
                       <Mail
                         size={18}
@@ -932,7 +958,7 @@ const Landing = () => {
                       <input
                         type="email"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={e => setEmail(e.target.value)}
                         required
                         className="w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple focus:ring-1 focus:ring-neon-purple transition-all"
                         placeholder="you@label.com"
@@ -941,9 +967,7 @@ const Landing = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Password
-                    </label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
                     <div className="relative">
                       <Lock
                         size={18}
@@ -952,7 +976,7 @@ const Landing = () => {
                       <input
                         type="password"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={e => setPassword(e.target.value)}
                         required
                         className="w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple focus:ring-1 focus:ring-neon-purple transition-all"
                         placeholder="••••••••"

@@ -47,7 +47,11 @@ const UsageWarningBanner = () => {
   if (warnings.length === 0 || !showBanner) return null
 
   const handleEraseOldest = async () => {
-    if (!confirm('This will erase the oldest 20% of your data. The data will still be kept in our logs for your records. Continue?')) {
+    if (
+      !confirm(
+        'This will erase the oldest 20% of your data. The data will still be kept in our logs for your records. Continue?'
+      )
+    ) {
       return
     }
 
@@ -69,10 +73,7 @@ const UsageWarningBanner = () => {
           if (tracksToErase && tracksToErase.length > 0) {
             const trackIds = tracksToErase.map(t => t.id)
             // Archive instead of delete to keep in logs
-            await supabase
-              .from('tracks')
-              .update({ archived: true })
-              .in('id', trackIds)
+            await supabase.from('tracks').update({ archived: true }).in('id', trackIds)
           }
         } else if (warning.type === 'contacts') {
           // For contacts, we need to find oldest artists and remove their tracks
@@ -108,10 +109,7 @@ const UsageWarningBanner = () => {
 
           if (vaultTracksToErase && vaultTracksToErase.length > 0) {
             const trackIds = vaultTracksToErase.map(t => t.id)
-            await supabase
-              .from('tracks')
-              .update({ archived: true })
-              .in('id', trackIds)
+            await supabase.from('tracks').update({ archived: true }).in('id', trackIds)
           }
         }
       }
@@ -119,7 +117,7 @@ const UsageWarningBanner = () => {
       setToast({
         isVisible: true,
         message: 'Oldest 20% of data has been archived. Data is still available in logs.',
-        type: 'success'
+        type: 'success',
       })
 
       // Refresh billing/usage data without a full reload (stability + avoids losing state).
@@ -129,7 +127,7 @@ const UsageWarningBanner = () => {
       setToast({
         isVisible: true,
         message: 'Failed to erase data. Please try again.',
-        type: 'error'
+        type: 'error',
       })
     } finally {
       setIsErasing(false)
@@ -151,13 +149,12 @@ const UsageWarningBanner = () => {
             <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <h3 className="text-red-400 font-semibold mb-1">Approaching Usage Limit</h3>
-              <p className="text-gray-300 text-sm mb-2">
-                You are within 10% of your plan limits:
-              </p>
+              <p className="text-gray-300 text-sm mb-2">You are within 10% of your plan limits:</p>
               <ul className="text-sm text-gray-400 space-y-1 mb-3">
-                {warnings.map((warning) => (
+                {warnings.map(warning => (
                   <li key={warning.key}>
-                    • {warning.label}: {warning.current} / {warning.max} ({Math.round(warning.percentage)}% used)
+                    • {warning.label}: {warning.current} / {warning.max} (
+                    {Math.round(warning.percentage)}% used)
                   </li>
                 ))}
               </ul>

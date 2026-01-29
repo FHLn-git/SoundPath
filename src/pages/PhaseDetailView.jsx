@@ -23,9 +23,19 @@ const PhaseDetailView = () => {
   const { phaseId } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { tracks, advanceTrack, archiveTrack, moveTrack, updateTrack, loadTracks, getOrganizationSettings } = useApp()
+  const {
+    tracks,
+    advanceTrack,
+    archiveTrack,
+    moveTrack,
+    updateTrack,
+    loadTracks,
+    getOrganizationSettings,
+  } = useApp()
   const [searchQuery, setSearchQuery] = useState('')
-  const { columnWidths, handleResize, getGridTemplate, minWidths } = useResizableColumns(phaseId || 'inbox')
+  const { columnWidths, handleResize, getGridTemplate, minWidths } = useResizableColumns(
+    phaseId || 'inbox'
+  )
   const trackRefs = useRef({})
   const scrollToTrackId = location.state?.scrollToTrackId
   const [confirmationModal, setConfirmationModal] = useState({
@@ -48,9 +58,9 @@ const PhaseDetailView = () => {
     }
   }, [getOrganizationSettings])
 
-  const currentPhase = PHASES.find((p) => p.id === phaseId) || PHASES[0]
+  const currentPhase = PHASES.find(p => p.id === phaseId) || PHASES[0]
   const phaseTracks = tracks.filter(
-    (t) =>
+    t =>
       t.column === phaseId &&
       !t.archived &&
       (searchQuery === '' ||
@@ -75,7 +85,7 @@ const PhaseDetailView = () => {
     }
   }, [scrollToTrackId, location.state, navigate])
 
-  const getNextPhaseName = (currentPhaseId) => {
+  const getNextPhaseName = currentPhaseId => {
     const phases = ['inbox', 'second-listen', 'team-review', 'contracting', 'upcoming']
     const phaseNames = ['Inbox', 'Second Listen', 'The Office', 'Contracting', 'Upcoming']
     const currentIndex = phases.indexOf(currentPhaseId)
@@ -85,8 +95,8 @@ const PhaseDetailView = () => {
     return 'Next Phase'
   }
 
-  const handleAdvance = (trackId) => {
-    const track = tracks.find((t) => t.id === trackId)
+  const handleAdvance = trackId => {
+    const track = tracks.find(t => t.id === trackId)
     if (!track) return
 
     // Check Energy Gate for Second Listen
@@ -127,15 +137,15 @@ const PhaseDetailView = () => {
     try {
       // Update track with target release date
       await updateTrack(track.id, { targetReleaseDate: new Date(targetReleaseDate) })
-      
+
       // Move track to contracting phase
       await moveTrack(track.id, 'contracting')
-      
+
       // Reload tracks to reflect changes
       if (loadTracks) {
         await loadTracks()
       }
-      
+
       // Show success message
       setToast({
         isVisible: true,
@@ -152,8 +162,8 @@ const PhaseDetailView = () => {
     }
   }
 
-  const handleRevise = (trackId) => {
-    const track = tracks.find((t) => t.id === trackId)
+  const handleRevise = trackId => {
+    const track = tracks.find(t => t.id === trackId)
     if (!track) return
     setReviseModal({ isOpen: true, track })
   }
@@ -167,8 +177,8 @@ const PhaseDetailView = () => {
     })
   }
 
-  const handleReject = (trackId) => {
-    const track = tracks.find((t) => t.id === trackId)
+  const handleReject = trackId => {
+    const track = tracks.find(t => t.id === trackId)
     if (!track) return
 
     // Check if this is a critical stage
@@ -196,7 +206,7 @@ const PhaseDetailView = () => {
     }
   }
 
-  const confirmReject = (rejectionReason) => {
+  const confirmReject = rejectionReason => {
     if (confirmationModal.track) {
       archiveTrack(confirmationModal.track.id, rejectionReason)
     }
@@ -220,7 +230,7 @@ const PhaseDetailView = () => {
   }
 
   const handleMove = (trackId, direction) => {
-    const track = tracks.find((t) => t.id === trackId)
+    const track = tracks.find(t => t.id === trackId)
     if (!track) return
 
     const phases = ['inbox', 'second-listen', 'team-review', 'contracting', 'upcoming', 'vault']
@@ -239,7 +249,7 @@ const PhaseDetailView = () => {
         <div className="flex items-center gap-3 mb-2">
           <motion.button
             type="button"
-            onClick={(e) => {
+            onClick={e => {
               e.preventDefault()
               navigate('/')
             }}
@@ -254,15 +264,15 @@ const PhaseDetailView = () => {
 
         {/* Phase Tabs */}
         <div className="flex gap-2">
-          {PHASES.map((phase) => {
+          {PHASES.map(phase => {
             const isActive = phase.id === phaseId
-            const count = tracks.filter((t) => t.column === phase.id && !t.archived).length
+            const count = tracks.filter(t => t.column === phase.id && !t.archived).length
 
             return (
               <motion.button
                 key={phase.id}
                 type="button"
-                onClick={(e) => {
+                onClick={e => {
                   e.preventDefault()
                   navigate(`/phase/${phase.id}`)
                 }}
@@ -283,12 +293,15 @@ const PhaseDetailView = () => {
 
         {/* Search */}
         <div className="mt-4 relative max-w-[600px]">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            size={20}
+          />
           <input
             type="text"
             placeholder="Search by Artist or Title..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gray-700 font-mono"
           />
         </div>
@@ -313,37 +326,37 @@ const PhaseDetailView = () => {
               className="mb-1 grid gap-4 px-4 py-2 bg-gray-900/40 border-b border-gray-800 text-xs font-semibold text-gray-500 uppercase items-center"
             >
               <ResizableColumnHeader
-                onResize={(width) => handleResize(0, width)}
+                onResize={width => handleResize(0, width)}
                 minWidth={minWidths[0]}
               >
                 <div className="text-center">Link</div>
               </ResizableColumnHeader>
               <ResizableColumnHeader
-                onResize={(width) => handleResize(1, width)}
+                onResize={width => handleResize(1, width)}
                 minWidth={minWidths[1]}
               >
                 <div className="text-center">Watch</div>
               </ResizableColumnHeader>
               <ResizableColumnHeader
-                onResize={(width) => handleResize(2, width)}
+                onResize={width => handleResize(2, width)}
                 minWidth={minWidths[2]}
               >
                 <div className="text-left">Artist / Title</div>
               </ResizableColumnHeader>
               <ResizableColumnHeader
-                onResize={(width) => handleResize(3, width)}
+                onResize={width => handleResize(3, width)}
                 minWidth={minWidths[3]}
               >
                 <div className="text-center">Genre</div>
               </ResizableColumnHeader>
               <ResizableColumnHeader
-                onResize={(width) => handleResize(4, width)}
+                onResize={width => handleResize(4, width)}
                 minWidth={minWidths[4]}
               >
                 <div className="text-center">BPM</div>
               </ResizableColumnHeader>
               <ResizableColumnHeader
-                onResize={(width) => handleResize(5, width)}
+                onResize={width => handleResize(5, width)}
                 minWidth={minWidths[5]}
               >
                 {isInbox ? (
@@ -353,11 +366,13 @@ const PhaseDetailView = () => {
                 ) : isContracting ? (
                   <div className="text-center">Signed / Release</div>
                 ) : (
-                  <div className="text-center">{phaseId === 'team-review' ? 'Energy / Consensus' : 'Energy / Votes'}</div>
+                  <div className="text-center">
+                    {phaseId === 'team-review' ? 'Energy / Consensus' : 'Energy / Votes'}
+                  </div>
                 )}
               </ResizableColumnHeader>
               <ResizableColumnHeader
-                onResize={(width) => handleResize(6, width)}
+                onResize={width => handleResize(6, width)}
                 minWidth={minWidths[6]}
                 isLast={true}
               >
@@ -372,10 +387,10 @@ const PhaseDetailView = () => {
             <p>No tracks in {currentPhase.title}</p>
           </div>
         ) : (
-          phaseTracks.map((track) => (
+          phaseTracks.map(track => (
             <div
               key={track.id}
-              ref={(el) => {
+              ref={el => {
                 if (el) trackRefs.current[track.id] = el
               }}
             >
@@ -405,11 +420,19 @@ const PhaseDetailView = () => {
       <ConfirmationModal
         isOpen={confirmationModal.isOpen}
         onClose={() =>
-          setConfirmationModal({ isOpen: false, track: null, action: null, destination: null, isCriticalStage: false })
+          setConfirmationModal({
+            isOpen: false,
+            track: null,
+            action: null,
+            destination: null,
+            isCriticalStage: false,
+          })
         }
-        onConfirm={confirmationModal.action === 'advance' 
-          ? () => confirmAdvance() 
-          : (reason) => confirmReject(reason)}
+        onConfirm={
+          confirmationModal.action === 'advance'
+            ? () => confirmAdvance()
+            : reason => confirmReject(reason)
+        }
         track={confirmationModal.track}
         action={confirmationModal.action}
         destination={confirmationModal.destination}

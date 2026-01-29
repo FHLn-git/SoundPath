@@ -48,7 +48,9 @@ const ResetPassword = () => {
           if (error) throw error
         }
 
-        const { data: { session } } = await supabase.auth.getSession()
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
         if (!session) {
           setToast({
             isVisible: true,
@@ -62,7 +64,8 @@ const ResetPassword = () => {
       } catch (error) {
         setToast({
           isVisible: true,
-          message: error.message || 'This reset link is invalid or expired. Please request a new one.',
+          message:
+            error.message || 'This reset link is invalid or expired. Please request a new one.',
           type: 'error',
         })
         setReady(false)
@@ -74,12 +77,16 @@ const ResetPassword = () => {
     init()
   }, [urlInfo])
 
-  const onSubmit = async (e) => {
+  const onSubmit = async e => {
     e.preventDefault()
     if (!supabase) return
 
     if (password.length < 8) {
-      setToast({ isVisible: true, message: 'Password must be at least 8 characters.', type: 'error' })
+      setToast({
+        isVisible: true,
+        message: 'Password must be at least 8 characters.',
+        type: 'error',
+      })
       return
     }
     if (password !== confirmPassword) {
@@ -92,13 +99,21 @@ const ResetPassword = () => {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
 
-      setToast({ isVisible: true, message: 'Password updated. You can now sign in.', type: 'success' })
+      setToast({
+        isVisible: true,
+        message: 'Password updated. You can now sign in.',
+        type: 'success',
+      })
 
       // Clean URL to remove tokens/codes
       window.history.replaceState({}, '', '/reset-password')
       setTimeout(() => navigate('/?message=password_reset', { replace: true }), 1200)
     } catch (error) {
-      setToast({ isVisible: true, message: error.message || 'Failed to update password.', type: 'error' })
+      setToast({
+        isVisible: true,
+        message: error.message || 'Failed to update password.',
+        type: 'error',
+      })
     } finally {
       setSubmitting(false)
     }
@@ -130,18 +145,20 @@ const ResetPassword = () => {
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 required
                 className="w-full px-4 py-2 bg-gray-900/50 border border-neon-purple/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple font-mono"
                 placeholder="••••••••"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Confirm Password
+              </label>
               <input
                 type="password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={e => setConfirmPassword(e.target.value)}
                 required
                 className="w-full px-4 py-2 bg-gray-900/50 border border-neon-purple/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple font-mono"
                 placeholder="••••••••"
@@ -200,4 +217,3 @@ const ResetPassword = () => {
 }
 
 export default ResetPassword
-

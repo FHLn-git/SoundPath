@@ -6,7 +6,7 @@ const EnergyMeter = ({ energy = 0, maxEnergy = 5 }) => {
   return (
     <div className="flex items-center gap-1">
       <Zap size={14} className="text-yellow-400" />
-      {segments.map((segment) => (
+      {segments.map(segment => (
         <div
           key={segment}
           className={`h-3 w-3 rounded-sm transition-all duration-200 ${

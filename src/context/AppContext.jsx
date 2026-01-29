@@ -16,7 +16,7 @@ const GENRES = ['Tech House', 'Deep House', 'Classic House', 'Piano House', 'Pro
 
 export const AppProvider = ({ children }) => {
   const { staffProfile, user, activeOrgId, activeMembership, isSystemAdmin } = useAuth()
-  
+
   // Fallback if isSystemAdmin is not available yet
   const systemAdminCheck = isSystemAdmin || staffProfile?.role === 'SystemAdmin'
   const [tracks, setTracks] = useState([])
@@ -48,7 +48,9 @@ export const AppProvider = ({ children }) => {
       column: dbTrack.status || dbTrack.column,
       votes: dbTrack.votes || 0,
       createdAt: new Date(dbTrack.created_at),
-      movedToSecondListen: dbTrack.moved_to_second_listen ? new Date(dbTrack.moved_to_second_listen) : null,
+      movedToSecondListen: dbTrack.moved_to_second_listen
+        ? new Date(dbTrack.moved_to_second_listen)
+        : null,
       targetReleaseDate: dbTrack.target_release_date ? new Date(dbTrack.target_release_date) : null,
       releaseDate: dbTrack.release_date ? new Date(dbTrack.release_date) : null,
       link: dbTrack.sc_link || '',
@@ -65,7 +67,7 @@ export const AppProvider = ({ children }) => {
   }
 
   // Transform app track to Supabase format
-  const transformToDb = (track) => {
+  const transformToDb = track => {
     return {
       artist_name: track.artist,
       title: track.title,
@@ -101,7 +103,7 @@ export const AppProvider = ({ children }) => {
 
       try {
         setConnectionStatus({ status: 'checking', message: null })
-        
+
         // Test connection with a simple count query
         const { count, error } = await supabase
           .from('tracks')
@@ -114,7 +116,10 @@ export const AppProvider = ({ children }) => {
             errorMessage = 'Tables not found - run schema.sql'
           } else if (error.code === '42501' || error.message?.includes('permission')) {
             errorMessage = '401 Unauthorized - check API key'
-          } else if (error.message?.includes('Failed to fetch') || error.message?.includes('Network')) {
+          } else if (
+            error.message?.includes('Failed to fetch') ||
+            error.message?.includes('Network')
+          ) {
             errorMessage = 'Network error - check URL'
           } else {
             errorMessage = error.message || `Error: ${error.code || 'Unknown'}`
@@ -143,121 +148,121 @@ export const AppProvider = ({ children }) => {
 
   // Load tracks from Supabase (can be called manually for real-time updates)
   const loadTracks = async () => {
-      try {
-        setLoading(true)
-        
-        // Check if Supabase is configured
-        if (!supabase) {
-          console.warn('Supabase not configured. Using empty tracks array.')
-          console.warn('Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file')
-          setTracks([])
-          setLoading(false)
-          return
-        }
-        
-        // Fetch tracks with relational join to artists table
-        // Agent-Centric: Personal view (activeOrgId is null) loads Personal Inbox (organization_id IS NULL, recipient_user_id = user)
-        // Label workspace (activeOrgId set) loads Label tracks (organization_id = activeOrgId)
-        let tracksQuery = supabase
-          .from('tracks')
-          .select(`
+    try {
+      setLoading(true)
+
+      // Check if Supabase is configured
+      if (!supabase) {
+        console.warn('Supabase not configured. Using empty tracks array.')
+        console.warn('Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file')
+        setTracks([])
+        setLoading(false)
+        return
+      }
+
+      // Fetch tracks with relational join to artists table
+      // Agent-Centric: Personal view (activeOrgId is null) loads Personal Inbox (organization_id IS NULL, recipient_user_id = user)
+      // Label workspace (activeOrgId set) loads Label tracks (organization_id = activeOrgId)
+      let tracksQuery = supabase.from('tracks').select(`
             *,
             artists (
               name
             )
           `)
-        
-        // SystemAdmin in global view sees all tracks
-        if (systemAdminCheck && activeOrgId === null) {
-          // Global view - no filter
-        } else if (activeOrgId === null) {
-          // Agent-Centric: Personal view - load Personal Inbox (owned by user, no organization)
-          if (!staffProfile) {
-            console.warn('⚠️ No staff profile. Cannot load personal inbox.')
-            setTracks([])
-            setLoading(false)
-            return
-          }
-          tracksQuery = tracksQuery
-            .is('organization_id', null)
-            .eq('recipient_user_id', staffProfile.id)
-        } else {
-          // Label workspace - load Label tracks
-          tracksQuery = tracksQuery.eq('organization_id', activeOrgId)
+
+      // SystemAdmin in global view sees all tracks
+      if (systemAdminCheck && activeOrgId === null) {
+        // Global view - no filter
+      } else if (activeOrgId === null) {
+        // Agent-Centric: Personal view - load Personal Inbox (owned by user, no organization)
+        if (!staffProfile) {
+          console.warn('⚠️ No staff profile. Cannot load personal inbox.')
+          setTracks([])
+          setLoading(false)
+          return
         }
-        
-        const { data: tracksData, error: tracksError } = await tracksQuery
-          .order('created_at', { ascending: false })
-
-        if (tracksError) {
-          console.error('❌ Supabase tracks fetch error:', tracksError)
-          console.error('Error code:', tracksError.code)
-          console.error('Error message:', tracksError.message)
-          console.error('Error details:', tracksError.details)
-          console.error('Error hint:', tracksError.hint)
-          
-          // If table doesn't exist, that's okay - just use empty array
-          if (tracksError.code === 'PGRST116' || tracksError.message?.includes('does not exist')) {
-            console.warn('Tracks table does not exist yet. Please run database/schemas/master-schema.sql script.')
-            setTracks([])
-            setLoading(false)
-            return
-          }
-          throw tracksError
-        }
-
-        // Fetch all votes (ignore errors if table doesn't exist)
-        // Agent-Centric: Filter votes based on workspace context
-        let votesQuery = supabase.from('votes').select('*')
-        if (systemAdminCheck && activeOrgId === null) {
-          // Global view - no filter
-        } else if (activeOrgId === null) {
-          // Personal view - votes for personal inbox tracks (organization_id IS NULL)
-          votesQuery = votesQuery.is('organization_id', null)
-        } else {
-          // Label workspace - votes for label tracks
-          votesQuery = votesQuery.eq('organization_id', activeOrgId)
-        }
-        const { data: votesData, error: votesError } = await votesQuery
-
-        if (votesError) {
-          // If votes table doesn't exist, that's okay - just use empty array
-          if (votesError.code === 'PGRST116' || votesError.message?.includes('does not exist')) {
-            console.warn('Votes table does not exist yet. Votes will be empty.')
-          } else {
-            throw votesError
-          }
-        }
-
-        // Group votes by track_id
-        const votesByTrack = {}
-        votesData?.forEach(vote => {
-          if (!votesByTrack[vote.track_id]) {
-            votesByTrack[vote.track_id] = []
-          }
-          votesByTrack[vote.track_id].push(vote)
-        })
-
-        // Transform and combine
-        const transformedTracks = tracksData?.map(track => 
-          transformTrack(track, votesByTrack[track.id] || [])
-        ) || []
-
-        console.log(`✅ Loaded ${transformedTracks.length} tracks from Supabase`)
-        setTracks(transformedTracks)
-      } catch (error) {
-        console.error('Error loading tracks from Supabase:', error)
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-        })
-        // Fallback to empty array on error - app will still work
-        setTracks([])
-        // Don't block the UI - let the app render with empty tracks
-      } finally {
-        setLoading(false)
+        tracksQuery = tracksQuery
+          .is('organization_id', null)
+          .eq('recipient_user_id', staffProfile.id)
+      } else {
+        // Label workspace - load Label tracks
+        tracksQuery = tracksQuery.eq('organization_id', activeOrgId)
       }
+
+      const { data: tracksData, error: tracksError } = await tracksQuery.order('created_at', {
+        ascending: false,
+      })
+
+      if (tracksError) {
+        console.error('❌ Supabase tracks fetch error:', tracksError)
+        console.error('Error code:', tracksError.code)
+        console.error('Error message:', tracksError.message)
+        console.error('Error details:', tracksError.details)
+        console.error('Error hint:', tracksError.hint)
+
+        // If table doesn't exist, that's okay - just use empty array
+        if (tracksError.code === 'PGRST116' || tracksError.message?.includes('does not exist')) {
+          console.warn(
+            'Tracks table does not exist yet. Please run database/schemas/master-schema.sql script.'
+          )
+          setTracks([])
+          setLoading(false)
+          return
+        }
+        throw tracksError
+      }
+
+      // Fetch all votes (ignore errors if table doesn't exist)
+      // Agent-Centric: Filter votes based on workspace context
+      let votesQuery = supabase.from('votes').select('*')
+      if (systemAdminCheck && activeOrgId === null) {
+        // Global view - no filter
+      } else if (activeOrgId === null) {
+        // Personal view - votes for personal inbox tracks (organization_id IS NULL)
+        votesQuery = votesQuery.is('organization_id', null)
+      } else {
+        // Label workspace - votes for label tracks
+        votesQuery = votesQuery.eq('organization_id', activeOrgId)
+      }
+      const { data: votesData, error: votesError } = await votesQuery
+
+      if (votesError) {
+        // If votes table doesn't exist, that's okay - just use empty array
+        if (votesError.code === 'PGRST116' || votesError.message?.includes('does not exist')) {
+          console.warn('Votes table does not exist yet. Votes will be empty.')
+        } else {
+          throw votesError
+        }
+      }
+
+      // Group votes by track_id
+      const votesByTrack = {}
+      votesData?.forEach(vote => {
+        if (!votesByTrack[vote.track_id]) {
+          votesByTrack[vote.track_id] = []
+        }
+        votesByTrack[vote.track_id].push(vote)
+      })
+
+      // Transform and combine
+      const transformedTracks =
+        tracksData?.map(track => transformTrack(track, votesByTrack[track.id] || [])) || []
+
+      console.log(`✅ Loaded ${transformedTracks.length} tracks from Supabase`)
+      setTracks(transformedTracks)
+    } catch (error) {
+      console.error('Error loading tracks from Supabase:', error)
+      console.error('Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      })
+      // Fallback to empty array on error - app will still work
+      setTracks([])
+      // Don't block the UI - let the app render with empty tracks
+    } finally {
+      setLoading(false)
+    }
   }
 
   // Keep a ref to the latest loadTracks (avoids effect dependency churn).
@@ -311,7 +316,11 @@ export const AppProvider = ({ children }) => {
 
     // Agent-Centric: Load tracks for Personal view (activeOrgId is null) or Label workspace (activeOrgId set)
     // SystemAdmin can also be in global view (activeOrgId is null, but systemAdminCheck is true)
-    if (activeOrgId !== null || (systemAdminCheck && activeOrgId === null) || (activeOrgId === null && staffProfile)) {
+    if (
+      activeOrgId !== null ||
+      (systemAdminCheck && activeOrgId === null) ||
+      (activeOrgId === null && staffProfile)
+    ) {
       loadTracks()
     } else if (!user) {
       // If no user, set loading to false (will show login screen)
@@ -325,18 +334,12 @@ export const AppProvider = ({ children }) => {
       try {
         tracksChannel = supabase
           .channel('tracks-changes')
-          .on('postgres_changes', 
-            { event: '*', schema: 'public', table: 'tracks' },
-            () => {
-              loadTracks() // Reload on any change
-            }
-          )
-          .on('postgres_changes',
-            { event: '*', schema: 'public', table: 'votes' },
-            () => {
-              loadTracks() // Reload on vote changes
-            }
-          )
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'tracks' }, () => {
+            loadTracks() // Reload on any change
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'votes' }, () => {
+            loadTracks() // Reload on vote changes
+          })
           .subscribe()
       } catch (error) {
         console.warn('Could not set up real-time subscriptions:', error)
@@ -376,11 +379,11 @@ export const AppProvider = ({ children }) => {
           .eq('archived', false)
           .not('release_date', 'is', null)
           .lte('release_date', todayStr)
-        
+
         if (activeOrgId) {
           tracksQuery = tracksQuery.eq('organization_id', activeOrgId)
         }
-        
+
         const { data: tracksToRelease, error } = await tracksQuery
 
         if (error) throw error
@@ -392,11 +395,11 @@ export const AppProvider = ({ children }) => {
             .from('tracks')
             .update({ status: 'vault', column: 'vault' })
             .in('id', trackIds)
-          
+
           if (activeOrgId) {
             updateQuery = updateQuery.eq('organization_id', activeOrgId)
           }
-          
+
           const { error: updateError } = await updateQuery
 
           if (updateError) throw updateError
@@ -420,39 +423,36 @@ export const AppProvider = ({ children }) => {
       if (!track) return
 
       const updatedTrack = { ...track, ...updates }
-      
+
       // Update Supabase if configured
       if (supabase) {
         const dbData = transformToDb(updatedTrack)
-        const { error } = await supabase
-          .from('tracks')
-          .update(dbData)
-          .eq('id', trackId)
+        const { error } = await supabase.from('tracks').update(dbData).eq('id', trackId)
 
         if (error) throw error
       }
 
       // Optimistically update local state
-      setTracks((prev) =>
-        prev.map((t) => (t.id === trackId ? updatedTrack : t))
-      )
+      setTracks(prev => prev.map(t => (t.id === trackId ? updatedTrack : t)))
     } catch (error) {
       console.error('Error updating track:', error)
       throw error
     }
   }
 
-  const addTrack = async (trackData) => {
+  const addTrack = async trackData => {
     try {
       // Check track limit if we have an active organization
       if (supabase && activeOrgId) {
         // Check tracks limit
-        const { data: canAddTracks, error: tracksLimitError } = await supabase
-          .rpc('check_usage_limit', {
+        const { data: canAddTracks, error: tracksLimitError } = await supabase.rpc(
+          'check_usage_limit',
+          {
             org_id: activeOrgId,
-            limit_type: 'tracks'
-          })
-        
+            limit_type: 'tracks',
+          }
+        )
+
         if (tracksLimitError) {
           console.error('Error checking track limit:', tracksLimitError)
           throw new Error('Error checking track limit. Please try again.')
@@ -471,17 +471,21 @@ export const AppProvider = ({ children }) => {
 
         // If artist doesn't exist, check contacts limit
         if (!existingArtist || existingArtist.length === 0) {
-          const { data: canAddContact, error: contactsLimitError } = await supabase
-            .rpc('check_usage_limit', {
+          const { data: canAddContact, error: contactsLimitError } = await supabase.rpc(
+            'check_usage_limit',
+            {
               org_id: activeOrgId,
-              limit_type: 'contacts'
-            })
-          
+              limit_type: 'contacts',
+            }
+          )
+
           if (contactsLimitError) {
             console.error('Error checking contacts limit:', contactsLimitError)
             throw new Error('Error checking contacts limit. Please try again.')
           } else if (canAddContact === false) {
-            throw new Error('Artist Directory contact limit reached. Please upgrade your plan or erase old data to add more contacts.')
+            throw new Error(
+              'Artist Directory contact limit reached. Please upgrade your plan or erase old data to add more contacts.'
+            )
           }
         }
       }
@@ -508,21 +512,18 @@ export const AppProvider = ({ children }) => {
           watched: false,
           archived: false,
         }
-        setTracks((prev) => [...prev, newTrack])
+        setTracks(prev => [...prev, newTrack])
         return newTrack
       }
 
       // STEP 1: Insert or upsert the Artist into the 'artists' table
       console.log('📝 Step 1: Checking/creating artist:', trackData.artist)
       let artistId = null
-      
+
       // Try to find existing artist first (filter by organization_id for multi-tenancy)
       // Personal view: organization_id IS NULL, Label view: organization_id = activeOrgId
-      let artistQuery = supabase
-        .from('artists')
-        .select('id')
-        .eq('name', trackData.artist)
-      
+      let artistQuery = supabase.from('artists').select('id').eq('name', trackData.artist)
+
       if (activeOrgId === null) {
         // Personal view: find artists where organization_id IS NULL
         artistQuery = artistQuery.is('organization_id', null)
@@ -546,9 +547,9 @@ export const AppProvider = ({ children }) => {
       } else {
         // Create new artist - use insert with ignoreDuplicates to handle race conditions
         console.log('📝 Creating new artist...')
-        const artistData = { 
+        const artistData = {
           name: trackData.artist,
-          organization_id: activeOrgId || null // null for personal workspace, orgId for label
+          organization_id: activeOrgId || null, // null for personal workspace, orgId for label
         }
         const { data: newArtist, error: artistError } = await supabase
           .from('artists')
@@ -560,17 +561,14 @@ export const AppProvider = ({ children }) => {
           // If it's a unique constraint violation, try to find the artist again (race condition)
           if (artistError.code === '23505' || artistError.message?.includes('duplicate key')) {
             console.log('⚠️ Artist was created by another process, fetching again...')
-            let retryQuery = supabase
-              .from('artists')
-              .select('id')
-              .eq('name', trackData.artist)
-            
+            let retryQuery = supabase.from('artists').select('id').eq('name', trackData.artist)
+
             if (activeOrgId === null) {
               retryQuery = retryQuery.is('organization_id', null)
             } else {
               retryQuery = retryQuery.eq('organization_id', activeOrgId)
             }
-            
+
             const { data: retryArtist, error: retryError } = await retryQuery.single()
 
             if (retryError) {
@@ -622,12 +620,14 @@ export const AppProvider = ({ children }) => {
       const { data: newTrack, error: trackError } = await supabase
         .from('tracks')
         .insert(dbData)
-        .select(`
+        .select(
+          `
           *,
           artists (
             name
           )
-        `)
+        `
+        )
         .single()
 
       if (trackError) {
@@ -637,7 +637,7 @@ export const AppProvider = ({ children }) => {
         console.error('Error details:', trackError.details)
         console.error('Error hint:', trackError.hint)
         console.error('Track data attempted:', dbData)
-        
+
         // Check for common issues
         if (trackError.code === '42501' || trackError.message?.includes('permission')) {
           console.error('⚠️ RLS (Row Level Security) issue - check Supabase policies')
@@ -646,15 +646,15 @@ export const AppProvider = ({ children }) => {
         } else if (trackError.code === '23502') {
           console.error('⚠️ Not null constraint - required field missing')
         }
-        
+
         throw trackError
       }
 
       console.log('✅ Track created successfully:', newTrack.id)
-      
+
       // Real-time update: Reload all tracks to get the latest data
       await loadTracks()
-      
+
       // Return the transformed track for immediate UI update
       const transformedTrack = transformTrack(newTrack, [])
       return transformedTrack
@@ -671,17 +671,21 @@ export const AppProvider = ({ children }) => {
 
       // Check vault limit if moving to vault
       if (supabase && activeOrgId && (newColumn === 'vault' || newColumn === 'Vault')) {
-        const { data: canAddToVault, error: vaultLimitError } = await supabase
-          .rpc('check_usage_limit', {
+        const { data: canAddToVault, error: vaultLimitError } = await supabase.rpc(
+          'check_usage_limit',
+          {
             org_id: activeOrgId,
-            limit_type: 'vault_tracks'
-          })
-        
+            limit_type: 'vault_tracks',
+          }
+        )
+
         if (vaultLimitError) {
           console.error('Error checking vault limit:', vaultLimitError)
           throw new Error('Error checking vault limit. Please try again.')
         } else if (canAddToVault === false) {
-          throw new Error('Vault limit reached. Please upgrade your plan or erase old data to add more tracks to The Vault.')
+          throw new Error(
+            'Vault limit reached. Please upgrade your plan or erase old data to add more tracks to The Vault.'
+          )
         }
       }
 
@@ -695,20 +699,17 @@ export const AppProvider = ({ children }) => {
         if (newColumn === 'second-listen' && track.column !== 'second-listen') {
           updates.moved_to_second_listen = new Date().toISOString()
         } else if (newColumn !== 'second-listen' && track.column === 'second-listen') {
-updates.moved_to_second_listen = null
+          updates.moved_to_second_listen = null
         }
 
-        const { error } = await supabase
-          .from('tracks')
-          .update(updates)
-          .eq('id', trackId)
+        const { error } = await supabase.from('tracks').update(updates).eq('id', trackId)
 
         if (error) throw error
       }
 
       // Optimistically update local state
-      setTracks((prev) =>
-        prev.map((t) => {
+      setTracks(prev =>
+        prev.map(t => {
           if (t.id === trackId) {
             const updated = { ...t, column: newColumn, status: newColumn }
             if (newColumn === 'second-listen' && t.column !== 'second-listen') {
@@ -756,17 +757,15 @@ updates.moved_to_second_listen = null
           newStaffVotes[staffProfile.id] = vote
         }
 
-        setTracks((prev) =>
-          prev.map((t) =>
-            t.id === trackId
-              ? { ...t, votes: newVotes, staffVotes: newStaffVotes }
-              : t
+        setTracks(prev =>
+          prev.map(t =>
+            t.id === trackId ? { ...t, votes: newVotes, staffVotes: newStaffVotes } : t
           )
         )
         return
       }
 
-        // Agent-Centric: Handle votes in Personal view or Label workspace
+      // Agent-Centric: Handle votes in Personal view or Label workspace
       if (activeOrgId === null && !staffProfile) {
         throw new Error('No staff profile. Cannot vote.')
       }
@@ -778,7 +777,7 @@ updates.moved_to_second_listen = null
           .delete()
           .eq('track_id', trackId)
           .eq('staff_id', staffProfile.id)
-        
+
         if (activeOrgId === null) {
           deleteQuery = deleteQuery.is('organization_id', null)
         } else {
@@ -798,74 +797,64 @@ updates.moved_to_second_listen = null
           vote_type: vote,
           organization_id: activeOrgId, // null for Personal view, orgId for Label workspace
         }
-        const { error: insertError } = await supabase
-          .from('votes')
-          .insert(voteData)
+        const { error: insertError } = await supabase.from('votes').insert(voteData)
 
         if (insertError) throw insertError
       }
 
       // Votes are recalculated by database trigger, so reload the track
       // Agent-Centric: Filter based on workspace context
-      let fetchQuery = supabase
-        .from('tracks')
-        .select('*')
-        .eq('id', trackId)
-      
+      let fetchQuery = supabase.from('tracks').select('*').eq('id', trackId)
+
       if (activeOrgId === null) {
         fetchQuery = fetchQuery.is('organization_id', null)
       } else {
         fetchQuery = fetchQuery.eq('organization_id', activeOrgId)
       }
-      
+
       const { data: updatedTrack, error: fetchError } = await fetchQuery.single()
       if (fetchError) throw fetchError
 
-      let votesFetchQuery = supabase
-        .from('votes')
-        .select('*')
-        .eq('track_id', trackId)
-      
+      let votesFetchQuery = supabase.from('votes').select('*').eq('track_id', trackId)
+
       if (activeOrgId === null) {
         votesFetchQuery = votesFetchQuery.is('organization_id', null)
       } else {
         votesFetchQuery = votesFetchQuery.eq('organization_id', activeOrgId)
       }
-      
+
       const { data: votesData } = await votesFetchQuery
 
       const transformedTrack = transformTrack(updatedTrack, votesData || [])
 
       // Update local state
-      setTracks((prev) =>
-        prev.map((t) => (t.id === trackId ? transformedTrack : t))
-      )
+      setTracks(prev => prev.map(t => (t.id === trackId ? transformedTrack : t)))
     } catch (error) {
       console.error('Error voting on track:', error)
       throw error
     }
   }
 
-  const getTracksByArtist = (artistName) => {
-    return tracks.filter((track) => track.artist === artistName)
+  const getTracksByArtist = artistName => {
+    return tracks.filter(track => track.artist === artistName)
   }
 
   const getAllArtists = () => {
     // CRITICAL: Filter artists based on workspace context to ensure complete isolation
     // Personal view: Only artists where organization_id IS NULL (personal artists)
     // Label view: Only artists where organization_id = activeOrgId (label's artists)
-    
+
     // First, get unique artist names from filtered tracks (tracks are already filtered by workspace)
-    const artistSet = new Set(tracks.map((track) => track.artist))
-    
-    return Array.from(artistSet).map((artist) => {
+    const artistSet = new Set(tracks.map(track => track.artist))
+
+    return Array.from(artistSet).map(artist => {
       // Get tracks for this artist (already filtered by workspace context)
       const artistTracks = getTracksByArtist(artist)
-      
+
       // Additional safety: Filter tracks to ensure they match workspace context
       // Personal view: tracks must have organization_id IS NULL and recipient_user_id = current user
       // Label view: tracks must have organization_id = activeOrgId
-      const filteredTracks = artistTracks.filter((track) => {
+      const filteredTracks = artistTracks.filter(track => {
         if (activeOrgId === null) {
           // Personal view: ensure track belongs to personal inbox
           return track.organizationId === null || track.organizationId === undefined
@@ -874,22 +863,23 @@ updates.moved_to_second_listen = null
           return track.organizationId === activeOrgId
         }
       })
-      
-      const signed = filteredTracks.filter((t) => t.contractSigned).length
+
+      const signed = filteredTracks.filter(t => t.contractSigned).length
       const submitted = filteredTracks.length
       const conversionRate = submitted > 0 ? (signed / submitted) * 100 : 0
 
       // Calculate dominant genre (mode)
       const genreCounts = {}
-      filteredTracks.forEach((track) => {
+      filteredTracks.forEach(track => {
         if (track.genre) {
           genreCounts[track.genre] = (genreCounts[track.genre] || 0) + 1
         }
       })
       const genreEntries = Object.entries(genreCounts)
-      const dominantGenre = genreEntries.length > 0
-        ? genreEntries.reduce((a, b) => (a[1] > b[1] ? a : b), genreEntries[0])[0]
-        : 'N/A'
+      const dominantGenre =
+        genreEntries.length > 0
+          ? genreEntries.reduce((a, b) => (a[1] > b[1] ? a : b), genreEntries[0])[0]
+          : 'N/A'
 
       return {
         name: artist,
@@ -903,20 +893,18 @@ updates.moved_to_second_listen = null
   }
 
   // Log listen event when staff clicks a track link
-  const logListenEvent = async (trackId) => {
+  const logListenEvent = async trackId => {
     if (!supabase || !currentStaff) return
 
     try {
       const track = tracks.find(t => t.id === trackId)
       if (!track) return
 
-      const { error } = await supabase
-        .from('listen_logs')
-        .insert({
-          staff_id: currentStaff.id,
-          track_id: trackId,
-          organization_id: activeOrgId || null,
-        })
+      const { error } = await supabase.from('listen_logs').insert({
+        staff_id: currentStaff.id,
+        track_id: trackId,
+        organization_id: activeOrgId || null,
+      })
 
       if (error) {
         console.error('Error logging listen event:', error)
@@ -927,11 +915,11 @@ updates.moved_to_second_listen = null
   }
 
   // Get cognitive load metrics for a staff member (with caching)
-  const getCognitiveLoad = async (staffId) => {
+  const getCognitiveLoad = async staffId => {
     // Return cached value if available and recent (within 30 seconds)
     const cacheKey = `cognitive_${staffId}`
     const cached = cognitiveLoadCache[cacheKey]
-    if (cached && (Date.now() - cached.timestamp) < 30000) {
+    if (cached && Date.now() - cached.timestamp < 30000) {
       return cached.data
     }
 
@@ -1014,15 +1002,14 @@ updates.moved_to_second_listen = null
 
       // Calculate relative percentage (listens vs demos)
       // For low volume: if all demos are listened to, status is Optimal
-      const dailyPercentage = (dailyDemoCount || 0) > 0 
-        ? (effectiveDailyListens / (dailyDemoCount || 1)) * 100 
-        : 100
-      const weeklyPercentage = (weeklyDemoCount || 0) > 0 
-        ? (effectiveWeeklyListens / (weeklyDemoCount || 1)) * 100 
-        : 100
-      const monthlyPercentage = (monthlyDemoCount || 0) > 0 
-        ? (effectiveMonthlyListens / (monthlyDemoCount || 1)) * 100 
-        : 100
+      const dailyPercentage =
+        (dailyDemoCount || 0) > 0 ? (effectiveDailyListens / (dailyDemoCount || 1)) * 100 : 100
+      const weeklyPercentage =
+        (weeklyDemoCount || 0) > 0 ? (effectiveWeeklyListens / (weeklyDemoCount || 1)) * 100 : 100
+      const monthlyPercentage =
+        (monthlyDemoCount || 0) > 0
+          ? (effectiveMonthlyListens / (monthlyDemoCount || 1)) * 100
+          : 100
 
       // Determine status based on thresholds and relative performance
       const getStatus = (count, percentage, threshold) => {
@@ -1085,7 +1072,7 @@ updates.moved_to_second_listen = null
       // Cache the result
       setCognitiveLoadCache(prev => ({
         ...prev,
-        [cacheKey]: { data: result, timestamp: Date.now() }
+        [cacheKey]: { data: result, timestamp: Date.now() },
       }))
 
       return result
@@ -1114,7 +1101,8 @@ updates.moved_to_second_listen = null
       // (Owners/Managers can see all in their org, users can see their own)
       const { data: membershipsData, error: membershipsError } = await supabase
         .from('memberships')
-        .select(`
+        .select(
+          `
           user_id,
           role,
           permissions_json,
@@ -1126,7 +1114,8 @@ updates.moved_to_second_listen = null
             last_active_at,
             created_at
           )
-        `)
+        `
+        )
         .eq('organization_id', activeOrgId)
         .eq('active', true)
 
@@ -1164,17 +1153,20 @@ updates.moved_to_second_listen = null
 
     try {
       // Check staff limit before creating invite
-      const { data: canAdd, error: limitError } = await supabase
-        .rpc('check_usage_limit', {
-          org_id: activeOrgId,
-          limit_type: 'staff'
-        })
-      
+      const { data: canAdd, error: limitError } = await supabase.rpc('check_usage_limit', {
+        org_id: activeOrgId,
+        limit_type: 'staff',
+      })
+
       if (limitError) {
         console.error('Error checking staff limit:', limitError)
         return { error: { message: 'Error checking staff limit. Please try again.' } }
       } else if (canAdd === false) {
-        return { error: { message: 'Staff member limit reached. Please upgrade your plan to add more members.' } }
+        return {
+          error: {
+            message: 'Staff member limit reached. Please upgrade your plan to add more members.',
+          },
+        }
       }
 
       // Note: We don't check if user exists here because:
@@ -1182,7 +1174,7 @@ updates.moved_to_second_listen = null
       // 2. The invite system handles duplicates via UNIQUE constraint and ON CONFLICT
       // 3. If user exists, they'll see the invite in their Launchpad
       // 4. If user doesn't exist, they'll receive an email to sign up
-      
+
       // Default permissions based on role
       const defaultPermissions = {
         can_vote: true,
@@ -1197,14 +1189,13 @@ updates.moved_to_second_listen = null
       }
 
       // Create invite record using SECURITY DEFINER function (bypasses RLS)
-      const { data: inviteId, error: inviteError } = await supabase
-        .rpc('create_invite', {
-          organization_id_param: activeOrgId,
-          email_param: email.toLowerCase().trim(),
-          role_param: role || 'Scout',
-          permissions_json_param: defaultPermissions,
-          invited_by_param: staffProfile?.id,
-        })
+      const { data: inviteId, error: inviteError } = await supabase.rpc('create_invite', {
+        organization_id_param: activeOrgId,
+        email_param: email.toLowerCase().trim(),
+        role_param: role || 'Scout',
+        permissions_json_param: defaultPermissions,
+        invited_by_param: staffProfile?.id,
+      })
 
       if (inviteError) {
         throw inviteError
@@ -1218,25 +1209,26 @@ updates.moved_to_second_listen = null
         .eq('organization_id', activeOrgId)
         .eq('email', email.toLowerCase().trim())
         .single()
-      
+
       console.log('📧 Invite created/updated:', {
         inviteId: inviteId,
         email: email.toLowerCase().trim(),
         organizationId: activeOrgId,
         inviteData: inviteData ? 'Found' : 'Not found',
-        error: fetchError?.message
+        error: fetchError?.message,
       })
 
       if (fetchError) {
         console.error('Error fetching invite after creation:', fetchError)
         // If we can't fetch it, we still created it, but can't send email with token
         // Return success but note that token is missing
-        return { 
-          data: { 
+        return {
+          data: {
             invite: { id: inviteId, email: email.toLowerCase().trim() },
-            message: 'Invite created. User will receive an email to create an account or can accept it in their account if they already exist.'
-          }, 
-          error: null 
+            message:
+              'Invite created. User will receive an email to create an account or can accept it in their account if they already exist.',
+          },
+          error: null,
         }
       }
 
@@ -1248,7 +1240,7 @@ updates.moved_to_second_listen = null
         const inviteUrl = `${window.location.origin}/signup?invite=${inviteData.token}`
         const launchpadUrl = `${window.location.origin}/launchpad` // For existing users
         const orgName = activeMembership?.organization_name || 'your organization'
-        
+
         await sendTeamInviteEmail({
           email: email.toLowerCase().trim(),
           inviteUrl,
@@ -1262,12 +1254,13 @@ updates.moved_to_second_listen = null
         // Don't fail the invite creation if email fails
       }
 
-      return { 
-        data: { 
+      return {
+        data: {
           invite: inviteData,
-          message: 'Invite sent. User will receive an email to create an account or can accept it in their account if they already exist.'
-        }, 
-        error: null 
+          message:
+            'Invite sent. User will receive an email to create an account or can accept it in their account if they already exist.',
+        },
+        error: null,
       }
     } catch (error) {
       console.error('Error creating invite:', error)
@@ -1291,12 +1284,11 @@ updates.moved_to_second_listen = null
 
     try {
       // Update membership role using SECURITY DEFINER function (bypasses RLS)
-      const { data: membershipId, error } = await supabase
-        .rpc('update_membership_role', {
-          user_id_param: staffId,
-          organization_id_param: activeOrgId,
-          new_role_param: newRole,
-        })
+      const { data: membershipId, error } = await supabase.rpc('update_membership_role', {
+        user_id_param: staffId,
+        organization_id_param: activeOrgId,
+        new_role_param: newRole,
+      })
 
       if (error) throw error
 
@@ -1318,7 +1310,7 @@ updates.moved_to_second_listen = null
 
   // Remove staff member (deactivate membership, Owner only)
   // Per requirements: Historical data (listen_logs, rejection_reasons) must be preserved
-  const removeStaff = async (staffId) => {
+  const removeStaff = async staffId => {
     if (!supabase || !activeMembership || activeMembership.role !== 'Owner') {
       return { error: { message: 'Only Owners can remove staff members' } }
     }
@@ -1335,11 +1327,10 @@ updates.moved_to_second_listen = null
     try {
       // Deactivate membership using SECURITY DEFINER function (bypasses RLS)
       // Historical listen_logs and rejection_reasons will remain linked to this staff_id
-      const { error: updateError } = await supabase
-        .rpc('deactivate_membership', {
-          user_id_param: staffId,
-          organization_id_param: activeOrgId,
-        })
+      const { error: updateError } = await supabase.rpc('deactivate_membership', {
+        user_id_param: staffId,
+        organization_id_param: activeOrgId,
+      })
 
       if (updateError) throw updateError
 
@@ -1362,12 +1353,11 @@ updates.moved_to_second_listen = null
 
     try {
       // Update permissions_json using SECURITY DEFINER function (bypasses RLS)
-      const { data: membershipId, error } = await supabase
-        .rpc('update_membership_permissions', {
-          user_id_param: staffId,
-          organization_id_param: activeOrgId,
-          permissions_json_param: permissions,
-        })
+      const { data: membershipId, error } = await supabase.rpc('update_membership_permissions', {
+        user_id_param: staffId,
+        organization_id_param: activeOrgId,
+        permissions_json_param: permissions,
+      })
 
       if (error) throw error
 
@@ -1389,17 +1379,21 @@ updates.moved_to_second_listen = null
 
   // Get staff metrics for all staff (Owner/Manager only)
   const getAllStaffMetrics = async () => {
-    if (!supabase || !activeMembership || (activeMembership.role !== 'Owner' && activeMembership.role !== 'Manager')) {
+    if (
+      !supabase ||
+      !activeMembership ||
+      (activeMembership.role !== 'Owner' && activeMembership.role !== 'Manager')
+    ) {
       return []
     }
 
     try {
       const allStaff = await getAllStaff()
       const metrics = await Promise.all(
-        allStaff.map(async (staff) => {
+        allStaff.map(async staff => {
           const cognitiveLoad = await getCognitiveLoad(staff.id)
           const staffMetrics = getStaffMetrics(staff.id)
-          
+
           // Get listen counts for this staff
           const now = new Date()
           const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -1414,8 +1408,8 @@ updates.moved_to_second_listen = null
             cognitiveLoad,
             staffMetrics,
             weeklyListens: weeklyListens || 0,
-            isOnline: staff.last_active_at 
-              ? (Date.now() - new Date(staff.last_active_at).getTime()) < 5 * 60 * 1000 // Online if active in last 5 minutes
+            isOnline: staff.last_active_at
+              ? Date.now() - new Date(staff.last_active_at).getTime() < 5 * 60 * 1000 // Online if active in last 5 minutes
               : false,
           }
         })
@@ -1435,7 +1429,7 @@ updates.moved_to_second_listen = null
     }
 
     // Return cached value if available and recent (within 60 seconds)
-    if (companyHealthCache && (Date.now() - companyHealthCache.timestamp) < 60000) {
+    if (companyHealthCache && Date.now() - companyHealthCache.timestamp < 60000) {
       return companyHealthCache.data
     }
 
@@ -1479,7 +1473,10 @@ updates.moved_to_second_listen = null
       })
 
       const fatiguedStaff = Object.values(staffListenCounts).filter(count => count >= 1000).length
-      const companyHealthScore = Math.max(0, 100 - (fatiguedStaff / (staffCount || 1)) * 50 - (staffingAlert ? 30 : 0))
+      const companyHealthScore = Math.max(
+        0,
+        100 - (fatiguedStaff / (staffCount || 1)) * 50 - (staffingAlert ? 30 : 0)
+      )
 
       const result = {
         totalStaff: staffCount || 1,
@@ -1513,8 +1510,8 @@ updates.moved_to_second_listen = null
     }
   }
 
-  const toggleWatched = async (trackId) => {
-    const track = tracks.find((t) => t.id === trackId)
+  const toggleWatched = async trackId => {
+    const track = tracks.find(t => t.id === trackId)
     if (track) {
       await updateTrack(trackId, { watched: !track.watched })
     }
@@ -1571,7 +1568,7 @@ updates.moved_to_second_listen = null
   }
 
   // Update organization settings (Owner only)
-  const updateOrganizationSettings = async (settings) => {
+  const updateOrganizationSettings = async settings => {
     if (!supabase || !activeOrgId || !activeMembership || activeMembership.role !== 'Owner') {
       return { error: { message: 'Unauthorized' } }
     }
@@ -1591,12 +1588,16 @@ updates.moved_to_second_listen = null
 
       if (checkError) {
         console.error('❌ Error checking organization:', checkError)
-        if (checkError.message?.includes('require_rejection_reason') || checkError.code === '42703') {
-          return { 
-            error: { 
-              message: 'Database schema needs to be updated. Please run add-rejection-reason-setting.sql in Supabase SQL Editor.',
-              code: 'SCHEMA_MIGRATION_REQUIRED'
-            } 
+        if (
+          checkError.message?.includes('require_rejection_reason') ||
+          checkError.code === '42703'
+        ) {
+          return {
+            error: {
+              message:
+                'Database schema needs to be updated. Please run add-rejection-reason-setting.sql in Supabase SQL Editor.',
+              code: 'SCHEMA_MIGRATION_REQUIRED',
+            },
           }
         }
         return { error: checkError }
@@ -1604,11 +1605,11 @@ updates.moved_to_second_listen = null
 
       if (!checkData || checkData.length === 0) {
         console.error('❌ Organization not found:', activeOrgId)
-        return { 
-          error: { 
+        return {
+          error: {
             message: `Organization not found. ID: ${activeOrgId}. Please check your active organization.`,
-            code: 'NOT_FOUND'
-          } 
+            code: 'NOT_FOUND',
+          },
         }
       }
 
@@ -1627,20 +1628,26 @@ updates.moved_to_second_listen = null
         if (error.message?.includes('require_rejection_reason') || error.code === '42703') {
           console.error('❌ Column require_rejection_reason not found in organizations table')
           console.error('💡 Please run the migration script: add-rejection-reason-setting.sql')
-          return { 
-            error: { 
-              message: 'Database schema needs to be updated. Please run add-rejection-reason-setting.sql in Supabase SQL Editor.',
-              code: 'SCHEMA_MIGRATION_REQUIRED'
-            } 
+          return {
+            error: {
+              message:
+                'Database schema needs to be updated. Please run add-rejection-reason-setting.sql in Supabase SQL Editor.',
+              code: 'SCHEMA_MIGRATION_REQUIRED',
+            },
           }
         }
         // Check if it's an RLS policy error
-        if (error.code === '42501' || error.message?.includes('permission denied') || error.message?.includes('RLS')) {
+        if (
+          error.code === '42501' ||
+          error.message?.includes('permission denied') ||
+          error.message?.includes('RLS')
+        ) {
           return {
             error: {
-              message: 'Permission denied. RLS policy may be blocking the update. Please check your RLS policies for organizations table.',
-              code: 'RLS_ERROR'
-            }
+              message:
+                'Permission denied. RLS policy may be blocking the update. Please check your RLS policies for organizations table.',
+              code: 'RLS_ERROR',
+            },
           }
         }
         return { error }
@@ -1659,25 +1666,29 @@ updates.moved_to_second_listen = null
     } catch (error) {
       console.error('❌ Exception updating organization settings:', error)
       if (error.message?.includes('require_rejection_reason')) {
-        return { 
-          error: { 
-            message: 'Database schema needs to be updated. Please run add-rejection-reason-setting.sql in Supabase SQL Editor.',
-            code: 'SCHEMA_MIGRATION_REQUIRED'
-          } 
+        return {
+          error: {
+            message:
+              'Database schema needs to be updated. Please run add-rejection-reason-setting.sql in Supabase SQL Editor.',
+            code: 'SCHEMA_MIGRATION_REQUIRED',
+          },
         }
       }
       return { error }
     }
   }
 
-  const advanceTrack = async (trackId) => {
-    const track = tracks.find((t) => t.id === trackId)
+  const advanceTrack = async trackId => {
+    const track = tracks.find(t => t.id === trackId)
     if (!track) return { success: false, error: 'Track not found' }
 
     // Energy Gate: Check if advancing from Second Listen
     if (track.column === 'second-listen') {
       if (!track.energy || track.energy === 0) {
-        return { success: false, error: 'Please set the Energy Level before advancing to the Office.' }
+        return {
+          success: false,
+          error: 'Please set the Energy Level before advancing to the Office.',
+        }
       }
     }
 
@@ -1699,21 +1710,27 @@ updates.moved_to_second_listen = null
     return { success: false, error: 'Already at final stage' }
   }
 
-  const getStaffMetrics = (staffId) => {
-    const staffTracks = tracks.filter((t) => t.column === 'team-review' || t.column === 'contracting' || t.column === 'vault')
-    const tracksWithEnergy = tracks.filter((t) => t.energy && t.energy > 0)
-    
+  const getStaffMetrics = staffId => {
+    const staffTracks = tracks.filter(
+      t => t.column === 'team-review' || t.column === 'contracting' || t.column === 'vault'
+    )
+    const tracksWithEnergy = tracks.filter(t => t.energy && t.energy > 0)
+
     // Calculate average energy assigned by this staff member
     // For now, we'll track energy assignments globally since we don't track who set energy
     const totalEnergy = tracksWithEnergy.reduce((sum, t) => sum + (t.energy || 0), 0)
-    const avgEnergy = tracksWithEnergy.length > 0 ? (totalEnergy / tracksWithEnergy.length).toFixed(1) : 0
+    const avgEnergy =
+      tracksWithEnergy.length > 0 ? (totalEnergy / tracksWithEnergy.length).toFixed(1) : 0
 
     // Calculate voting participation
-    const tracksInTeamReview = tracks.filter((t) => t.column === 'team-review' || t.column === 'contracting' || t.column === 'vault')
-    const tracksVotedOn = tracks.filter((t) => t.staffVotes?.[staffId] !== undefined)
-    const participationRate = tracksInTeamReview.length > 0 
-      ? ((tracksVotedOn.length / tracksInTeamReview.length) * 100).toFixed(1)
-      : 0
+    const tracksInTeamReview = tracks.filter(
+      t => t.column === 'team-review' || t.column === 'contracting' || t.column === 'vault'
+    )
+    const tracksVotedOn = tracks.filter(t => t.staffVotes?.[staffId] !== undefined)
+    const participationRate =
+      tracksInTeamReview.length > 0
+        ? ((tracksVotedOn.length / tracksInTeamReview.length) * 100).toFixed(1)
+        : 0
 
     return {
       avgEnergyAssigned: parseFloat(avgEnergy),
@@ -1725,21 +1742,26 @@ updates.moved_to_second_listen = null
 
   const getUpcomingReleases = () => {
     return tracks
-      .filter((t) => (t.column === 'upcoming' || t.column === 'contracting') && t.targetReleaseDate && !t.archived)
+      .filter(
+        t =>
+          (t.column === 'upcoming' || t.column === 'contracting') &&
+          t.targetReleaseDate &&
+          !t.archived
+      )
       .sort((a, b) => new Date(a.targetReleaseDate) - new Date(b.targetReleaseDate))
       .slice(0, 3)
   }
 
   const getUpcomingCount = () => {
-    return tracks.filter((t) => t.column === 'upcoming' && !t.archived).length
+    return tracks.filter(t => t.column === 'upcoming' && !t.archived).length
   }
 
   const getWatchedTracks = () => {
-    return tracks.filter((t) => t.watched && !t.archived)
+    return tracks.filter(t => t.watched && !t.archived)
   }
 
   const getQuickStats = () => {
-    const activeTracks = tracks.filter((t) => !t.archived)
+    const activeTracks = tracks.filter(t => !t.archived)
     const byPhase = activeTracks.reduce((acc, track) => {
       acc[track.column] = (acc[track.column] || 0) + 1
       return acc

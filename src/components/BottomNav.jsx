@@ -23,7 +23,7 @@ const BottomNav = () => {
   useEffect(() => {
     const checkAccess = async () => {
       const userIsSystemAdmin = Boolean(isSystemAdmin || staffProfile?.role === 'SystemAdmin')
-      
+
       if (userIsSystemAdmin) {
         setHasArtistDirectoryAccess(true)
         setIsFreeTier(false)
@@ -61,30 +61,31 @@ const BottomNav = () => {
       animate={{ y: 0, opacity: 1, scale: 1 }}
       exit={{ y: 150, opacity: 0, scale: 0.95 }}
       transition={{
-        type: "spring",
+        type: 'spring',
         stiffness: 280,
         damping: 22,
         mass: 0.9,
-        velocity: 0.8
+        velocity: 0.8,
       }}
       className="fixed bottom-0 left-0 right-0 bg-gray-950/98 backdrop-blur-lg border-t border-gray-800 z-40 md:hidden"
       style={{
-        boxShadow: '0 -8px 32px rgba(0, 0, 0, 0.6), 0 -2px 8px rgba(168, 85, 247, 0.1)'
+        boxShadow: '0 -8px 32px rgba(0, 0, 0, 0.6), 0 -2px 8px rgba(168, 85, 247, 0.1)',
       }}
     >
-      <motion.div 
+      <motion.div
         className="flex items-center justify-around px-2 py-2"
         initial={{ scale: 0.85, y: 10 }}
         animate={{ scale: 1, y: 0 }}
         transition={{
-          type: "spring",
+          type: 'spring',
           stiffness: 350,
           damping: 22,
-          delay: 0.08
+          delay: 0.08,
         }}
       >
         {navItems.map((item, index) => {
-          const isActive = location.pathname === item.path ||
+          const isActive =
+            location.pathname === item.path ||
             (item.path === '/personal/dashboard' && location.pathname === '/personal/dashboard')
           const showProBadge = item.isPremium && isFreeTier
 
@@ -94,36 +95,34 @@ const BottomNav = () => {
               initial={{ y: 30, opacity: 0, scale: 0.8 }}
               animate={{ y: 0, opacity: 1, scale: 1 }}
               transition={{
-                type: "spring",
+                type: 'spring',
                 stiffness: 380,
                 damping: 20,
-                delay: 0.12 + (index * 0.06)
+                delay: 0.12 + index * 0.06,
               }}
             >
               <NavLink
                 to={item.path}
                 className={({ isActive: navIsActive }) =>
                   `flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all min-w-[60px] touch-target ${
-                    navIsActive || isActive
-                      ? 'text-neon-purple'
-                      : 'text-gray-400'
+                    navIsActive || isActive ? 'text-neon-purple' : 'text-gray-400'
                   } ${showProBadge ? 'opacity-75' : ''}`
                 }
               >
-                <motion.div 
+                <motion.div
                   className="relative"
-                  whileHover={{ 
+                  whileHover={{
                     scale: 1.15,
-                    y: -2
+                    y: -2,
                   }}
-                  whileTap={{ 
+                  whileTap={{
                     scale: 0.9,
-                    y: 0
+                    y: 0,
                   }}
                   transition={{
-                    type: "spring",
+                    type: 'spring',
                     stiffness: 500,
-                    damping: 15
+                    damping: 15,
                   }}
                 >
                   <item.icon size={20} />
@@ -132,25 +131,25 @@ const BottomNav = () => {
                       initial={{ scale: 0, rotate: -180 }}
                       animate={{ scale: 1, rotate: 0 }}
                       transition={{
-                        type: "spring",
+                        type: 'spring',
                         stiffness: 400,
                         damping: 20,
-                        delay: 0.3 + (index * 0.06)
+                        delay: 0.3 + index * 0.06,
                       }}
                     >
                       <Crown size={10} className="absolute -top-1 -right-1 text-yellow-400" />
                     </motion.div>
                   )}
                 </motion.div>
-                <motion.span 
+                <motion.span
                   className="text-xs font-medium"
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ 
-                    type: "spring",
+                  transition={{
+                    type: 'spring',
                     stiffness: 300,
                     damping: 20,
-                    delay: 0.18 + (index * 0.06)
+                    delay: 0.18 + index * 0.06,
                   }}
                 >
                   {item.label}

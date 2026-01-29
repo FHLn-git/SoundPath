@@ -30,7 +30,7 @@ const Upcoming = () => {
 
   const upcomingTracks = tracks
     .filter(
-      (t) =>
+      t =>
         t.column === 'upcoming' &&
         !t.archived &&
         (searchQuery === '' ||
@@ -45,7 +45,7 @@ const Upcoming = () => {
     })
 
   const handleMove = (trackId, direction) => {
-    const track = tracks.find((t) => t.id === trackId)
+    const track = tracks.find(t => t.id === trackId)
     if (!track) return
 
     const phases = ['inbox', 'second-listen', 'team-review', 'contracting', 'upcoming', 'vault']
@@ -57,8 +57,8 @@ const Upcoming = () => {
     }
   }
 
-  const handleReject = (trackId) => {
-    const track = tracks.find((t) => t.id === trackId)
+  const handleReject = trackId => {
+    const track = tracks.find(t => t.id === trackId)
     if (!track) return
 
     // Upcoming is always a critical stage
@@ -71,7 +71,7 @@ const Upcoming = () => {
     })
   }
 
-  const confirmReject = (rejectionReason) => {
+  const confirmReject = rejectionReason => {
     if (confirmationModal.track) {
       archiveTrack(confirmationModal.track.id, rejectionReason)
     }
@@ -82,12 +82,15 @@ const Upcoming = () => {
       <div className="p-6 border-b border-gray-800 bg-gray-950/50 backdrop-blur-sm">
         <h1 className="text-3xl font-bold text-white mb-4">Upcoming Releases</h1>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            size={20}
+          />
           <input
             type="text"
             placeholder="Search by Artist or Title..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gray-700 font-mono"
           />
         </div>
@@ -98,44 +101,26 @@ const Upcoming = () => {
           style={{ gridTemplateColumns: getGridTemplate() }}
           className="mb-1 grid gap-4 px-4 py-2 bg-gray-900/40 border-b border-gray-800 text-xs font-semibold text-gray-500 uppercase items-center"
         >
-          <ResizableColumnHeader
-            onResize={(width) => handleResize(0, width)}
-            minWidth={minWidths[0]}
-          >
+          <ResizableColumnHeader onResize={width => handleResize(0, width)} minWidth={minWidths[0]}>
             <div className="text-center">Link</div>
           </ResizableColumnHeader>
-          <ResizableColumnHeader
-            onResize={(width) => handleResize(1, width)}
-            minWidth={minWidths[1]}
-          >
+          <ResizableColumnHeader onResize={width => handleResize(1, width)} minWidth={minWidths[1]}>
             <div className="text-center">Watch</div>
           </ResizableColumnHeader>
-          <ResizableColumnHeader
-            onResize={(width) => handleResize(2, width)}
-            minWidth={minWidths[2]}
-          >
+          <ResizableColumnHeader onResize={width => handleResize(2, width)} minWidth={minWidths[2]}>
             <div className="text-left">Artist / Title</div>
           </ResizableColumnHeader>
-          <ResizableColumnHeader
-            onResize={(width) => handleResize(3, width)}
-            minWidth={minWidths[3]}
-          >
+          <ResizableColumnHeader onResize={width => handleResize(3, width)} minWidth={minWidths[3]}>
             <div className="text-center">Genre</div>
           </ResizableColumnHeader>
-          <ResizableColumnHeader
-            onResize={(width) => handleResize(4, width)}
-            minWidth={minWidths[4]}
-          >
+          <ResizableColumnHeader onResize={width => handleResize(4, width)} minWidth={minWidths[4]}>
             <div className="text-center">BPM</div>
           </ResizableColumnHeader>
-          <ResizableColumnHeader
-            onResize={(width) => handleResize(5, width)}
-            minWidth={minWidths[5]}
-          >
+          <ResizableColumnHeader onResize={width => handleResize(5, width)} minWidth={minWidths[5]}>
             <div className="text-center">Release Date / Status</div>
           </ResizableColumnHeader>
           <ResizableColumnHeader
-            onResize={(width) => handleResize(6, width)}
+            onResize={width => handleResize(6, width)}
             minWidth={minWidths[6]}
             isLast={true}
           >
@@ -148,11 +133,11 @@ const Upcoming = () => {
             <p>No upcoming releases scheduled</p>
           </div>
         ) : (
-          upcomingTracks.map((track) => (
-            <TrackRow 
-              key={track.id} 
-              track={track} 
-              onMove={handleMove} 
+          upcomingTracks.map(track => (
+            <TrackRow
+              key={track.id}
+              track={track}
+              onMove={handleMove}
               useGridTemplate={true}
               columnWidths={columnWidths}
               showPhaseControls={!!isOwner}
@@ -166,7 +151,13 @@ const Upcoming = () => {
       <ConfirmationModal
         isOpen={confirmationModal.isOpen}
         onClose={() =>
-          setConfirmationModal({ isOpen: false, track: null, action: null, destination: null, isCriticalStage: false })
+          setConfirmationModal({
+            isOpen: false,
+            track: null,
+            action: null,
+            destination: null,
+            isCriticalStage: false,
+          })
         }
         onConfirm={confirmReject}
         track={confirmationModal.track}

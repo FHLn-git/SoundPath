@@ -20,7 +20,7 @@ const TrialExpiredModal = ({ isOpen, onClose }) => {
           initial={{ scale: 0.96, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.96, opacity: 0 }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
           className="relative w-full max-w-lg bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-2xl"
         >
           <button
@@ -38,8 +38,9 @@ const TrialExpiredModal = ({ isOpen, onClose }) => {
             <div className="flex-1">
               <h2 className="text-xl font-bold text-white mb-2">Your Pro Trial Has Ended</h2>
               <p className="text-gray-400 text-sm leading-relaxed">
-                You’ve been returned to the Free tier. Your tracks are safe — if you’re over the Free limit,
-                your workspace will stay locked until you upgrade or trim down to capacity.
+                You’ve been returned to the Free tier. Your tracks are safe — if you’re over the
+                Free limit, your workspace will stay locked until you upgrade or trim down to
+                capacity.
               </p>
             </div>
           </div>
@@ -87,4 +88,3 @@ const TrialExpiredModal = ({ isOpen, onClose }) => {
 }
 
 export default TrialExpiredModal
-

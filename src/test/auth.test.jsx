@@ -71,4 +71,3 @@ describe('Authentication', () => {
     expect(true).toBe(true) // Placeholder
   })
 })
-

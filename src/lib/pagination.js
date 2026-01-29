@@ -12,8 +12,8 @@ export const createPagination = (page = 1, pageSize = DEFAULT_PAGE_SIZE) => {
     page,
     limit,
     offset,
-    hasMore: (total) => offset + limit < total,
-    totalPages: (total) => Math.ceil(total / limit),
+    hasMore: total => offset + limit < total,
+    totalPages: total => Math.ceil(total / limit),
   }
 }
 
@@ -25,8 +25,8 @@ export const usePagination = (initialPage = 1, initialPageSize = DEFAULT_PAGE_SI
 
   const nextPage = () => setPage(p => p + 1)
   const prevPage = () => setPage(p => Math.max(1, p - 1))
-  const goToPage = (newPage) => setPage(Math.max(1, newPage))
-  const changePageSize = (newSize) => {
+  const goToPage = newPage => setPage(Math.max(1, newPage))
+  const changePageSize = newSize => {
     setPageSize(Math.min(newSize, MAX_PAGE_SIZE))
     setPage(1) // Reset to first page
   }

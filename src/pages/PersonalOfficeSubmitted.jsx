@@ -25,7 +25,8 @@ const PersonalOfficeSubmitted = () => {
         setLoading(true)
         const { data, error } = await supabase
           .from('tracks')
-          .select(`
+          .select(
+            `
             *,
             artists (
               name
@@ -34,7 +35,8 @@ const PersonalOfficeSubmitted = () => {
               id,
               name
             )
-          `)
+          `
+          )
           .eq('sender_id', staffProfile.id)
           .not('organization_id', 'is', null)
           .eq('archived', false)
@@ -82,9 +84,7 @@ const PersonalOfficeSubmitted = () => {
             <Send size={24} className="text-white" />
             <h1 className="text-2xl font-bold text-white">Submitted</h1>
           </div>
-          <p className="text-gray-400 text-sm">
-            Tracks you've sent to external labels
-          </p>
+          <p className="text-gray-400 text-sm">Tracks you've sent to external labels</p>
         </div>
       </div>
 
@@ -98,13 +98,11 @@ const PersonalOfficeSubmitted = () => {
           <div className="text-center py-12 bg-gray-900/30 rounded-lg border border-gray-800">
             <Send size={48} className="text-gray-600 mx-auto mb-4" />
             <p className="text-gray-500 text-lg mb-2">No submitted tracks</p>
-            <p className="text-gray-600 text-sm">
-              Tracks you send to labels will appear here
-            </p>
+            <p className="text-gray-600 text-sm">Tracks you send to labels will appear here</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {submittedTracks.map((track) => (
+            {submittedTracks.map(track => (
               <motion.div
                 key={track.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -125,9 +123,7 @@ const PersonalOfficeSubmitted = () => {
                           <p className="text-gray-500 text-xs">{track.organization}</p>
                         </div>
                       )}
-                      {track.genre && (
-                        <p className="text-gray-600 text-xs">{track.genre}</p>
-                      )}
+                      {track.genre && <p className="text-gray-600 text-xs">{track.genre}</p>}
                       <p className="text-gray-600 text-xs">
                         {new Date(track.createdAt).toLocaleDateString()}
                       </p>

@@ -17,8 +17,17 @@ const PersonalPitched = () => {
   const [showUpgradeOverlay, setShowUpgradeOverlay] = useState(false)
   const [hasPersonalInboxAccess, setHasPersonalInboxAccess] = useState(false)
   const [isFreeTier, setIsFreeTier] = useState(false)
-  const [showPitchedToModal, setShowPitchedToModal] = useState({ isOpen: false, track: null, pitchedTo: '' })
-  const [showMarkSignedModal, setShowMarkSignedModal] = useState({ isOpen: false, track: null, signingLabel: '', releaseDate: '' })
+  const [showPitchedToModal, setShowPitchedToModal] = useState({
+    isOpen: false,
+    track: null,
+    pitchedTo: '',
+  })
+  const [showMarkSignedModal, setShowMarkSignedModal] = useState({
+    isOpen: false,
+    track: null,
+    signingLabel: '',
+    releaseDate: '',
+  })
 
   // Personal inbox access: Available to ALL authenticated users in personal view
   useEffect(() => {
@@ -88,7 +97,8 @@ const PersonalPitched = () => {
         setLoading(true)
         const { data, error } = await supabase
           .from('tracks')
-          .select(`
+          .select(
+            `
             *,
             artists (
               name
@@ -97,7 +107,8 @@ const PersonalPitched = () => {
               id,
               name
             )
-          `)
+          `
+          )
           .eq('recipient_user_id', staffProfile.id)
           .is('organization_id', null)
           .eq('crate', 'pitched')
@@ -145,7 +156,7 @@ const PersonalPitched = () => {
   }, [staffProfile, activeOrgId])
 
   // Calculate days since pitch
-  const getDaysSincePitch = (pitchedAt) => {
+  const getDaysSincePitch = pitchedAt => {
     if (!pitchedAt) return 'N/A'
     const now = new Date()
     const pitchDate = new Date(pitchedAt)
@@ -175,11 +186,12 @@ const PersonalPitched = () => {
       })
 
       setShowPitchedToModal({ isOpen: false, track: null, pitchedTo: '' })
-      
+
       // Reload tracks
       const { data } = await supabase
         .from('tracks')
-        .select(`
+        .select(
+          `
           *,
           artists (
             name
@@ -188,7 +200,8 @@ const PersonalPitched = () => {
             id,
             name
           )
-        `)
+        `
+        )
         .eq('recipient_user_id', staffProfile.id)
         .is('organization_id', null)
         .eq('crate', 'pitched')
@@ -251,11 +264,12 @@ const PersonalPitched = () => {
       })
 
       setShowMarkSignedModal({ isOpen: false, track: null, signingLabel: '', releaseDate: '' })
-      
+
       // Reload tracks
       const { data } = await supabase
         .from('tracks')
-        .select(`
+        .select(
+          `
           *,
           artists (
             name
@@ -264,7 +278,8 @@ const PersonalPitched = () => {
             id,
             name
           )
-        `)
+        `
+        )
         .eq('recipient_user_id', staffProfile.id)
         .is('organization_id', null)
         .eq('crate', 'pitched')
@@ -329,9 +344,7 @@ const PersonalPitched = () => {
       {/* Content */}
       <div className="p-4 bg-[#0B0E14] relative">
         {/* Premium Overlay for Free Users */}
-        {isFreeTier && (
-          <PremiumOverlay />
-        )}
+        {isFreeTier && <PremiumOverlay />}
         {loading ? (
           <div className="text-center py-8">
             <p className="text-gray-400">Loading pitched tracks...</p>
@@ -340,9 +353,7 @@ const PersonalPitched = () => {
           <div className="text-center py-12 bg-gray-900/30 rounded-lg border border-gray-800">
             <Send size={48} className="text-gray-600 mx-auto mb-4" />
             <p className="text-gray-500 text-lg mb-2">No pitched tracks yet</p>
-            <p className="text-gray-600 text-sm">
-              Tracks you pitch will appear here
-            </p>
+            <p className="text-gray-600 text-sm">Tracks you pitch will appear here</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -358,7 +369,7 @@ const PersonalPitched = () => {
             </div>
 
             {/* Track Rows */}
-            {pitchedTracks.map((track) => {
+            {pitchedTracks.map(track => {
               const daysSince = getDaysSincePitch(track.pitchedAt)
               return (
                 <motion.div
@@ -376,7 +387,9 @@ const PersonalPitched = () => {
                       <p className="text-gray-300 text-sm truncate">{track.pitchedTo}</p>
                     ) : (
                       <button
-                        onClick={() => setShowPitchedToModal({ isOpen: true, track, pitchedTo: '' })}
+                        onClick={() =>
+                          setShowPitchedToModal({ isOpen: true, track, pitchedTo: '' })
+                        }
                         className="text-orange-400 hover:text-orange-300 text-xs underline"
                       >
                         Add Label
@@ -384,18 +397,27 @@ const PersonalPitched = () => {
                     )}
                   </div>
                   <div className="col-span-1 text-center">
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                      daysSince === 'N/A' ? 'bg-gray-800 text-gray-500' :
-                      daysSince < 7 ? 'bg-green-500/20 text-green-400' :
-                      daysSince < 30 ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-red-500/20 text-red-400'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-semibold ${
+                        daysSince === 'N/A'
+                          ? 'bg-gray-800 text-gray-500'
+                          : daysSince < 7
+                            ? 'bg-green-500/20 text-green-400'
+                            : daysSince < 30
+                              ? 'bg-yellow-500/20 text-yellow-400'
+                              : 'bg-red-500/20 text-red-400'
+                      }`}
+                    >
                       {daysSince}
                     </span>
                   </div>
                   <div className="col-span-2 text-gray-400 text-sm">{track.genre || 'N/A'}</div>
-                  <div className="col-span-1 text-center text-gray-400 text-sm">{track.bpm || 'N/A'}</div>
-                  <div className="col-span-1 text-center text-gray-400 text-sm">{track.energy || 'N/A'}</div>
+                  <div className="col-span-1 text-center text-gray-400 text-sm">
+                    {track.bpm || 'N/A'}
+                  </div>
+                  <div className="col-span-1 text-center text-gray-400 text-sm">
+                    {track.energy || 'N/A'}
+                  </div>
                   <div className="col-span-2 flex items-center justify-end gap-2">
                     {track.link && (
                       <a
@@ -408,14 +430,27 @@ const PersonalPitched = () => {
                       </a>
                     )}
                     <button
-                      onClick={() => setShowPitchedToModal({ isOpen: true, track, pitchedTo: track.pitchedTo || '' })}
+                      onClick={() =>
+                        setShowPitchedToModal({
+                          isOpen: true,
+                          track,
+                          pitchedTo: track.pitchedTo || '',
+                        })
+                      }
                       className="px-2 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-xs font-semibold text-white transition-colors"
                       title="Edit Pitched To"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => setShowMarkSignedModal({ isOpen: true, track, signingLabel: '', releaseDate: '' })}
+                      onClick={() =>
+                        setShowMarkSignedModal({
+                          isOpen: true,
+                          track,
+                          signingLabel: '',
+                          releaseDate: '',
+                        })
+                      }
                       className="px-2 py-1 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 rounded text-xs font-semibold text-yellow-400 transition-colors flex items-center gap-1"
                       title="Mark as Signed"
                     >
@@ -439,9 +474,7 @@ const PersonalPitched = () => {
             className="bg-gray-900/95 border border-gray-700 rounded-lg p-6 w-full max-w-md backdrop-blur-sm"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-white">
-                Edit Pitched To
-              </h3>
+              <h3 className="text-lg font-bold text-white">Edit Pitched To</h3>
               <button
                 onClick={() => setShowPitchedToModal({ isOpen: false, track: null, pitchedTo: '' })}
                 className="text-gray-400 hover:text-white"
@@ -455,7 +488,9 @@ const PersonalPitched = () => {
             <input
               type="text"
               value={showPitchedToModal.pitchedTo}
-              onChange={(e) => setShowPitchedToModal({ ...showPitchedToModal, pitchedTo: e.target.value })}
+              onChange={e =>
+                setShowPitchedToModal({ ...showPitchedToModal, pitchedTo: e.target.value })
+              }
               placeholder="Label or person name"
               className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white mb-4 focus:outline-none focus:border-gray-600"
               autoFocus
@@ -487,11 +522,16 @@ const PersonalPitched = () => {
             className="bg-gray-900/95 border border-gray-700 rounded-lg p-6 w-full max-w-md backdrop-blur-sm"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-white">
-                Mark as Signed
-              </h3>
+              <h3 className="text-lg font-bold text-white">Mark as Signed</h3>
               <button
-                onClick={() => setShowMarkSignedModal({ isOpen: false, track: null, signingLabel: '', releaseDate: '' })}
+                onClick={() =>
+                  setShowMarkSignedModal({
+                    isOpen: false,
+                    track: null,
+                    signingLabel: '',
+                    releaseDate: '',
+                  })
+                }
                 className="text-gray-400 hover:text-white"
               >
                 <X size={20} />
@@ -506,7 +546,9 @@ const PersonalPitched = () => {
                 <input
                   type="text"
                   value={showMarkSignedModal.signingLabel}
-                  onChange={(e) => setShowMarkSignedModal({ ...showMarkSignedModal, signingLabel: e.target.value })}
+                  onChange={e =>
+                    setShowMarkSignedModal({ ...showMarkSignedModal, signingLabel: e.target.value })
+                  }
                   placeholder="Label name"
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-600"
                   autoFocus
@@ -517,7 +559,9 @@ const PersonalPitched = () => {
                 <input
                   type="date"
                   value={showMarkSignedModal.releaseDate}
-                  onChange={(e) => setShowMarkSignedModal({ ...showMarkSignedModal, releaseDate: e.target.value })}
+                  onChange={e =>
+                    setShowMarkSignedModal({ ...showMarkSignedModal, releaseDate: e.target.value })
+                  }
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-600"
                 />
               </div>
@@ -530,7 +574,14 @@ const PersonalPitched = () => {
                 Mark as Signed
               </button>
               <button
-                onClick={() => setShowMarkSignedModal({ isOpen: false, track: null, signingLabel: '', releaseDate: '' })}
+                onClick={() =>
+                  setShowMarkSignedModal({
+                    isOpen: false,
+                    track: null,
+                    signingLabel: '',
+                    releaseDate: '',
+                  })
+                }
                 className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-gray-400"
               >
                 Cancel

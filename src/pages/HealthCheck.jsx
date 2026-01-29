@@ -15,10 +15,10 @@ const HealthCheck = () => {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
       const healthUrl = `${supabaseUrl}/functions/v1/health`
-      
+
       const response = await fetch(healthUrl, {
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
         },
       })
 
@@ -34,7 +34,7 @@ const HealthCheck = () => {
     }
   }
 
-  const getStatusIcon = (status) => {
+  const getStatusIcon = status => {
     switch (status) {
       case 'healthy':
         return <CheckCircle className="w-6 h-6 text-green-400" />
@@ -47,7 +47,7 @@ const HealthCheck = () => {
     }
   }
 
-  const getStatusColor = (status) => {
+  const getStatusColor = status => {
     switch (status) {
       case 'healthy':
         return 'text-green-400'

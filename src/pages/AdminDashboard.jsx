@@ -1,10 +1,26 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
-import { 
-  Building2, Users, DollarSign, TrendingUp, AlertCircle, 
-  CheckCircle, XCircle, Activity, CreditCard, BarChart3,
-  Search, Filter, Download, Bug, Eye, EyeOff, RefreshCw, ArrowLeft, Mail
+import {
+  Building2,
+  Users,
+  DollarSign,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Activity,
+  CreditCard,
+  BarChart3,
+  Search,
+  Filter,
+  Download,
+  Bug,
+  Eye,
+  EyeOff,
+  RefreshCw,
+  ArrowLeft,
+  Mail,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import ContactInbox from '../components/ContactInbox'
@@ -32,7 +48,7 @@ const AdminDashboard = () => {
     unresolvedErrors: 0,
     errorsLast24h: 0,
     errorsLast7d: 0,
-    mostCommonError: null
+    mostCommonError: null,
   })
   const [errorFilter, setErrorFilter] = useState('all') // 'all', 'unresolved', 'resolved'
   const [errorSeverity, setErrorSeverity] = useState('all') // 'all', 'error', 'warning', 'info'
@@ -73,18 +89,22 @@ const AdminDashboard = () => {
       // Load subscriptions
       const { data: subsData, error: subsError } = await supabase
         .from('subscriptions')
-        .select(`
+        .select(
+          `
           *,
           organizations:organization_id (id, name, slug),
           plans:plan_id (id, name, price_monthly, price_yearly)
-        `)
+        `
+        )
         .order('created_at', { ascending: false })
 
       if (subsError) throw subsError
       setSubscriptions(subsData || [])
 
       // Calculate stats
-      const activeSubs = (subsData || []).filter(s => s.status === 'active' || s.status === 'trialing')
+      const activeSubs = (subsData || []).filter(
+        s => s.status === 'active' || s.status === 'trialing'
+      )
       const trialSubs = (subsData || []).filter(s => s.status === 'trialing')
       const pastDueSubs = (subsData || []).filter(s => s.status === 'past_due')
 
@@ -92,9 +112,8 @@ const AdminDashboard = () => {
       const mrr = activeSubs.reduce((sum, sub) => {
         const plan = sub.plans
         if (!plan) return sum
-        const price = sub.billing_interval === 'year' 
-          ? (plan.price_yearly || 0) / 12 
-          : (plan.price_monthly || 0)
+        const price =
+          sub.billing_interval === 'year' ? (plan.price_yearly || 0) / 12 : plan.price_monthly || 0
         return sum + price
       }, 0)
 
@@ -104,7 +123,10 @@ const AdminDashboard = () => {
         .select('amount')
         .eq('status', 'paid')
 
-      const totalRevenue = (invoicesData || []).reduce((sum, inv) => sum + (parseFloat(inv.amount) || 0), 0)
+      const totalRevenue = (invoicesData || []).reduce(
+        (sum, inv) => sum + (parseFloat(inv.amount) || 0),
+        0
+      )
 
       setStats({
         totalOrganizations: orgsData?.length || 0,
@@ -170,7 +192,7 @@ const AdminDashboard = () => {
           resolved: true,
           resolved_at: new Date().toISOString(),
           resolved_by: staffProfile?.id,
-          resolved_note: note
+          resolved_note: note,
         })
         .eq('id', errorId)
 
@@ -181,7 +203,7 @@ const AdminDashboard = () => {
     }
   }
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = amount => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -190,7 +212,7 @@ const AdminDashboard = () => {
     }).format(amount)
   }
 
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -199,7 +221,7 @@ const AdminDashboard = () => {
     })
   }
 
-  const getStatusColor = (status) => {
+  const getStatusColor = status => {
     switch (status) {
       case 'active':
         return 'text-green-400 bg-green-500/20'
@@ -216,10 +238,11 @@ const AdminDashboard = () => {
 
   const filteredSubscriptions = subscriptions.filter(sub => {
     const org = sub.organizations
-    const matchesSearch = !searchTerm || 
+    const matchesSearch =
+      !searchTerm ||
       org?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       org?.slug?.toLowerCase().includes(searchTerm.toLowerCase())
-    
+
     const matchesFilter = filterStatus === 'all' || sub.status === filterStatus
 
     return matchesSearch && matchesFilter
@@ -249,7 +272,8 @@ const AdminDashboard = () => {
             <div>
               <h1 className="text-4xl font-bold mb-4">Admin Dashboard</h1>
               <p className="text-gray-400 text-lg">
-                Manage organizations, subscriptions, and monitor system health. Use this dashboard to help customers and manage the platform.
+                Manage organizations, subscriptions, and monitor system health. Use this dashboard
+                to help customers and manage the platform.
               </p>
             </div>
             <button
@@ -317,7 +341,8 @@ const AdminDashboard = () => {
                       <AlertCircle className="w-5 h-5 text-yellow-400" />
                       <div>
                         <div className="font-semibold text-yellow-400">
-                          {stats.trialOrganizations} organization{stats.trialOrganizations !== 1 ? 's' : ''} on trial
+                          {stats.trialOrganizations} organization
+                          {stats.trialOrganizations !== 1 ? 's' : ''} on trial
                         </div>
                         <div className="text-sm text-gray-300">
                           Monitor trial conversions and send upgrade reminders
@@ -330,7 +355,8 @@ const AdminDashboard = () => {
                       <AlertCircle className="w-5 h-5 text-red-400" />
                       <div>
                         <div className="font-semibold text-red-400">
-                          {stats.pastDueOrganizations} organization{stats.pastDueOrganizations !== 1 ? 's' : ''} past due
+                          {stats.pastDueOrganizations} organization
+                          {stats.pastDueOrganizations !== 1 ? 's' : ''} past due
                         </div>
                         <div className="text-sm text-gray-300">
                           Payment required - follow up with these organizations
@@ -378,82 +404,94 @@ const AdminDashboard = () => {
             {activeTab === 'subscriptions' ? (
               /* Subscriptions Table */
               <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold">Subscriptions</h2>
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search organizations..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gray-600"
-                    />
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold">Subscriptions</h2>
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search organizations..."
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        className="pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gray-600"
+                      />
+                    </div>
+                    <select
+                      value={filterStatus}
+                      onChange={e => setFilterStatus(e.target.value)}
+                      className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-600"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="active">Active</option>
+                      <option value="trialing">Trialing</option>
+                      <option value="past_due">Past Due</option>
+                      <option value="canceled">Canceled</option>
+                    </select>
                   </div>
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-600"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="trialing">Trialing</option>
-                    <option value="past_due">Past Due</option>
-                    <option value="canceled">Canceled</option>
-                  </select>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-800">
+                        <th className="text-left py-3 px-4 text-gray-400 font-semibold">
+                          Organization
+                        </th>
+                        <th className="text-left py-3 px-4 text-gray-400 font-semibold">Plan</th>
+                        <th className="text-left py-3 px-4 text-gray-400 font-semibold">Status</th>
+                        <th className="text-left py-3 px-4 text-gray-400 font-semibold">Amount</th>
+                        <th className="text-left py-3 px-4 text-gray-400 font-semibold">
+                          Period End
+                        </th>
+                        <th className="text-left py-3 px-4 text-gray-400 font-semibold">Created</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredSubscriptions.map(sub => {
+                        const org = sub.organizations
+                        const plan = sub.plans
+                        return (
+                          <tr
+                            key={sub.id}
+                            className="border-b border-gray-800 hover:bg-gray-800/50"
+                          >
+                            <td className="py-3 px-4">
+                              <div className="font-semibold">{org?.name || 'Unknown'}</div>
+                              <div className="text-sm text-gray-400">{org?.slug || 'N/A'}</div>
+                            </td>
+                            <td className="py-3 px-4">{plan?.name || sub.plan_id}</td>
+                            <td className="py-3 px-4">
+                              <span
+                                className={`px-2 py-1 rounded text-xs ${getStatusColor(sub.status)}`}
+                              >
+                                {sub.status.charAt(0).toUpperCase() + sub.status.slice(1)}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              {plan &&
+                                formatCurrency(
+                                  sub.billing_interval === 'year'
+                                    ? (plan.price_yearly || 0) / 12
+                                    : plan.price_monthly || 0
+                                )}
+                            </td>
+                            <td className="py-3 px-4 text-gray-400">
+                              {formatDate(sub.current_period_end)}
+                            </td>
+                            <td className="py-3 px-4 text-gray-400">
+                              {formatDate(sub.created_at)}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                  {filteredSubscriptions.length === 0 && (
+                    <div className="text-center py-8 text-gray-400">No subscriptions found</div>
+                  )}
                 </div>
               </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-800">
-                      <th className="text-left py-3 px-4 text-gray-400 font-semibold">Organization</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-semibold">Plan</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-semibold">Status</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-semibold">Amount</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-semibold">Period End</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-semibold">Created</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredSubscriptions.map((sub) => {
-                      const org = sub.organizations
-                      const plan = sub.plans
-                      return (
-                        <tr key={sub.id} className="border-b border-gray-800 hover:bg-gray-800/50">
-                          <td className="py-3 px-4">
-                            <div className="font-semibold">{org?.name || 'Unknown'}</div>
-                            <div className="text-sm text-gray-400">{org?.slug || 'N/A'}</div>
-                          </td>
-                          <td className="py-3 px-4">{plan?.name || sub.plan_id}</td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2 py-1 rounded text-xs ${getStatusColor(sub.status)}`}>
-                              {sub.status.charAt(0).toUpperCase() + sub.status.slice(1)}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            {plan && formatCurrency(
-                              sub.billing_interval === 'year' 
-                                ? (plan.price_yearly || 0) / 12 
-                                : (plan.price_monthly || 0)
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-gray-400">{formatDate(sub.current_period_end)}</td>
-                          <td className="py-3 px-4 text-gray-400">{formatDate(sub.created_at)}</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-                {filteredSubscriptions.length === 0 && (
-                  <div className="text-center py-8 text-gray-400">
-                    No subscriptions found
-                  </div>
-                )}
-              </div>
-            </div>
             ) : (
               /* Error Logs Section */
               <div className="space-y-6">
@@ -465,7 +503,9 @@ const AdminDashboard = () => {
                   </div>
                   <div className="bg-red-500/10 rounded-lg p-4 border border-red-500/30">
                     <div className="text-sm text-red-400 mb-1">Unresolved</div>
-                    <div className="text-2xl font-bold text-red-400">{errorStats.unresolvedErrors || 0}</div>
+                    <div className="text-2xl font-bold text-red-400">
+                      {errorStats.unresolvedErrors || 0}
+                    </div>
                   </div>
                   <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
                     <div className="text-sm text-gray-400 mb-1">Last 24h</div>
@@ -491,7 +531,7 @@ const AdminDashboard = () => {
                       </button>
                       <select
                         value={errorFilter}
-                        onChange={(e) => {
+                        onChange={e => {
                           const newFilter = e.target.value
                           setErrorFilter(newFilter)
                           loadErrorLogs(newFilter, errorSeverity)
@@ -504,7 +544,7 @@ const AdminDashboard = () => {
                       </select>
                       <select
                         value={errorSeverity}
-                        onChange={(e) => {
+                        onChange={e => {
                           const newSeverity = e.target.value
                           setErrorSeverity(newSeverity)
                           loadErrorLogs(errorFilter, newSeverity)
@@ -524,20 +564,40 @@ const AdminDashboard = () => {
                       <thead>
                         <tr className="border-b border-gray-800">
                           <th className="text-left py-3 px-4 text-gray-400 font-semibold">Error</th>
-                          <th className="text-left py-3 px-4 text-gray-400 font-semibold">Component</th>
-                          <th className="text-left py-3 px-4 text-gray-400 font-semibold">Severity</th>
-                          <th className="text-left py-3 px-4 text-gray-400 font-semibold">Occurrences</th>
-                          <th className="text-left py-3 px-4 text-gray-400 font-semibold">First Seen</th>
-                          <th className="text-left py-3 px-4 text-gray-400 font-semibold">Last Seen</th>
-                          <th className="text-left py-3 px-4 text-gray-400 font-semibold">Status</th>
-                          <th className="text-left py-3 px-4 text-gray-400 font-semibold">Actions</th>
+                          <th className="text-left py-3 px-4 text-gray-400 font-semibold">
+                            Component
+                          </th>
+                          <th className="text-left py-3 px-4 text-gray-400 font-semibold">
+                            Severity
+                          </th>
+                          <th className="text-left py-3 px-4 text-gray-400 font-semibold">
+                            Occurrences
+                          </th>
+                          <th className="text-left py-3 px-4 text-gray-400 font-semibold">
+                            First Seen
+                          </th>
+                          <th className="text-left py-3 px-4 text-gray-400 font-semibold">
+                            Last Seen
+                          </th>
+                          <th className="text-left py-3 px-4 text-gray-400 font-semibold">
+                            Status
+                          </th>
+                          <th className="text-left py-3 px-4 text-gray-400 font-semibold">
+                            Actions
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {errorLogs.map((error) => (
-                          <tr key={error.id} className="border-b border-gray-800 hover:bg-gray-800/50">
+                        {errorLogs.map(error => (
+                          <tr
+                            key={error.id}
+                            className="border-b border-gray-800 hover:bg-gray-800/50"
+                          >
                             <td className="py-3 px-4">
-                              <div className="font-semibold max-w-md truncate" title={error.error_message}>
+                              <div
+                                className="font-semibold max-w-md truncate"
+                                title={error.error_message}
+                              >
                                 {error.error_message}
                               </div>
                               {error.error_url && (
@@ -548,11 +608,15 @@ const AdminDashboard = () => {
                               {error.error_component || 'N/A'}
                             </td>
                             <td className="py-3 px-4">
-                              <span className={`px-2 py-1 rounded text-xs ${
-                                error.severity === 'error' ? 'text-red-400 bg-red-500/20' :
-                                error.severity === 'warning' ? 'text-yellow-400 bg-yellow-500/20' :
-                                'text-blue-400 bg-blue-500/20'
-                              }`}>
+                              <span
+                                className={`px-2 py-1 rounded text-xs ${
+                                  error.severity === 'error'
+                                    ? 'text-red-400 bg-red-500/20'
+                                    : error.severity === 'warning'
+                                      ? 'text-yellow-400 bg-yellow-500/20'
+                                      : 'text-blue-400 bg-blue-500/20'
+                                }`}
+                              >
                                 {error.severity}
                               </span>
                             </td>
@@ -601,9 +665,7 @@ const AdminDashboard = () => {
                       </tbody>
                     </table>
                     {errorLogs.length === 0 && (
-                      <div className="text-center py-8 text-gray-400">
-                        No errors found
-                      </div>
+                      <div className="text-center py-8 text-gray-400">No errors found</div>
                     )}
                   </div>
                 </div>
@@ -626,7 +688,9 @@ const AdminDashboard = () => {
                       <div className="p-6 space-y-4">
                         <div>
                           <div className="text-sm text-gray-400 mb-1">Error Message</div>
-                          <div className="bg-gray-800 rounded p-3 font-mono text-sm">{selectedError.error_message}</div>
+                          <div className="bg-gray-800 rounded p-3 font-mono text-sm">
+                            {selectedError.error_message}
+                          </div>
                         </div>
                         {selectedError.error_stack && (
                           <div>
@@ -702,9 +766,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Contact Inbox Modal */}
-      {showContactInbox && (
-        <ContactInbox onClose={() => setShowContactInbox(false)} />
-      )}
+      {showContactInbox && <ContactInbox onClose={() => setShowContactInbox(false)} />}
     </div>
   )
 }

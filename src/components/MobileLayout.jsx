@@ -16,7 +16,7 @@ const MobileLayout = ({ children, showBottomNav = false }) => {
   const { activeOrgId } = useAuth()
   const location = useLocation()
   const isPersonalView = activeOrgId === null
-  
+
   // Collapse state with localStorage persistence (desktop only)
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window !== 'undefined' && window.innerWidth >= 768) {
@@ -38,20 +38,20 @@ const MobileLayout = ({ children, showBottomNav = false }) => {
   }
 
   // Calculate sidebar width for content margin
-  const sidebarWidth = isMobile ? 0 : (isCollapsed ? 64 : 256)
+  const sidebarWidth = isMobile ? 0 : isCollapsed ? 64 : 256
 
   return (
     <div className="flex min-h-screen bg-gray-950">
       {/* Sidebar - hidden on mobile, shown via drawer */}
-      <Sidebar 
-        isOpen={sidebarOpen} 
+      <Sidebar
+        isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         isCollapsed={isCollapsed}
         onToggleCollapse={handleToggleCollapse}
       />
-      
+
       {/* Main Content */}
-      <main 
+      <main
         className="flex-1 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
         style={{ marginLeft: isMobile ? 0 : `${sidebarWidth}px` }}
       >
@@ -69,18 +69,14 @@ const MobileLayout = ({ children, showBottomNav = false }) => {
             <div className="w-10" /> {/* Spacer for centering */}
           </header>
         )}
-        
+
         {/* Content Area */}
-        <div className={`${isMobile ? 'p-4 pb-20' : 'max-w-[1600px] ml-0 p-10'}`}>
-          {children}
-        </div>
+        <div className={`${isMobile ? 'p-4 pb-20' : 'max-w-[1600px] ml-0 p-10'}`}>{children}</div>
       </main>
 
       {/* Bottom Navigation for Personal Workspace on Mobile */}
       <AnimatePresence mode="wait">
-        {isMobile && showBottomNav && isPersonalView && (
-          <BottomNav key={location.pathname} />
-        )}
+        {isMobile && showBottomNav && isPersonalView && <BottomNav key={location.pathname} />}
       </AnimatePresence>
     </div>
   )

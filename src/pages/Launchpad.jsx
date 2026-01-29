@@ -1,10 +1,27 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { 
-  Building2, Search, ArrowRight, Inbox, 
-  TrendingUp, Bell, Plus, MoveRight, X, Check, LogOut,
-  Users, Send, Eye, Package, Package2, Radio, Menu, Settings, Activity
+import {
+  Building2,
+  Search,
+  ArrowRight,
+  Inbox,
+  TrendingUp,
+  Bell,
+  Plus,
+  MoveRight,
+  X,
+  Check,
+  LogOut,
+  Users,
+  Send,
+  Eye,
+  Package,
+  Package2,
+  Radio,
+  Menu,
+  Settings,
+  Activity,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useBilling } from '../context/BillingContext'
@@ -21,7 +38,18 @@ import AddDemoModal from '../components/AddDemoModal'
 const Launchpad = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { staffProfile, memberships, switchOrganization, clearWorkspace, activeOrgId, user, signOut, isSystemAdmin, refreshStaffProfile, loadMemberships } = useAuth()
+  const {
+    staffProfile,
+    memberships,
+    switchOrganization,
+    clearWorkspace,
+    activeOrgId,
+    user,
+    signOut,
+    isSystemAdmin,
+    refreshStaffProfile,
+    loadMemberships,
+  } = useAuth()
   const { hasFeature } = useBilling()
   const { tracks, loadTracks, addTrack, GENRES } = useApp()
   const [searchQuery, setSearchQuery] = useState('')
@@ -46,14 +74,14 @@ const Launchpad = () => {
   const [showUpgradeOverlay, setShowUpgradeOverlay] = useState(false)
   const [upgradeRedirecting, setUpgradeRedirecting] = useState(false)
   const [showTrialExpiredModal, setShowTrialExpiredModal] = useState(false)
-  
+
   // Quad-Inbox state
   const [activeCrate, setActiveCrate] = useState('submissions') // 'submissions', 'network', 'crate_a', 'crate_b'
   const [submissionsTracks, setSubmissionsTracks] = useState([])
   const [networkTracks, setNetworkTracks] = useState([])
   const [crateATracks, setCrateATracks] = useState([])
   const [crateBTracks, setCrateBTracks] = useState([])
-  
+
   // Network search state
   const [networkSearchQuery, setNetworkSearchQuery] = useState('')
   const [networkSearchResults, setNetworkSearchResults] = useState([])
@@ -64,7 +92,7 @@ const Launchpad = () => {
   const [showGlobalSettings, setShowGlobalSettings] = useState(false)
   const [pendingConnectionRequests, setPendingConnectionRequests] = useState(0)
   const [isAddSubmissionOpen, setIsAddSubmissionOpen] = useState(false)
-  
+
   // Global Close Watch state
   const [globalCloseWatchTracks, setGlobalCloseWatchTracks] = useState([])
 
@@ -133,47 +161,52 @@ const Launchpad = () => {
   useEffect(() => {
     const loadUpcomingEvents = async () => {
       if (!supabase || !memberships || memberships.length === 0) return
-      
+
       try {
         const today = new Date()
         today.setHours(0, 0, 0, 0)
         const nextWeek = new Date(today)
         nextWeek.setDate(nextWeek.getDate() + 7)
-        
+
         const orgIds = memberships.map(m => m.organization_id)
-        
+
         // Get all tracks with release dates from all user's labels
         const { data: allTracks, error } = await supabase
           .from('tracks')
-          .select('id, title, artist_name, release_date, target_release_date, status, organization_id')
+          .select(
+            'id, title, artist_name, release_date, target_release_date, status, organization_id'
+          )
           .in('organization_id', orgIds)
           .in('status', ['contracting', 'upcoming'])
           .eq('archived', false)
-        
+
         if (error) {
           console.error('Error loading upcoming events:', error)
           return
         }
-        
+
         // Filter in JavaScript to handle both release_date and target_release_date
-        const filteredTracks = allTracks?.filter(track => {
-          const releaseDate = track.status === 'upcoming' 
-            ? track.release_date 
-            : (track.target_release_date || track.release_date)
-          
-          if (!releaseDate) return false
-          
-          const date = new Date(releaseDate)
-          return date >= today && date <= nextWeek
-        }) || []
-        
+        const filteredTracks =
+          allTracks?.filter(track => {
+            const releaseDate =
+              track.status === 'upcoming'
+                ? track.release_date
+                : track.target_release_date || track.release_date
+
+            if (!releaseDate) return false
+
+            const date = new Date(releaseDate)
+            return date >= today && date <= nextWeek
+          }) || []
+
         // Transform and group by date
         const events = []
         filteredTracks.forEach(track => {
-          const releaseDate = track.status === 'upcoming' 
-            ? track.release_date 
-            : (track.target_release_date || track.release_date)
-          
+          const releaseDate =
+            track.status === 'upcoming'
+              ? track.release_date
+              : track.target_release_date || track.release_date
+
           if (releaseDate) {
             const date = new Date(releaseDate)
             const org = memberships.find(m => m.organization_id === track.organization_id)
@@ -188,13 +221,13 @@ const Launchpad = () => {
             })
           }
         })
-        
+
         setUpcomingEvents(events)
       } catch (err) {
         console.error('Error loading events:', err)
       }
     }
-    
+
     loadUpcomingEvents()
   }, [memberships])
 
@@ -208,7 +241,7 @@ const Launchpad = () => {
 
       const stats = {}
       const cognitiveLoad = {}
-      
+
       for (const membership of memberships) {
         try {
           // Get inbox count
@@ -222,7 +255,7 @@ const Launchpad = () => {
           // Get notifications count (tracks moved to second-listen in last 24h)
           const yesterday = new Date()
           yesterday.setDate(yesterday.getDate() - 1)
-          
+
           const { count: notificationsCount } = await supabase
             .from('tracks')
             .select('*', { count: 'exact', head: true })
@@ -239,21 +272,21 @@ const Launchpad = () => {
           // Check for critical gaps in release schedule
           const gapCheckToday = new Date()
           gapCheckToday.setHours(0, 0, 0, 0)
-          
+
           const month1Start = new Date(gapCheckToday)
           const month1End = new Date(gapCheckToday)
           month1End.setDate(month1End.getDate() + 30)
-          
+
           const month2Start = new Date(gapCheckToday)
           month2Start.setDate(month2Start.getDate() + 31)
           const month2End = new Date(gapCheckToday)
           month2End.setDate(month2End.getDate() + 60)
-          
+
           const month3Start = new Date(gapCheckToday)
           month3Start.setDate(month3Start.getDate() + 61)
           const month3End = new Date(gapCheckToday)
           month3End.setDate(month3End.getDate() + 90)
-          
+
           // Get tracks in contracting or upcoming status for this label
           const { data: releaseTracks } = await supabase
             .from('tracks')
@@ -261,42 +294,54 @@ const Launchpad = () => {
             .eq('organization_id', membership.organization_id)
             .in('status', ['contracting', 'upcoming'])
             .eq('archived', false)
-          
+
           // Check which months have releases
-          const month1HasRelease = releaseTracks?.some(track => {
-            const releaseDate = track.status === 'upcoming' 
-              ? track.release_date 
-              : (track.target_release_date || track.release_date)
-            if (!releaseDate) return false
-            const date = new Date(releaseDate)
-            return date >= month1Start && date < month1End
-          }) || false
-          
-          const month2HasRelease = releaseTracks?.some(track => {
-            const releaseDate = track.status === 'upcoming' 
-              ? track.release_date 
-              : (track.target_release_date || track.release_date)
-            if (!releaseDate) return false
-            const date = new Date(releaseDate)
-            return date >= month2Start && date < month2End
-          }) || false
-          
-          const month3HasRelease = releaseTracks?.some(track => {
-            const releaseDate = track.status === 'upcoming' 
-              ? track.release_date 
-              : (track.target_release_date || track.release_date)
-            if (!releaseDate) return false
-            const date = new Date(releaseDate)
-            return date >= month3Start && date < month3End
-          }) || false
-          
+          const month1HasRelease =
+            releaseTracks?.some(track => {
+              const releaseDate =
+                track.status === 'upcoming'
+                  ? track.release_date
+                  : track.target_release_date || track.release_date
+              if (!releaseDate) return false
+              const date = new Date(releaseDate)
+              return date >= month1Start && date < month1End
+            }) || false
+
+          const month2HasRelease =
+            releaseTracks?.some(track => {
+              const releaseDate =
+                track.status === 'upcoming'
+                  ? track.release_date
+                  : track.target_release_date || track.release_date
+              if (!releaseDate) return false
+              const date = new Date(releaseDate)
+              return date >= month2Start && date < month2End
+            }) || false
+
+          const month3HasRelease =
+            releaseTracks?.some(track => {
+              const releaseDate =
+                track.status === 'upcoming'
+                  ? track.release_date
+                  : track.target_release_date || track.release_date
+              if (!releaseDate) return false
+              const date = new Date(releaseDate)
+              return date >= month3Start && date < month3End
+            }) || false
+
           // Critical gap = 2+ months with no releases
-          const gapCount = [month1HasRelease, month2HasRelease, month3HasRelease].filter(hasRelease => !hasRelease).length
+          const gapCount = [month1HasRelease, month2HasRelease, month3HasRelease].filter(
+            hasRelease => !hasRelease
+          ).length
           const hasCriticalGap = gapCount >= 2
 
           // Calculate cognitive load for this label (for current user)
           const loadCheckNow = new Date()
-          const loadCheckToday = new Date(loadCheckNow.getFullYear(), loadCheckNow.getMonth(), loadCheckNow.getDate())
+          const loadCheckToday = new Date(
+            loadCheckNow.getFullYear(),
+            loadCheckNow.getMonth(),
+            loadCheckNow.getDate()
+          )
           const weekAgo = new Date(loadCheckToday.getTime() - 7 * 24 * 60 * 60 * 1000)
           const monthAgo = new Date(loadCheckToday.getTime() - 30 * 24 * 60 * 60 * 1000)
 
@@ -318,9 +363,10 @@ const Launchpad = () => {
           // Calculate status
           const EXPECTATION_CAP = 60
           const effectiveWeeklyListens = Math.min(weeklyCount || 0, EXPECTATION_CAP * 7)
-          const weeklyPercentage = (weeklyDemoCount || 0) > 0 
-            ? (effectiveWeeklyListens / (weeklyDemoCount || 1)) * 100 
-            : 100
+          const weeklyPercentage =
+            (weeklyDemoCount || 0) > 0
+              ? (effectiveWeeklyListens / (weeklyDemoCount || 1)) * 100
+              : 100
 
           let status = 'Optimal'
           let color = 'green'
@@ -342,7 +388,7 @@ const Launchpad = () => {
             weeklyDemos: weeklyDemoCount || 0,
             percentage: weeklyPercentage,
           }
-          
+
           // Store gap status
           labelGaps[membership.organization_id] = hasCriticalGap
         } catch (error) {
@@ -382,14 +428,17 @@ const Launchpad = () => {
     setInvitesLoading(true)
     try {
       // Get user's email from auth
-      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
-      
+      const {
+        data: { user: authUser },
+        error: authError,
+      } = await supabase.auth.getUser()
+
       if (authError) {
         console.error('Error getting auth user:', authError)
         setInvitesLoading(false)
         return
       }
-      
+
       if (!authUser?.email) {
         console.log('⚠️ No email found for user')
         setInvitesLoading(false)
@@ -406,11 +455,11 @@ const Launchpad = () => {
         .from('invites')
         .select('id, email')
         .limit(1)
-      
+
       console.log('🔍 RLS test result:', {
         canAccess: !rlsError,
         error: rlsError?.message,
-        foundAny: rlsTest?.length > 0
+        foundAny: rlsTest?.length > 0,
       })
 
       // Query pending invites for this email
@@ -418,19 +467,21 @@ const Launchpad = () => {
       console.log('🔍 Step 2: Querying invites with email filter...')
       let { data, error } = await supabase
         .from('invites')
-        .select(`
+        .select(
+          `
           *,
           organizations (
             id,
             name,
             slug
           )
-        `)
+        `
+        )
         .eq('email', userEmail) // Explicit email filter
         .is('accepted_at', null)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
-      
+
       // If that worked, try to get the inviter info separately
       if (data && data.length > 0 && !error) {
         console.log('🔍 Step 3: Fetching inviter details...')
@@ -440,38 +491,41 @@ const Launchpad = () => {
             .from('staff_members')
             .select('id, name')
             .in('id', inviteIds)
-          
+
           // Merge inviter info into invites
           if (inviters) {
             const inviterMap = new Map(inviters.map(inv => [inv.id, inv]))
             data = data.map(inv => ({
               ...inv,
-              staff_members: inv.invited_by ? inviterMap.get(inv.invited_by) : null
+              staff_members: inv.invited_by ? inviterMap.get(inv.invited_by) : null,
             }))
           }
         }
       }
-      
+
       console.log('📋 Final invite query result:', {
         userEmail,
         authEmail: authUser.email,
         invitesFound: data?.length || 0,
-        error: error ? {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        } : null,
-        invites: data?.map(inv => ({ 
-          id: inv.id, 
-          email: inv.email, 
-          emailMatch: inv.email?.toLowerCase().trim() === userEmail,
-          org: inv.organizations?.name,
-          role: inv.role,
-          accepted: inv.accepted_at,
-          expires: inv.expires_at,
-          expiresInFuture: inv.expires_at ? new Date(inv.expires_at) > new Date() : false
-        })) || []
+        error: error
+          ? {
+              code: error.code,
+              message: error.message,
+              details: error.details,
+              hint: error.hint,
+            }
+          : null,
+        invites:
+          data?.map(inv => ({
+            id: inv.id,
+            email: inv.email,
+            emailMatch: inv.email?.toLowerCase().trim() === userEmail,
+            org: inv.organizations?.name,
+            role: inv.role,
+            accepted: inv.accepted_at,
+            expires: inv.expires_at,
+            expiresInFuture: inv.expires_at ? new Date(inv.expires_at) > new Date() : false,
+          })) || [],
       })
 
       if (error) {
@@ -480,13 +534,19 @@ const Launchpad = () => {
           code: error.code,
           message: error.message,
           details: error.details,
-          hint: error.hint
+          hint: error.hint,
         })
-        
+
         // If it's an RLS error, log it specifically
-        if (error.code === '42501' || error.message?.includes('permission denied') || error.message?.includes('RLS')) {
+        if (
+          error.code === '42501' ||
+          error.message?.includes('permission denied') ||
+          error.message?.includes('RLS')
+        ) {
           console.error('⚠️ RLS policy might be blocking invite access')
-          console.error('💡 Check that the RLS policy "Users can view their invites" is correctly configured')
+          console.error(
+            '💡 Check that the RLS policy "Users can view their invites" is correctly configured'
+          )
           console.error('💡 Run fix-invite-rls-case-insensitive.sql to fix case sensitivity issues')
         }
         setInvitesLoading(false)
@@ -495,7 +555,10 @@ const Launchpad = () => {
 
       console.log(`✅ Found ${(data || []).length} pending invite(s) for ${userEmail}`)
       if (data && data.length > 0) {
-        console.log('Invites:', data.map(inv => ({ id: inv.id, org: inv.organizations?.name, email: inv.email })))
+        console.log(
+          'Invites:',
+          data.map(inv => ({ id: inv.id, org: inv.organizations?.name, email: inv.email }))
+        )
       } else {
         console.log('ℹ️ No pending invites found')
       }
@@ -510,25 +573,26 @@ const Launchpad = () => {
   // Load invites when user/staffProfile becomes available
   useEffect(() => {
     loadPendingInvites()
-    
+
     // Set up real-time subscription for invite changes
     let invitesChannel = null
     if (supabase && user && staffProfile) {
       invitesChannel = supabase
         .channel('invites-changes')
-        .on('postgres_changes', 
-          { 
-            event: '*', 
-            schema: 'public', 
-            table: 'invites'
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'invites',
           },
-          (payload) => {
+          payload => {
             console.log('📬 Invite change detected:', payload.eventType, payload.new || payload.old)
             // Reload invites when any invite changes (RLS will filter to user's invites)
             loadPendingInvites()
           }
         )
-        .subscribe((status) => {
+        .subscribe(status => {
           if (status === 'SUBSCRIBED') {
             console.log('✅ Subscribed to invite changes')
           } else if (status === 'CHANNEL_ERROR') {
@@ -587,13 +651,13 @@ const Launchpad = () => {
     const checkAccess = async () => {
       // Check system admin status with fallback - check both isSystemAdmin and staffProfile.role
       const userIsSystemAdmin = Boolean(isSystemAdmin || staffProfile?.role === 'SystemAdmin')
-      
+
       // System admins always have access to everything
       if (userIsSystemAdmin) {
         setHasPersonalInboxAccess(true)
         return
       }
-      
+
       if (activeOrgId === null && staffProfile) {
         // Personal view - check if user has personal inbox feature
         const access = await hasFeature('personal_inbox')
@@ -620,7 +684,8 @@ const Launchpad = () => {
         // Load all personal inbox tracks
         const { data, error } = await supabase
           .from('tracks')
-          .select(`
+          .select(
+            `
             *,
             artists (
               name
@@ -629,7 +694,8 @@ const Launchpad = () => {
               id,
               name
             )
-          `)
+          `
+          )
           .eq('recipient_user_id', staffProfile.id)
           .is('organization_id', null)
           .eq('archived', false)
@@ -659,11 +725,44 @@ const Launchpad = () => {
         }))
 
         // Separate into crates (exclude pitched and signed tracks)
-        setSubmissionsTracks(transformedTracks.filter(t => t.source === 'public_form' && !t.peer_to_peer && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-        setNetworkTracks(transformedTracks.filter(t => (t.crate === 'network' || t.peer_to_peer) && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-        setCrateATracks(transformedTracks.filter(t => t.crate === 'crate_a' && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-        setCrateBTracks(transformedTracks.filter(t => t.crate === 'crate_b' && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-        
+        setSubmissionsTracks(
+          transformedTracks.filter(
+            t =>
+              t.source === 'public_form' &&
+              !t.peer_to_peer &&
+              t.crate !== 'pitched' &&
+              t.crate !== 'signed' &&
+              !t.contractSigned
+          )
+        )
+        setNetworkTracks(
+          transformedTracks.filter(
+            t =>
+              (t.crate === 'network' || t.peer_to_peer) &&
+              t.crate !== 'pitched' &&
+              t.crate !== 'signed' &&
+              !t.contractSigned
+          )
+        )
+        setCrateATracks(
+          transformedTracks.filter(
+            t =>
+              t.crate === 'crate_a' &&
+              t.crate !== 'pitched' &&
+              t.crate !== 'signed' &&
+              !t.contractSigned
+          )
+        )
+        setCrateBTracks(
+          transformedTracks.filter(
+            t =>
+              t.crate === 'crate_b' &&
+              t.crate !== 'pitched' &&
+              t.crate !== 'signed' &&
+              !t.contractSigned
+          )
+        )
+
         // Keep personalInboxTracks for backward compatibility
         setPersonalInboxTracks(transformedTracks)
       } catch (error) {
@@ -689,7 +788,8 @@ const Launchpad = () => {
       try {
         const { data, error } = await supabase
           .from('connections')
-          .select(`
+          .select(
+            `
             *,
             requester:staff_members!connections_requester_id_fkey (
               id,
@@ -699,7 +799,8 @@ const Launchpad = () => {
               id,
               name
             )
-          `)
+          `
+          )
           .or(`requester_id.eq.${staffProfile.id},recipient_id.eq.${staffProfile.id}`)
           .eq('status', 'accepted')
 
@@ -773,10 +874,11 @@ const Launchpad = () => {
 
       try {
         const orgIds = memberships.map(m => m.organization_id)
-        
+
         const { data, error } = await supabase
           .from('tracks')
-          .select(`
+          .select(
+            `
             *,
             artists (
               name
@@ -785,7 +887,8 @@ const Launchpad = () => {
               id,
               name
             )
-          `)
+          `
+          )
           .in('organization_id', orgIds)
           .eq('is_close_eye', true)
           .eq('archived', false)
@@ -823,28 +926,34 @@ const Launchpad = () => {
   // Get current crate tracks based on activeCrate
   const currentCrateTracks = useMemo(() => {
     switch (activeCrate) {
-      case 'submissions': return submissionsTracks
-      case 'network': return networkTracks
-      case 'crate_a': return crateATracks
-      case 'crate_b': return crateBTracks
-      default: return submissionsTracks
+      case 'submissions':
+        return submissionsTracks
+      case 'network':
+        return networkTracks
+      case 'crate_a':
+        return crateATracks
+      case 'crate_b':
+        return crateBTracks
+      default:
+        return submissionsTracks
     }
   }, [activeCrate, submissionsTracks, networkTracks, crateATracks, crateBTracks])
 
   // Filter tracks based on search query
   const filteredPersonalTracks = useMemo(() => {
     if (!searchQuery.trim()) return currentCrateTracks
-    
+
     const query = searchQuery.toLowerCase()
-    return currentCrateTracks.filter(track => 
-      track.title.toLowerCase().includes(query) ||
-      track.artist.toLowerCase().includes(query) ||
-      track.genre?.toLowerCase().includes(query)
+    return currentCrateTracks.filter(
+      track =>
+        track.title.toLowerCase().includes(query) ||
+        track.artist.toLowerCase().includes(query) ||
+        track.genre?.toLowerCase().includes(query)
     )
   }, [currentCrateTracks, searchQuery])
 
   // Search for agents in network
-  const searchNetwork = async (query) => {
+  const searchNetwork = async query => {
     if (!supabase || !staffProfile || !query.trim()) {
       setNetworkSearchResults([])
       return
@@ -862,9 +971,7 @@ const Launchpad = () => {
 
       // Filter out already connected agents
       const connectedIds = new Set(
-        connections.map(c => 
-          c.requester_id === staffProfile.id ? c.recipient_id : c.requester_id
-        )
+        connections.map(c => (c.requester_id === staffProfile.id ? c.recipient_id : c.requester_id))
       )
 
       const filtered = (data || []).filter(agent => !connectedIds.has(agent.id))
@@ -888,12 +995,12 @@ const Launchpad = () => {
   }, [networkSearchQuery])
 
   // Connect to agent
-  const handleConnect = async (agentId) => {
+  const handleConnect = async agentId => {
     if (!supabase || !staffProfile) return
 
     try {
       const { error } = await supabase.rpc('create_connection_request', {
-        recipient_staff_id: agentId
+        recipient_staff_id: agentId,
       })
 
       if (error) throw error
@@ -931,7 +1038,7 @@ const Launchpad = () => {
     try {
       const { error } = await supabase.rpc('send_track_to_peer', {
         track_id_param: trackId,
-        recipient_staff_id: recipientId
+        recipient_staff_id: recipientId,
       })
 
       if (error) throw error
@@ -943,7 +1050,7 @@ const Launchpad = () => {
       })
 
       setShowSendToPeerModal({ isOpen: false, track: null })
-      
+
       // Reload network tracks
       const { data } = await supabase
         .from('tracks')
@@ -972,7 +1079,15 @@ const Launchpad = () => {
         contractSigned: track.contract_signed || false,
       }))
 
-      setNetworkTracks(transformedTracks.filter(t => (t.crate === 'network' || t.peer_to_peer) && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
+      setNetworkTracks(
+        transformedTracks.filter(
+          t =>
+            (t.crate === 'network' || t.peer_to_peer) &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
     } catch (error) {
       console.error('Error sending track to peer:', error)
       setToast({
@@ -984,7 +1099,7 @@ const Launchpad = () => {
   }
 
   // Handle pitching track
-  const handlePitchTrack = async (trackId) => {
+  const handlePitchTrack = async trackId => {
     if (!supabase || !staffProfile) return
 
     try {
@@ -1007,7 +1122,8 @@ const Launchpad = () => {
       // Reload quad-inbox crates
       const { data } = await supabase
         .from('tracks')
-        .select(`
+        .select(
+          `
           *,
           artists (
             name
@@ -1016,7 +1132,8 @@ const Launchpad = () => {
             id,
             name
           )
-        `)
+        `
+        )
         .eq('recipient_user_id', staffProfile.id)
         .is('organization_id', null)
         .eq('archived', false)
@@ -1042,10 +1159,43 @@ const Launchpad = () => {
         contractSigned: track.contract_signed || false,
       }))
 
-      setSubmissionsTracks(transformedTracks.filter(t => t.source === 'public_form' && !t.peer_to_peer && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setNetworkTracks(transformedTracks.filter(t => (t.crate === 'network' || t.peer_to_peer) && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setCrateATracks(transformedTracks.filter(t => t.crate === 'crate_a' && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setCrateBTracks(transformedTracks.filter(t => t.crate === 'crate_b' && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
+      setSubmissionsTracks(
+        transformedTracks.filter(
+          t =>
+            t.source === 'public_form' &&
+            !t.peer_to_peer &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setNetworkTracks(
+        transformedTracks.filter(
+          t =>
+            (t.crate === 'network' || t.peer_to_peer) &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setCrateATracks(
+        transformedTracks.filter(
+          t =>
+            t.crate === 'crate_a' &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setCrateBTracks(
+        transformedTracks.filter(
+          t =>
+            t.crate === 'crate_b' &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
       setPersonalInboxTracks(transformedTracks)
     } catch (error) {
       console.error('Error pitching track:', error)
@@ -1062,10 +1212,7 @@ const Launchpad = () => {
     if (!supabase) return
 
     try {
-      const { error } = await supabase
-        .from('tracks')
-        .update({ crate })
-        .eq('id', trackId)
+      const { error } = await supabase.from('tracks').update({ crate }).eq('id', trackId)
 
       if (error) throw error
 
@@ -1097,10 +1244,43 @@ const Launchpad = () => {
         contractSigned: track.contract_signed || false,
       }))
 
-      setSubmissionsTracks(transformedTracks.filter(t => t.source === 'public_form' && !t.peer_to_peer && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setNetworkTracks(transformedTracks.filter(t => (t.crate === 'network' || t.peer_to_peer) && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setCrateATracks(transformedTracks.filter(t => t.crate === 'crate_a' && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setCrateBTracks(transformedTracks.filter(t => t.crate === 'crate_b' && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
+      setSubmissionsTracks(
+        transformedTracks.filter(
+          t =>
+            t.source === 'public_form' &&
+            !t.peer_to_peer &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setNetworkTracks(
+        transformedTracks.filter(
+          t =>
+            (t.crate === 'network' || t.peer_to_peer) &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setCrateATracks(
+        transformedTracks.filter(
+          t =>
+            t.crate === 'crate_a' &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setCrateBTracks(
+        transformedTracks.filter(
+          t =>
+            t.crate === 'crate_b' &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
     } catch (error) {
       console.error('Error moving track to crate:', error)
       setToast({
@@ -1111,7 +1291,7 @@ const Launchpad = () => {
     }
   }
 
-  const generateSlug = (name) => {
+  const generateSlug = name => {
     return name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
@@ -1119,17 +1299,17 @@ const Launchpad = () => {
       .substring(0, 50)
   }
 
-  const handleLabelNameChange = (value) => {
+  const handleLabelNameChange = value => {
     setLabelName(value)
     if (value) {
       setLabelSlug(generateSlug(value))
     }
   }
 
-  const handleEnterWorkspace = async (orgId) => {
+  const handleEnterWorkspace = async orgId => {
     try {
       const result = await switchOrganization(orgId)
-      
+
       if (result?.error) {
         console.error('Error switching organization:', result.error)
         setToast({
@@ -1139,12 +1319,12 @@ const Launchpad = () => {
         })
         return
       }
-      
+
       // Force reload tracks for the new organization
       if (loadTracks) {
         await loadTracks()
       }
-      
+
       // Navigate to label workspace (URL drives activeOrganizationId)
       navigate(`/labels/${orgId}`)
     } catch (error) {
@@ -1164,10 +1344,9 @@ const Launchpad = () => {
 
     try {
       // Check ownership limit before creating label
-      const { data: capacityData, error: capacityError } = await supabase
-        .rpc('can_create_label', {
-          user_id_param: staffProfile.id
-        })
+      const { data: capacityData, error: capacityError } = await supabase.rpc('can_create_label', {
+        user_id_param: staffProfile.id,
+      })
 
       if (capacityError) {
         console.error('Error checking ownership limit:', capacityError)
@@ -1211,13 +1390,12 @@ const Launchpad = () => {
       }
 
       // Create membership using SECURITY DEFINER function (bypasses RLS)
-      const { error: membershipError } = await supabase
-        .rpc('create_membership', {
-          user_id_param: staffProfile.id,
-          organization_id_param: orgData.id,
-          role_param: 'Owner',
-          permissions_json_param: defaultPermissions,
-        })
+      const { error: membershipError } = await supabase.rpc('create_membership', {
+        user_id_param: staffProfile.id,
+        organization_id_param: orgData.id,
+        role_param: 'Owner',
+        permissions_json_param: defaultPermissions,
+      })
 
       if (membershipError) throw membershipError
 
@@ -1250,17 +1428,19 @@ const Launchpad = () => {
     }
   }
 
-  const handleAcceptInvite = async (invite) => {
+  const handleAcceptInvite = async invite => {
     if (!supabase || !staffProfile || processingInvite) return
 
     setProcessingInvite(invite.id)
 
     try {
       // Check staff invitation limit for Free tier users
-      const { data: capacityData, error: capacityError } = await supabase
-        .rpc('can_accept_staff_invitation', {
-          user_id_param: staffProfile.id
-        })
+      const { data: capacityData, error: capacityError } = await supabase.rpc(
+        'can_accept_staff_invitation',
+        {
+          user_id_param: staffProfile.id,
+        }
+      )
 
       if (capacityError) {
         console.error('Error checking staff limit:', capacityError)
@@ -1279,7 +1459,7 @@ const Launchpad = () => {
 
       const { data, error } = await supabase.rpc('accept_invite', {
         invite_token: invite.token,
-        user_id_param: staffProfile.id
+        user_id_param: staffProfile.id,
       })
 
       if (error) throw error
@@ -1314,7 +1494,7 @@ const Launchpad = () => {
     }
   }
 
-  const handleDeclineInvite = async (invite) => {
+  const handleDeclineInvite = async invite => {
     if (!supabase || processingInvite) return
 
     setProcessingInvite(invite.id)
@@ -1325,7 +1505,7 @@ const Launchpad = () => {
       // Actually, we'll just remove it from the UI since users can't delete invites
       // The invite will expire naturally
       setPendingInvites(prev => prev.filter(inv => inv.id !== invite.id))
-      
+
       setToast({
         isVisible: true,
         message: 'Invite dismissed',
@@ -1368,11 +1548,12 @@ const Launchpad = () => {
       })
 
       setShowMoveToLabelModal({ isOpen: false, track: null })
-      
+
       // Reload quad-inbox crates
       const { data } = await supabase
         .from('tracks')
-        .select(`
+        .select(
+          `
           *,
           artists (
             name
@@ -1381,7 +1562,8 @@ const Launchpad = () => {
             id,
             name
           )
-        `)
+        `
+        )
         .eq('recipient_user_id', staffProfile.id)
         .is('organization_id', null)
         .eq('archived', false)
@@ -1408,10 +1590,43 @@ const Launchpad = () => {
       }))
 
       // Update all crates (exclude pitched and signed tracks)
-      setSubmissionsTracks(transformedTracks.filter(t => t.source === 'public_form' && !t.peer_to_peer && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setNetworkTracks(transformedTracks.filter(t => (t.crate === 'network' || t.peer_to_peer) && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setCrateATracks(transformedTracks.filter(t => t.crate === 'crate_a' && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setCrateBTracks(transformedTracks.filter(t => t.crate === 'crate_b' && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
+      setSubmissionsTracks(
+        transformedTracks.filter(
+          t =>
+            t.source === 'public_form' &&
+            !t.peer_to_peer &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setNetworkTracks(
+        transformedTracks.filter(
+          t =>
+            (t.crate === 'network' || t.peer_to_peer) &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setCrateATracks(
+        transformedTracks.filter(
+          t =>
+            t.crate === 'crate_a' &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setCrateBTracks(
+        transformedTracks.filter(
+          t =>
+            t.crate === 'crate_b' &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
       setPersonalInboxTracks(transformedTracks)
     } catch (error) {
       console.error('Error moving track to label:', error)
@@ -1443,9 +1658,9 @@ const Launchpad = () => {
       return {}
     }
   }, [upcomingEvents])
-  
+
   // Get type color (matching Calendar page)
-  const getTypeColor = (type) => {
+  const getTypeColor = type => {
     switch (type) {
       case 'upcoming':
         return 'bg-green-500/20 text-green-400 border-green-500/50'
@@ -1464,7 +1679,7 @@ const Launchpad = () => {
       const days = []
       const today = new Date()
       today.setHours(0, 0, 0, 0)
-      
+
       for (let i = 0; i < 7; i++) {
         const date = new Date(today)
         date.setDate(date.getDate() + i)
@@ -1505,15 +1720,15 @@ const Launchpad = () => {
       <div className="w-full px-4 sm:px-6 lg:px-10 flex-shrink-0">
         {/* Usage Warning Banner */}
         <UsageWarningBanner />
-        
+
         {/* Pending Invites Notification */}
         {pendingInvites.length > 0 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-3 space-y-2"
           >
-            {pendingInvites.map((invite) => (
+            {pendingInvites.map(invite => (
               <motion.div
                 key={invite.id}
                 initial={{ opacity: 0, y: -10 }}
@@ -1526,12 +1741,19 @@ const Launchpad = () => {
                   </div>
                   <div className="flex-1">
                     <p className="text-white font-semibold">
-                      You've been invited to join <span className="text-purple-400">{invite.organizations?.name || 'a label'}</span>
+                      You've been invited to join{' '}
+                      <span className="text-purple-400">
+                        {invite.organizations?.name || 'a label'}
+                      </span>
                     </p>
                     <p className="text-gray-400 text-sm">
                       Role: <span className="text-gray-300">{invite.role}</span>
                       {invite.staff_members?.name && (
-                        <> • Invited by <span className="text-gray-300">{invite.staff_members.name}</span></>
+                        <>
+                          {' '}
+                          • Invited by{' '}
+                          <span className="text-gray-300">{invite.staff_members.name}</span>
+                        </>
                       )}
                     </p>
                   </div>
@@ -1571,7 +1793,7 @@ const Launchpad = () => {
             ))}
           </motion.div>
         )}
-        
+
         {/* Debug info - remove in production */}
         {import.meta.env.DEV && (
           <div className="mb-2 text-xs text-gray-600">
@@ -1600,7 +1822,7 @@ const Launchpad = () => {
             />
             <motion.button
               type="button"
-              onClick={(e) => {
+              onClick={e => {
                 e.preventDefault()
                 setShowGlobalSettings(true)
               }}
@@ -1618,7 +1840,7 @@ const Launchpad = () => {
             </motion.button>
             <motion.button
               type="button"
-              onClick={(e) => {
+              onClick={e => {
                 e.preventDefault()
                 signOut()
               }}
@@ -1637,10 +1859,12 @@ const Launchpad = () => {
           <div className="mb-4">
             <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
               <h2 className="text-xl font-bold text-white mb-2">
-                Welcome{staffProfile?.name ? `, ${staffProfile.name}` : ''}. Create your first label.
+                Welcome{staffProfile?.name ? `, ${staffProfile.name}` : ''}. Create your first
+                label.
               </h2>
               <p className="text-gray-400 text-sm mb-4">
-                You’re signed in, but you don’t belong to any labels yet. Create one now, or accept an invite if you have one.
+                You’re signed in, but you don’t belong to any labels yet. Create one now, or accept
+                an invite if you have one.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
@@ -1670,7 +1894,10 @@ const Launchpad = () => {
         {/* Main Layout: Sidebar + Content */}
         <div className="flex flex-col lg:flex-row gap-2 items-start w-full">
           {/* Main Content Column - Independent Height */}
-          <div className="flex-1 flex flex-col w-full" style={{ height: 'fit-content', minWidth: 0 }}>
+          <div
+            className="flex-1 flex flex-col w-full"
+            style={{ height: 'fit-content', minWidth: 0 }}
+          >
             {/* Network Search */}
             <div className="mb-2">
               <div className="flex items-center gap-2">
@@ -1682,43 +1909,48 @@ const Launchpad = () => {
                   <input
                     type="text"
                     value={networkSearchQuery}
-                    onChange={(e) => setNetworkSearchQuery(e.target.value)}
+                    onChange={e => setNetworkSearchQuery(e.target.value)}
                     onFocus={() => setShowNetworkSearch(true)}
                     onBlur={() => setTimeout(() => setShowNetworkSearch(false), 200)}
                     placeholder="Find Agents..."
                     className="w-full pl-9 pr-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-gray-600 focus:ring-1 focus:ring-gray-600 transition-all"
                   />
-                  {showNetworkSearch && (networkSearchResults.length > 0 || networkSearchQuery.trim()) && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-gray-800 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto">
-                      {networkSearchResults.length > 0 ? (
-                        networkSearchResults.map((agent) => (
-                          <button
-                            key={agent.id}
-                            onClick={() => handleConnect(agent.id)}
-                            className="w-full px-3 py-2 text-left hover:bg-gray-800 border-b border-gray-800 last:border-0 flex items-center gap-2"
-                          >
-                            <Users size={14} className="text-gray-400" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-white text-sm font-medium truncate">{agent.name}</p>
-                              {agent.organization_name && (
-                                <p className="text-gray-500 text-xs truncate">{agent.organization_name}</p>
-                              )}
-                            </div>
-                            <Plus size={14} className="text-gray-400 flex-shrink-0" />
-                          </button>
-                        ))
-                      ) : (
-                        <div className="px-3 py-2 text-gray-500 text-sm">No agents found</div>
-                      )}
-                    </div>
-                  )}
+                  {showNetworkSearch &&
+                    (networkSearchResults.length > 0 || networkSearchQuery.trim()) && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-gray-800 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto">
+                        {networkSearchResults.length > 0 ? (
+                          networkSearchResults.map(agent => (
+                            <button
+                              key={agent.id}
+                              onClick={() => handleConnect(agent.id)}
+                              className="w-full px-3 py-2 text-left hover:bg-gray-800 border-b border-gray-800 last:border-0 flex items-center gap-2"
+                            >
+                              <Users size={14} className="text-gray-400" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-sm font-medium truncate">
+                                  {agent.name}
+                                </p>
+                                {agent.organization_name && (
+                                  <p className="text-gray-500 text-xs truncate">
+                                    {agent.organization_name}
+                                  </p>
+                                )}
+                              </div>
+                              <Plus size={14} className="text-gray-400 flex-shrink-0" />
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-3 py-2 text-gray-500 text-sm">No agents found</div>
+                        )}
+                      </div>
+                    )}
                 </div>
-                
+
                 {/* Network Menu Button */}
                 <div className="relative">
                   <motion.button
                     type="button"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault()
                       setShowNetworkMenu(!showNetworkMenu)
                     }}
@@ -1730,12 +1962,12 @@ const Launchpad = () => {
                     <Menu size={16} />
                     <span className="text-sm">Your Network</span>
                   </motion.button>
-                  
+
                   {/* Network Menu Dropdown */}
                   {showNetworkMenu && (
                     <>
-                      <div 
-                        className="fixed inset-0 z-40" 
+                      <div
+                        className="fixed inset-0 z-40"
                         onClick={() => setShowNetworkMenu(false)}
                       />
                       <motion.div
@@ -1748,13 +1980,14 @@ const Launchpad = () => {
                             <h3 className="text-lg font-semibold text-white">Your Network</h3>
                             {connections.length > 0 && (
                               <span className="px-2 py-0.5 bg-gray-800 text-gray-300 rounded text-xs font-semibold">
-                                {connections.length} {connections.length === 1 ? 'connection' : 'connections'}
+                                {connections.length}{' '}
+                                {connections.length === 1 ? 'connection' : 'connections'}
                               </span>
                             )}
                           </div>
                           <button
                             type="button"
-                            onClick={(e) => {
+                            onClick={e => {
                               e.preventDefault()
                               setShowNetworkMenu(false)
                             }}
@@ -1766,10 +1999,11 @@ const Launchpad = () => {
                         <div className="flex-1 overflow-y-auto">
                           {connections.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3">
-                              {connections.map((connection) => {
-                                const peer = connection.requester_id === staffProfile.id 
-                                  ? connection.recipient 
-                                  : connection.requester
+                              {connections.map(connection => {
+                                const peer =
+                                  connection.requester_id === staffProfile.id
+                                    ? connection.recipient
+                                    : connection.requester
                                 return (
                                   <div
                                     key={connection.id}
@@ -1783,9 +2017,13 @@ const Launchpad = () => {
                                       <Users size={18} className="text-gray-400" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-white text-sm font-medium truncate">{peer?.name || 'Unknown'}</p>
+                                      <p className="text-white text-sm font-medium truncate">
+                                        {peer?.name || 'Unknown'}
+                                      </p>
                                       {peer?.organization_name && (
-                                        <p className="text-gray-500 text-xs truncate">{peer.organization_name}</p>
+                                        <p className="text-gray-500 text-xs truncate">
+                                          {peer.organization_name}
+                                        </p>
                                       )}
                                     </div>
                                   </div>
@@ -1797,7 +2035,9 @@ const Launchpad = () => {
                               <div>
                                 <Users size={32} className="text-gray-600 mx-auto mb-3" />
                                 <p className="text-gray-500 text-sm">No connections yet</p>
-                                <p className="text-gray-600 text-xs mt-1">Search for agents to connect</p>
+                                <p className="text-gray-600 text-xs mt-1">
+                                  Search for agents to connect
+                                </p>
                               </div>
                             </div>
                           )}
@@ -1813,7 +2053,10 @@ const Launchpad = () => {
             {isSystemAdmin && (
               <div className="mb-3" style={{ height: 'fit-content' }}>
                 <h2 className="text-lg font-bold text-white mb-3">System Administration</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2" style={{ gridAutoRows: 'minmax(200px, auto)' }}>
+                <div
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2"
+                  style={{ gridAutoRows: 'minmax(200px, auto)' }}
+                >
                   {/* Admin Dashboard Card */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -1828,11 +2071,18 @@ const Launchpad = () => {
                         <Building2 size={20} className="text-purple-400" />
                       </div>
                     </div>
-                    <h3 className="text-white font-semibold mb-1 group-hover:text-purple-400 transition-colors">Admin Dashboard</h3>
-                    <p className="text-gray-400 text-xs mb-3 flex-1">Manage organizations, subscriptions, and monitor system health</p>
+                    <h3 className="text-white font-semibold mb-1 group-hover:text-purple-400 transition-colors">
+                      Admin Dashboard
+                    </h3>
+                    <p className="text-gray-400 text-xs mb-3 flex-1">
+                      Manage organizations, subscriptions, and monitor system health
+                    </p>
                     <div className="flex items-center gap-1 text-purple-400 text-xs font-medium mt-auto">
                       <span>Open Dashboard</span>
-                      <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight
+                        size={14}
+                        className="group-hover:translate-x-1 transition-transform"
+                      />
                     </div>
                   </motion.div>
 
@@ -1850,11 +2100,18 @@ const Launchpad = () => {
                         <Activity size={20} className="text-blue-400" />
                       </div>
                     </div>
-                    <h3 className="text-white font-semibold mb-1 group-hover:text-blue-400 transition-colors">Global Pulse</h3>
-                    <p className="text-gray-400 text-xs mb-3 flex-1">System-wide analytics and real-time monitoring across all organizations</p>
+                    <h3 className="text-white font-semibold mb-1 group-hover:text-blue-400 transition-colors">
+                      Global Pulse
+                    </h3>
+                    <p className="text-gray-400 text-xs mb-3 flex-1">
+                      System-wide analytics and real-time monitoring across all organizations
+                    </p>
                     <div className="flex items-center gap-1 text-blue-400 text-xs font-medium mt-auto">
                       <span>View Pulse</span>
-                      <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight
+                        size={14}
+                        className="group-hover:translate-x-1 transition-transform"
+                      />
                     </div>
                   </motion.div>
                 </div>
@@ -1864,153 +2121,76 @@ const Launchpad = () => {
             {/* Label Cards Grid */}
             {memberships && memberships.length > 0 && (
               <div className="mb-3" style={{ height: 'fit-content' }}>
-            <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-lg font-bold text-white">Your Labels</h2>
-              <motion.button
-                onClick={() => setShowCreateLabelModal(true)}
-                className="p-1.5 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded-lg text-gray-300 transition-all flex items-center justify-center"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                title="Create New Label"
-              >
-                <Plus size={16} />
-              </motion.button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2" style={{ gridAutoRows: 'minmax(280px, auto)' }}>
-              {/* Personal Office Tile - First */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-br from-purple-900/30 to-blue-900/30 rounded-lg p-3 hover:border-purple-500/60 transition-all cursor-pointer group backdrop-blur-sm h-full flex flex-col border-2 border-purple-500/40"
-                onClick={async () => {
-                  // WORKSPACE CLEARANCE: Explicitly clear activeOrgId before navigating to Personal Office
-                  clearWorkspace()
-                  localStorage.removeItem('active_org_id')
-                  // Personal Office at /personal/dashboard (URL drives activeOrgId = null)
-                  navigate('/personal/dashboard')
-                }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center border border-purple-500/30 flex-shrink-0">
-                    <Inbox size={20} className="text-purple-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-bold text-white break-words leading-tight">Personal Office</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">Your Workspace</p>
-                  </div>
+                <div className="flex items-center gap-2 mb-3">
+                  <h2 className="text-lg font-bold text-white">Your Labels</h2>
+                  <motion.button
+                    onClick={() => setShowCreateLabelModal(true)}
+                    className="p-1.5 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded-lg text-gray-300 transition-all flex items-center justify-center"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="Create New Label"
+                  >
+                    <Plus size={16} />
+                  </motion.button>
                 </div>
-
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  <div className="bg-gray-900/30 rounded-lg p-2 border border-gray-800">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <Radio size={12} className="text-gray-500" />
-                      <span className="text-xs text-gray-500">Subs</span>
-                    </div>
-                    <p className="text-xl font-bold text-white">{submissionsTracks.length}</p>
-                  </div>
-                  <div className="bg-gray-900/30 rounded-lg p-2 border border-gray-800">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <Users size={12} className="text-gray-500" />
-                      <span className="text-xs text-gray-500">Net</span>
-                    </div>
-                    <p className="text-xl font-bold text-white">{networkTracks.length}</p>
-                  </div>
-                </div>
-
-                {/* Total Tracks Info */}
-                <div className="mb-2 flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
-                  <span className="text-xs font-semibold text-purple-400">
-                    Active
-                  </span>
-                  <span className="text-xs text-gray-600 ml-auto">
-                    {submissionsTracks.length + networkTracks.length + crateATracks.length + crateBTracks.length} total
-                  </span>
-                </div>
-
-                <button className="mt-auto w-full py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-white text-sm font-semibold transition-all flex items-center justify-center gap-2">
-                  <span>Enter</span>
-                  <ArrowRight size={14} />
-                </button>
-              </motion.div>
-
-              {memberships.map((membership) => {
-                const stats = labelStats[membership.organization_id] || { inboxCount: 0, notificationsCount: 0 }
-                const cognitiveLoad = labelCognitiveLoad[membership.organization_id] || { 
-                  status: 'Optimal', 
-                  color: 'green',
-                  weeklyListens: 0,
-                  weeklyDemos: 0,
-                  percentage: 0
-                }
-                const hasCriticalGap = labelGaps[membership.organization_id] || false
-                
-                const getStatusColor = (color) => {
-                  switch (color) {
-                    case 'green': return 'bg-green-500'
-                    case 'yellow': return 'bg-yellow-500'
-                    case 'blue': return 'bg-blue-500'
-                    case 'orange': return 'bg-orange-500'
-                    default: return 'bg-gray-500'
-                  }
-                }
-                
-                return (
+                <div
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2"
+                  style={{ gridAutoRows: 'minmax(280px, auto)' }}
+                >
+                  {/* Personal Office Tile - First */}
                   <motion.div
-                    key={membership.membership_id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`bg-gray-900/50 rounded-lg p-3 hover:border-gray-600 transition-all cursor-pointer group backdrop-blur-sm h-full flex flex-col ${
-                      hasCriticalGap 
-                        ? 'border-2 border-amber-500/60 shadow-lg shadow-amber-500/10' 
-                        : 'border border-gray-800'
-                    }`}
-                    onClick={() => handleEnterWorkspace(membership.organization_id)}
+                    className="bg-gradient-to-br from-purple-900/30 to-blue-900/30 rounded-lg p-3 hover:border-purple-500/60 transition-all cursor-pointer group backdrop-blur-sm h-full flex flex-col border-2 border-purple-500/40"
+                    onClick={async () => {
+                      // WORKSPACE CLEARANCE: Explicitly clear activeOrgId before navigating to Personal Office
+                      clearWorkspace()
+                      localStorage.removeItem('active_org_id')
+                      // Personal Office at /personal/dashboard (URL drives activeOrgId = null)
+                      navigate('/personal/dashboard')
+                    }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-10 h-10 rounded-lg bg-gray-800/50 flex items-center justify-center border border-gray-700 flex-shrink-0">
-                        <Building2 size={20} className="text-gray-400" />
+                      <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center border border-purple-500/30 flex-shrink-0">
+                        <Inbox size={20} className="text-purple-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-white break-words leading-tight">{membership.organization_name}</h3>
-                        <p className="text-xs text-gray-500 mt-0.5">{membership.role}</p>
+                        <h3 className="text-lg font-bold text-white break-words leading-tight">
+                          Personal Office
+                        </h3>
+                        <p className="text-xs text-gray-500 mt-0.5">Your Workspace</p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 mb-3">
                       <div className="bg-gray-900/30 rounded-lg p-2 border border-gray-800">
                         <div className="flex items-center gap-1.5 mb-0.5">
-                          <Inbox size={12} className="text-gray-500" />
-                          <span className="text-xs text-gray-500">Inbox</span>
+                          <Radio size={12} className="text-gray-500" />
+                          <span className="text-xs text-gray-500">Subs</span>
                         </div>
-                        <p className="text-xl font-bold text-white">{stats.inboxCount}</p>
+                        <p className="text-xl font-bold text-white">{submissionsTracks.length}</p>
                       </div>
                       <div className="bg-gray-900/30 rounded-lg p-2 border border-gray-800">
                         <div className="flex items-center gap-1.5 mb-0.5">
-                          <Bell size={12} className="text-gray-500" />
-                          <span className="text-xs text-gray-500">New</span>
+                          <Users size={12} className="text-gray-500" />
+                          <span className="text-xs text-gray-500">Net</span>
                         </div>
-                        <p className="text-xl font-bold text-white">{stats.notificationsCount}</p>
+                        <p className="text-xl font-bold text-white">{networkTracks.length}</p>
                       </div>
                     </div>
 
-                    {/* Cognitive Load Status */}
+                    {/* Total Tracks Info */}
                     <div className="mb-2 flex items-center gap-2">
-                      <div className={`w-2.5 h-2.5 rounded-full ${getStatusColor(cognitiveLoad.color)}`} />
-                      <span className={`text-xs font-semibold ${
-                        cognitiveLoad.color === 'green' ? 'text-green-400' :
-                        cognitiveLoad.color === 'yellow' ? 'text-yellow-400' :
-                        cognitiveLoad.color === 'blue' ? 'text-blue-400' :
-                        'text-orange-400'
-                      }`}>
-                        {cognitiveLoad.status}
-                      </span>
+                      <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                      <span className="text-xs font-semibold text-purple-400">Active</span>
                       <span className="text-xs text-gray-600 ml-auto">
-                        {cognitiveLoad.weeklyListens}/{cognitiveLoad.weeklyDemos}
+                        {submissionsTracks.length +
+                          networkTracks.length +
+                          crateATracks.length +
+                          crateBTracks.length}{' '}
+                        total
                       </span>
                     </div>
 
@@ -2019,68 +2199,189 @@ const Launchpad = () => {
                       <ArrowRight size={14} />
                     </button>
                   </motion.div>
-                )
-              })}
-            </div>
 
-            {/* Global Close Watch Section */}
-            {globalCloseWatchTracks.length > 0 && (
-              <div className="mt-2 mb-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <Eye size={16} className="text-amber-400" />
-                  <h2 className="text-lg font-bold text-white">Global Close Watch</h2>
-                  <span className="text-xs text-gray-400">
-                    {globalCloseWatchTracks.length} watched
-                  </span>
-                </div>
-                <div className="bg-gray-900/40 border border-amber-500/30 rounded-lg p-2">
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
-                    {['inbox', 'second-listen', 'team-review', 'contracting', 'upcoming'].map((phase) => {
-                      const phaseTracks = globalCloseWatchTracks.filter(t => t.column === phase)
-                      return (
-                        <div key={phase} className="bg-gray-900/50 rounded p-2 border border-gray-800">
-                          <h3 className="text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">
-                            {phase.replace('-', ' ')} ({phaseTracks.length})
-                          </h3>
-                          <div className="space-y-1">
-                            {phaseTracks.map((track) => (
-                              <div
-                                key={track.id}
-                                className="bg-gray-900/60 border border-gray-800 rounded p-1.5 hover:border-amber-500/50 transition-all cursor-pointer group"
-                                onClick={() => {
-                                  // Switch to track's organization and navigate
-                                  if (track.organizationId) {
-                                    handleEnterWorkspace(track.organizationId)
-                                  }
-                                }}
-                              >
-                                <div className="flex items-start justify-between mb-0.5">
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-white font-semibold text-xs truncate">{track.artist}</p>
-                                    <p className="text-gray-500 text-xs truncate">{track.title}</p>
-                                    <p className="text-amber-400/70 text-xs truncate">{track.organization}</p>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
+                  {memberships.map(membership => {
+                    const stats = labelStats[membership.organization_id] || {
+                      inboxCount: 0,
+                      notificationsCount: 0,
+                    }
+                    const cognitiveLoad = labelCognitiveLoad[membership.organization_id] || {
+                      status: 'Optimal',
+                      color: 'green',
+                      weeklyListens: 0,
+                      weeklyDemos: 0,
+                      percentage: 0,
+                    }
+                    const hasCriticalGap = labelGaps[membership.organization_id] || false
+
+                    const getStatusColor = color => {
+                      switch (color) {
+                        case 'green':
+                          return 'bg-green-500'
+                        case 'yellow':
+                          return 'bg-yellow-500'
+                        case 'blue':
+                          return 'bg-blue-500'
+                        case 'orange':
+                          return 'bg-orange-500'
+                        default:
+                          return 'bg-gray-500'
+                      }
+                    }
+
+                    return (
+                      <motion.div
+                        key={membership.membership_id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`bg-gray-900/50 rounded-lg p-3 hover:border-gray-600 transition-all cursor-pointer group backdrop-blur-sm h-full flex flex-col ${
+                          hasCriticalGap
+                            ? 'border-2 border-amber-500/60 shadow-lg shadow-amber-500/10'
+                            : 'border border-gray-800'
+                        }`}
+                        onClick={() => handleEnterWorkspace(membership.organization_id)}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-10 h-10 rounded-lg bg-gray-800/50 flex items-center justify-center border border-gray-700 flex-shrink-0">
+                            <Building2 size={20} className="text-gray-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-bold text-white break-words leading-tight">
+                              {membership.organization_name}
+                            </h3>
+                            <p className="text-xs text-gray-500 mt-0.5">{membership.role}</p>
                           </div>
                         </div>
-                      )
-                    })}
-                  </div>
+
+                        <div className="grid grid-cols-2 gap-2 mb-3">
+                          <div className="bg-gray-900/30 rounded-lg p-2 border border-gray-800">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <Inbox size={12} className="text-gray-500" />
+                              <span className="text-xs text-gray-500">Inbox</span>
+                            </div>
+                            <p className="text-xl font-bold text-white">{stats.inboxCount}</p>
+                          </div>
+                          <div className="bg-gray-900/30 rounded-lg p-2 border border-gray-800">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <Bell size={12} className="text-gray-500" />
+                              <span className="text-xs text-gray-500">New</span>
+                            </div>
+                            <p className="text-xl font-bold text-white">
+                              {stats.notificationsCount}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Cognitive Load Status */}
+                        <div className="mb-2 flex items-center gap-2">
+                          <div
+                            className={`w-2.5 h-2.5 rounded-full ${getStatusColor(cognitiveLoad.color)}`}
+                          />
+                          <span
+                            className={`text-xs font-semibold ${
+                              cognitiveLoad.color === 'green'
+                                ? 'text-green-400'
+                                : cognitiveLoad.color === 'yellow'
+                                  ? 'text-yellow-400'
+                                  : cognitiveLoad.color === 'blue'
+                                    ? 'text-blue-400'
+                                    : 'text-orange-400'
+                            }`}
+                          >
+                            {cognitiveLoad.status}
+                          </span>
+                          <span className="text-xs text-gray-600 ml-auto">
+                            {cognitiveLoad.weeklyListens}/{cognitiveLoad.weeklyDemos}
+                          </span>
+                        </div>
+
+                        <button className="mt-auto w-full py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-white text-sm font-semibold transition-all flex items-center justify-center gap-2">
+                          <span>Enter</span>
+                          <ArrowRight size={14} />
+                        </button>
+                      </motion.div>
+                    )
+                  })}
                 </div>
+
+                {/* Global Close Watch Section */}
+                {globalCloseWatchTracks.length > 0 && (
+                  <div className="mt-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Eye size={16} className="text-amber-400" />
+                      <h2 className="text-lg font-bold text-white">Global Close Watch</h2>
+                      <span className="text-xs text-gray-400">
+                        {globalCloseWatchTracks.length} watched
+                      </span>
+                    </div>
+                    <div className="bg-gray-900/40 border border-amber-500/30 rounded-lg p-2">
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+                        {['inbox', 'second-listen', 'team-review', 'contracting', 'upcoming'].map(
+                          phase => {
+                            const phaseTracks = globalCloseWatchTracks.filter(
+                              t => t.column === phase
+                            )
+                            return (
+                              <div
+                                key={phase}
+                                className="bg-gray-900/50 rounded p-2 border border-gray-800"
+                              >
+                                <h3 className="text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">
+                                  {phase.replace('-', ' ')} ({phaseTracks.length})
+                                </h3>
+                                <div className="space-y-1">
+                                  {phaseTracks.map(track => (
+                                    <div
+                                      key={track.id}
+                                      className="bg-gray-900/60 border border-gray-800 rounded p-1.5 hover:border-amber-500/50 transition-all cursor-pointer group"
+                                      onClick={() => {
+                                        // Switch to track's organization and navigate
+                                        if (track.organizationId) {
+                                          handleEnterWorkspace(track.organizationId)
+                                        }
+                                      }}
+                                    >
+                                      <div className="flex items-start justify-between mb-0.5">
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-white font-semibold text-xs truncate">
+                                            {track.artist}
+                                          </p>
+                                          <p className="text-gray-500 text-xs truncate">
+                                            {track.title}
+                                          </p>
+                                          <p className="text-amber-400/70 text-xs truncate">
+                                            {track.organization}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )
+                          }
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
-          </div>
 
           {/* Calendar Sidebar - Aligned with Label Cards */}
-          <div className="w-full lg:w-64 xl:w-72 flex-shrink-0 lg:sticky lg:top-4" style={{ marginTop: '3.5rem', minHeight: '280px' }}>
+          <div
+            className="w-full lg:w-64 xl:w-72 flex-shrink-0 lg:sticky lg:top-4"
+            style={{ marginTop: '3.5rem', minHeight: '280px' }}
+          >
             <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-2 h-full">
-              <h3 className="text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Next 7 Days</h3>
+              <h3 className="text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">
+                Next 7 Days
+              </h3>
               <div className="space-y-1">
-                {next7Days.map((day) => (
+                {next7Days.map(day => (
                   <div
                     key={day.dateKey}
                     className={`rounded p-1.5 border ${
@@ -2091,14 +2392,16 @@ const Launchpad = () => {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className={`text-xs font-semibold ${
-                          day.isToday ? 'text-white' : 'text-gray-500'
-                        }`}>
+                        <span
+                          className={`text-xs font-semibold ${
+                            day.isToday ? 'text-white' : 'text-gray-500'
+                          }`}
+                        >
                           {day.dayName}
                         </span>
-                        <span className={`text-xs ${
-                          day.isToday ? 'text-gray-300' : 'text-gray-600'
-                        }`}>
+                        <span
+                          className={`text-xs ${day.isToday ? 'text-gray-300' : 'text-gray-600'}`}
+                        >
                           {day.dayNumber}
                         </span>
                       </div>
@@ -2110,10 +2413,14 @@ const Launchpad = () => {
                     </div>
                     {day.events.length > 0 && (
                       <div className="space-y-0.5 mt-1">
-                        {day.events.slice(0, 1).map((event) => {
+                        {day.events.slice(0, 1).map(event => {
                           // Map status to type for color coding
-                          const eventType = event.status === 'upcoming' ? 'upcoming' : 
-                                          event.status === 'contracting' ? 'contracting' : 'released'
+                          const eventType =
+                            event.status === 'upcoming'
+                              ? 'upcoming'
+                              : event.status === 'contracting'
+                                ? 'contracting'
+                                : 'released'
                           return (
                             <div
                               key={event.id}
@@ -2125,9 +2432,7 @@ const Launchpad = () => {
                           )
                         })}
                         {day.events.length > 1 && (
-                          <div className="text-xs text-gray-600">
-                            +{day.events.length - 1}
-                          </div>
+                          <div className="text-xs text-gray-600">+{day.events.length - 1}</div>
                         )}
                       </div>
                     )}
@@ -2156,9 +2461,13 @@ const Launchpad = () => {
             {!hasPersonalInboxAccess && activeOrgId === null && (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center max-w-md p-8 bg-gray-900/50 rounded-lg border border-gray-800">
-                  <h3 className="text-xl font-bold text-white mb-3">Upgrade to Unlock Personal Inbox</h3>
+                  <h3 className="text-xl font-bold text-white mb-3">
+                    Upgrade to Unlock Personal Inbox
+                  </h3>
                   <p className="text-gray-400 mb-6">
-                    Personal Inbox is available on Agent tier and above. Upgrade to access direct artist submissions, organize tracks in custom crates, and network with other A&R professionals.
+                    Personal Inbox is available on Agent tier and above. Upgrade to access direct
+                    artist submissions, organize tracks in custom crates, and network with other A&R
+                    professionals.
                   </p>
                   {canFinishUpgrading ? (
                     <button
@@ -2199,185 +2508,206 @@ const Launchpad = () => {
               <>
                 {/* Crate Tabs - Scrollable on mobile */}
                 <div className="flex items-center gap-1 mb-2 bg-gray-900/50 border border-gray-800 rounded-lg p-1 flex-shrink-0 overflow-x-auto scrollbar-hide md:overflow-x-visible">
-                <button
-                  onClick={() => setActiveCrate('submissions')}
-                  className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
-                    activeCrate === 'submissions'
-                      ? 'bg-gray-800 text-white'
-                      : 'text-gray-400 hover:text-gray-300'
-                  }`}
-                >
-                  <Radio size={12} />
-                  <span className="whitespace-nowrap">Submissions ({submissionsTracks.length})</span>
-                </button>
-                <button
-                  onClick={() => setActiveCrate('network')}
-                  className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
-                    activeCrate === 'network'
-                      ? 'bg-gray-800 text-white'
-                      : 'text-gray-400 hover:text-gray-300'
-                  }`}
-                >
-                  <Users size={12} />
-                  <span className="whitespace-nowrap">Network ({networkTracks.length})</span>
-                </button>
-                <button
-                  onClick={() => setActiveCrate('crate_a')}
-                  className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
-                    activeCrate === 'crate_a'
-                      ? 'bg-gray-800 text-white'
-                      : 'text-gray-400 hover:text-gray-300'
-                  }`}
-                >
-                  <Package size={12} />
-                  <span className="whitespace-nowrap">Crate A ({crateATracks.length})</span>
-                </button>
-                <button
-                  onClick={() => setActiveCrate('crate_b')}
-                  className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
-                    activeCrate === 'crate_b'
-                      ? 'bg-gray-800 text-white'
-                      : 'text-gray-400 hover:text-gray-300'
-                  }`}
-                >
-                  <Package2 size={12} />
-                  <span className="whitespace-nowrap">Crate B ({crateBTracks.length})</span>
-                </button>
+                  <button
+                    onClick={() => setActiveCrate('submissions')}
+                    className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
+                      activeCrate === 'submissions'
+                        ? 'bg-gray-800 text-white'
+                        : 'text-gray-400 hover:text-gray-300'
+                    }`}
+                  >
+                    <Radio size={12} />
+                    <span className="whitespace-nowrap">
+                      Submissions ({submissionsTracks.length})
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setActiveCrate('network')}
+                    className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
+                      activeCrate === 'network'
+                        ? 'bg-gray-800 text-white'
+                        : 'text-gray-400 hover:text-gray-300'
+                    }`}
+                  >
+                    <Users size={12} />
+                    <span className="whitespace-nowrap">Network ({networkTracks.length})</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveCrate('crate_a')}
+                    className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
+                      activeCrate === 'crate_a'
+                        ? 'bg-gray-800 text-white'
+                        : 'text-gray-400 hover:text-gray-300'
+                    }`}
+                  >
+                    <Package size={12} />
+                    <span className="whitespace-nowrap">Crate A ({crateATracks.length})</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveCrate('crate_b')}
+                    className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
+                      activeCrate === 'crate_b'
+                        ? 'bg-gray-800 text-white'
+                        : 'text-gray-400 hover:text-gray-300'
+                    }`}
+                  >
+                    <Package2 size={12} />
+                    <span className="whitespace-nowrap">Crate B ({crateBTracks.length})</span>
+                  </button>
                 </div>
 
                 <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-                {currentCrateTracks.length === 0 ? (
-                  <div className="bg-gray-900/40 border border-gray-800 rounded-lg p-4 text-center flex-1 flex items-center justify-center">
-                    <div>
-                      <Inbox size={24} className="text-gray-600 mx-auto mb-2" />
-                      <p className="text-gray-400 text-sm">No tracks in {activeCrate.replace('_', ' ')}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-gray-900/40 border border-gray-800 rounded-lg p-2 w-full flex-1 flex flex-col min-h-0 overflow-hidden">
-                    {filteredPersonalTracks.length === 0 ? (
-                      <div className="text-center py-4 flex-1 flex items-center justify-center">
-                        <p className="text-gray-500 text-sm">No tracks match your search</p>
+                  {currentCrateTracks.length === 0 ? (
+                    <div className="bg-gray-900/40 border border-gray-800 rounded-lg p-4 text-center flex-1 flex items-center justify-center">
+                      <div>
+                        <Inbox size={24} className="text-gray-600 mx-auto mb-2" />
+                        <p className="text-gray-400 text-sm">
+                          No tracks in {activeCrate.replace('_', ' ')}
+                        </p>
                       </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 w-full max-w-none flex-1 min-h-0 overflow-y-auto">
-                      {['inbox', 'second-listen', 'team-review', 'contracting', 'upcoming'].map((phase) => {
-                        const phaseTracks = filteredPersonalTracks.filter(t => t.column === phase)
-                        return (
-                          <div key={phase} className="bg-gray-900/50 rounded p-2 border border-gray-800 flex flex-col h-full">
-                            <h3 className="text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider flex-shrink-0">
-                              {phase.replace('-', ' ')} ({phaseTracks.length})
-                            </h3>
-                            <div className="space-y-1 flex-1 overflow-y-auto min-h-0">
-                              {phaseTracks.map((track) => (
+                    </div>
+                  ) : (
+                    <div className="bg-gray-900/40 border border-gray-800 rounded-lg p-2 w-full flex-1 flex flex-col min-h-0 overflow-hidden">
+                      {filteredPersonalTracks.length === 0 ? (
+                        <div className="text-center py-4 flex-1 flex items-center justify-center">
+                          <p className="text-gray-500 text-sm">No tracks match your search</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 w-full max-w-none flex-1 min-h-0 overflow-y-auto">
+                          {['inbox', 'second-listen', 'team-review', 'contracting', 'upcoming'].map(
+                            phase => {
+                              const phaseTracks = filteredPersonalTracks.filter(
+                                t => t.column === phase
+                              )
+                              return (
                                 <div
-                                  key={track.id}
-                                  className="bg-gray-900/60 border border-gray-800 rounded p-1.5 hover:border-gray-700 transition-all cursor-pointer group"
+                                  key={phase}
+                                  className="bg-gray-900/50 rounded p-2 border border-gray-800 flex flex-col h-full"
                                 >
-                                  <div className="flex items-start justify-between mb-0.5">
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-white font-semibold text-xs truncate">{track.artist}</p>
-                                      <p className="text-gray-500 text-xs truncate">{track.title}</p>
-                                      {track.sender && (
-                                        <p className="text-blue-400/70 text-xs truncate">From: {track.sender.name}</p>
-                                      )}
-                                    </div>
-                                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                      {activeCrate !== 'network' && connections.length > 0 && (
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation()
-                                            setShowSendToPeerModal({ isOpen: true, track })
-                                          }}
-                                          className="p-1 bg-gray-800 hover:bg-gray-700 rounded text-gray-400"
-                                          title="Send to Peer"
-                                        >
-                                          <Send size={12} />
-                                        </button>
-                                      )}
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation()
-                                          handlePitchTrack(track.id)
-                                        }}
-                                        className="p-1 bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 rounded text-orange-400"
-                                        title="Pitch Track"
+                                  <h3 className="text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider flex-shrink-0">
+                                    {phase.replace('-', ' ')} ({phaseTracks.length})
+                                  </h3>
+                                  <div className="space-y-1 flex-1 overflow-y-auto min-h-0">
+                                    {phaseTracks.map(track => (
+                                      <div
+                                        key={track.id}
+                                        className="bg-gray-900/60 border border-gray-800 rounded p-1.5 hover:border-gray-700 transition-all cursor-pointer group"
                                       >
-                                        <Send size={12} />
-                                      </button>
-                                      {activeCrate === 'submissions' && (
-                                        <>
-                                          <button
-                                            onClick={(e) => {
+                                        <div className="flex items-start justify-between mb-0.5">
+                                          <div className="flex-1 min-w-0">
+                                            <p className="text-white font-semibold text-xs truncate">
+                                              {track.artist}
+                                            </p>
+                                            <p className="text-gray-500 text-xs truncate">
+                                              {track.title}
+                                            </p>
+                                            {track.sender && (
+                                              <p className="text-blue-400/70 text-xs truncate">
+                                                From: {track.sender.name}
+                                              </p>
+                                            )}
+                                          </div>
+                                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {activeCrate !== 'network' &&
+                                              connections.length > 0 && (
+                                                <button
+                                                  onClick={e => {
+                                                    e.stopPropagation()
+                                                    setShowSendToPeerModal({ isOpen: true, track })
+                                                  }}
+                                                  className="p-1 bg-gray-800 hover:bg-gray-700 rounded text-gray-400"
+                                                  title="Send to Peer"
+                                                >
+                                                  <Send size={12} />
+                                                </button>
+                                              )}
+                                            <button
+                                              onClick={e => {
+                                                e.stopPropagation()
+                                                handlePitchTrack(track.id)
+                                              }}
+                                              className="p-1 bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 rounded text-orange-400"
+                                              title="Pitch Track"
+                                            >
+                                              <Send size={12} />
+                                            </button>
+                                            {activeCrate === 'submissions' && (
+                                              <>
+                                                <button
+                                                  onClick={e => {
+                                                    e.stopPropagation()
+                                                    handleMoveToCrate(track.id, 'crate_a')
+                                                  }}
+                                                  className="p-1 bg-gray-800 hover:bg-gray-700 rounded text-gray-400"
+                                                  title="Move to Crate A"
+                                                >
+                                                  <Package size={12} />
+                                                </button>
+                                                <button
+                                                  onClick={e => {
+                                                    e.stopPropagation()
+                                                    handleMoveToCrate(track.id, 'crate_b')
+                                                  }}
+                                                  className="p-1 bg-gray-800 hover:bg-gray-700 rounded text-gray-400"
+                                                  title="Move to Crate B"
+                                                >
+                                                  <Package2 size={12} />
+                                                </button>
+                                              </>
+                                            )}
+                                            <button
+                                              onClick={e => {
+                                                e.stopPropagation()
+                                                setShowMoveToLabelModal({ isOpen: true, track })
+                                              }}
+                                              className="p-1 bg-gray-800 hover:bg-gray-700 rounded text-gray-400"
+                                              title="Promote to Label"
+                                            >
+                                              <MoveRight size={12} />
+                                            </button>
+                                          </div>
+                                        </div>
+                                        {track.link && (
+                                          <a
+                                            href={track.link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-xs text-gray-400 hover:text-gray-300"
+                                            onClick={e => {
                                               e.stopPropagation()
-                                              handleMoveToCrate(track.id, 'crate_a')
+                                              // Log listen event
+                                              if (supabase && staffProfile) {
+                                                supabase
+                                                  .from('listen_logs')
+                                                  .insert({
+                                                    staff_id: staffProfile.id,
+                                                    track_id: track.id,
+                                                    organization_id: null,
+                                                  })
+                                                  .catch(console.error)
+                                              }
                                             }}
-                                            className="p-1 bg-gray-800 hover:bg-gray-700 rounded text-gray-400"
-                                            title="Move to Crate A"
                                           >
-                                            <Package size={12} />
-                                          </button>
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation()
-                                              handleMoveToCrate(track.id, 'crate_b')
-                                            }}
-                                            className="p-1 bg-gray-800 hover:bg-gray-700 rounded text-gray-400"
-                                            title="Move to Crate B"
-                                          >
-                                            <Package2 size={12} />
-                                          </button>
-                                        </>
-                                      )}
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation()
-                                          setShowMoveToLabelModal({ isOpen: true, track })
-                                        }}
-                                        className="p-1 bg-gray-800 hover:bg-gray-700 rounded text-gray-400"
-                                        title="Promote to Label"
-                                      >
-                                        <MoveRight size={12} />
-                                      </button>
-                                    </div>
+                                            Listen →
+                                          </a>
+                                        )}
+                                      </div>
+                                    ))}
                                   </div>
-                                  {track.link && (
-                                    <a
-                                      href={track.link}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-xs text-gray-400 hover:text-gray-300"
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        // Log listen event
-                                        if (supabase && staffProfile) {
-                                          supabase.from('listen_logs').insert({
-                                            staff_id: staffProfile.id,
-                                            track_id: track.id,
-                                            organization_id: null,
-                                          }).catch(console.error)
-                                        }
-                                      }}
-                                    >
-                                      Listen →
-                                    </a>
-                                  )}
                                 </div>
-                              ))}
-                            </div>
-                          </div>
-                        )
-                      })}
+                              )
+                            }
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
-                  </div>
-                )}
-              </div>
-            </>
+                </div>
+              </>
             )}
           </div>
         </div>
-        )}
+      )}
 
       <UpgradeOverlay
         isOpen={showUpgradeOverlay}
@@ -2392,7 +2722,7 @@ const Launchpad = () => {
       <AddDemoModal
         isOpen={isAddSubmissionOpen}
         onClose={() => setIsAddSubmissionOpen(false)}
-        onAdd={(data) => {
+        onAdd={data => {
           addTrack?.(data)
           setIsAddSubmissionOpen(false)
         }}
@@ -2401,11 +2731,14 @@ const Launchpad = () => {
 
       {/* Send to Peer Modal */}
       {showSendToPeerModal.isOpen && showSendToPeerModal.track && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setShowSendToPeerModal({ isOpen: false, track: null })}>
+        <div
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowSendToPeerModal({ isOpen: false, track: null })}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             className="bg-gray-900/95 border border-gray-700 rounded-lg p-4 w-full max-w-md backdrop-blur-sm"
           >
             <h3 className="text-lg font-bold text-white mb-3">
@@ -2417,10 +2750,11 @@ const Launchpad = () => {
 
             <div className="space-y-1.5 mb-4 max-h-64 overflow-y-auto">
               {connections.length > 0 ? (
-                connections.map((connection) => {
-                  const peer = connection.requester_id === staffProfile.id 
-                    ? connection.recipient 
-                    : connection.requester
+                connections.map(connection => {
+                  const peer =
+                    connection.requester_id === staffProfile.id
+                      ? connection.recipient
+                      : connection.requester
                   return (
                     <button
                       key={connection.id}
@@ -2436,7 +2770,10 @@ const Launchpad = () => {
                           )}
                         </div>
                       </div>
-                      <Send size={14} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                      <Send
+                        size={14}
+                        className="text-gray-600 group-hover:text-gray-400 transition-colors"
+                      />
                     </button>
                   )
                 })
@@ -2473,20 +2810,27 @@ const Launchpad = () => {
             </p>
 
             <div className="space-y-1.5 mb-4">
-              {memberships?.map((membership) => (
+              {memberships?.map(membership => (
                 <button
                   key={membership.membership_id}
-                  onClick={() => handleMoveToLabel(showMoveToLabelModal.track.id, membership.organization_id)}
+                  onClick={() =>
+                    handleMoveToLabel(showMoveToLabelModal.track.id, membership.organization_id)
+                  }
                   className="w-full p-2.5 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded-lg text-left transition-all flex items-center justify-between group"
                 >
                   <div className="flex items-center gap-2">
                     <Building2 size={16} className="text-gray-400" />
                     <div>
-                      <p className="text-white font-semibold text-sm">{membership.organization_name}</p>
+                      <p className="text-white font-semibold text-sm">
+                        {membership.organization_name}
+                      </p>
                       <p className="text-xs text-gray-500">{membership.role}</p>
                     </div>
                   </div>
-                  <MoveRight size={14} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                  <MoveRight
+                    size={14}
+                    className="text-gray-600 group-hover:text-gray-400 transition-colors"
+                  />
                 </button>
               ))}
             </div>
@@ -2525,35 +2869,29 @@ const Launchpad = () => {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Label Name
-                </label>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Label Name</label>
                 <input
                   type="text"
                   value={labelName}
-                  onChange={(e) => handleLabelNameChange(e.target.value)}
+                  onChange={e => handleLabelNameChange(e.target.value)}
                   className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-600"
                   placeholder="My Awesome Label"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Label Slug
-                </label>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Label Slug</label>
                 <div className="flex items-center gap-2">
                   <span className="text-gray-500">soundpath.app/</span>
                   <input
                     type="text"
                     value={labelSlug}
-                    onChange={(e) => setLabelSlug(e.target.value)}
+                    onChange={e => setLabelSlug(e.target.value)}
                     className="flex-1 px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-600"
                     placeholder="my-awesome-label"
                   />
                 </div>
-                <p className="text-gray-600 text-xs mt-1">
-                  This will be your label's unique URL
-                </p>
+                <p className="text-gray-600 text-xs mt-1">This will be your label's unique URL</p>
               </div>
             </div>
 
@@ -2597,10 +2935,7 @@ const Launchpad = () => {
         onClose={() => setToast({ ...toast, isVisible: false })}
       />
 
-      <GlobalSettings
-        isOpen={showGlobalSettings}
-        onClose={() => setShowGlobalSettings(false)}
-      />
+      <GlobalSettings isOpen={showGlobalSettings} onClose={() => setShowGlobalSettings(false)} />
     </div>
   )
 }

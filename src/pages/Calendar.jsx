@@ -17,8 +17,8 @@ const Calendar = () => {
 
     // Get upcoming tracks (with releaseDate)
     tracks
-      .filter((t) => t.column === 'upcoming' && !t.archived && t.releaseDate)
-      .forEach((track) => {
+      .filter(t => t.column === 'upcoming' && !t.archived && t.releaseDate)
+      .forEach(track => {
         allTracks.push({
           ...track,
           releaseDate: new Date(track.releaseDate),
@@ -29,12 +29,9 @@ const Calendar = () => {
     // Get contracting tracks (with targetReleaseDate or releaseDate)
     tracks
       .filter(
-        (t) =>
-          t.column === 'contracting' &&
-          !t.archived &&
-          (t.targetReleaseDate || t.releaseDate)
+        t => t.column === 'contracting' && !t.archived && (t.targetReleaseDate || t.releaseDate)
       )
-      .forEach((track) => {
+      .forEach(track => {
         const date = track.targetReleaseDate
           ? new Date(track.targetReleaseDate)
           : new Date(track.releaseDate)
@@ -47,8 +44,8 @@ const Calendar = () => {
 
     // Get vault tracks (released tracks with releaseDate)
     tracks
-      .filter((t) => t.column === 'vault' && !t.archived && t.releaseDate)
-      .forEach((track) => {
+      .filter(t => t.column === 'vault' && !t.archived && t.releaseDate)
+      .forEach(track => {
         allTracks.push({
           ...track,
           releaseDate: new Date(track.releaseDate),
@@ -62,7 +59,7 @@ const Calendar = () => {
   // Group tracks by date
   const tracksByDate = useMemo(() => {
     const grouped = {}
-    tracksWithDates.forEach((track) => {
+    tracksWithDates.forEach(track => {
       const dateKey = track.releaseDate.toISOString().split('T')[0]
       if (!grouped[dateKey]) {
         grouped[dateKey] = []
@@ -74,11 +71,14 @@ const Calendar = () => {
 
   // Check if current month has a gap
   const currentMonthHasGap = useMemo(() => {
-    const currentMonthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    const currentMonthName = currentDate.toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric',
+    })
     return (
-      gaps.month1.monthName === currentMonthName && gaps.month1.hasGap ||
-      gaps.month2.monthName === currentMonthName && gaps.month2.hasGap ||
-      gaps.month3.monthName === currentMonthName && gaps.month3.hasGap
+      (gaps.month1.monthName === currentMonthName && gaps.month1.hasGap) ||
+      (gaps.month2.monthName === currentMonthName && gaps.month2.hasGap) ||
+      (gaps.month3.monthName === currentMonthName && gaps.month3.hasGap)
     )
   }, [currentDate, gaps])
 
@@ -140,18 +140,18 @@ const Calendar = () => {
     setCurrentDate(new Date())
   }
 
-  const getDateKey = (date) => {
+  const getDateKey = date => {
     if (!date) return null
     return date.toISOString().split('T')[0]
   }
 
-  const getTracksForDate = (date) => {
+  const getTracksForDate = date => {
     if (!date) return []
     const dateKey = getDateKey(date)
     return tracksByDate[dateKey] || []
   }
 
-  const getTypeColor = (type) => {
+  const getTypeColor = type => {
     switch (type) {
       case 'upcoming':
         return 'bg-green-500/20 text-green-400 border-green-500/50'
@@ -164,7 +164,7 @@ const Calendar = () => {
     }
   }
 
-  const getTypeLabel = (type) => {
+  const getTypeLabel = type => {
     switch (type) {
       case 'upcoming':
         return 'Upcoming'
@@ -177,7 +177,7 @@ const Calendar = () => {
     }
   }
 
-  const isToday = (date) => {
+  const isToday = date => {
     if (!date) return false
     const today = new Date()
     return (
@@ -187,7 +187,7 @@ const Calendar = () => {
     )
   }
 
-  const handleTrackClick = (track) => {
+  const handleTrackClick = track => {
     if (track.type === 'released') {
       navigate('/vault')
     } else if (track.type === 'contracting') {
@@ -216,29 +216,35 @@ const Calendar = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <ChevronLeft className="text-gray-500 group-hover:text-gray-400 transition-colors" size={20} />
+              <ChevronLeft
+                className="text-gray-500 group-hover:text-gray-400 transition-colors"
+                size={20}
+              />
             </motion.button>
-            
-            <div className={`px-6 py-2.5 border rounded-lg min-w-[240px] transition-all ${
-              currentMonthHasGap
-                ? 'bg-amber-500/10 border-amber-500/60 shadow-lg shadow-amber-500/20'
-                : 'bg-gray-900/50 border-gray-800'
-            }`}>
+
+            <div
+              className={`px-6 py-2.5 border rounded-lg min-w-[240px] transition-all ${
+                currentMonthHasGap
+                  ? 'bg-amber-500/10 border-amber-500/60 shadow-lg shadow-amber-500/20'
+                  : 'bg-gray-900/50 border-gray-800'
+              }`}
+            >
               <h2 className="text-lg font-bold text-white text-center font-mono">
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-                {currentMonthHasGap && (
-                  <span className="ml-2 text-amber-500 text-sm">⚠️</span>
-                )}
+                {currentMonthHasGap && <span className="ml-2 text-amber-500 text-sm">⚠️</span>}
               </h2>
             </div>
-            
+
             <motion.button
               onClick={goToNextMonth}
               className="p-2.5 bg-gray-900/50 hover:bg-gray-900/70 border border-gray-800 rounded-lg transition-all group"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <ChevronRight className="text-gray-500 group-hover:text-gray-400 transition-colors" size={20} />
+              <ChevronRight
+                className="text-gray-500 group-hover:text-gray-400 transition-colors"
+                size={20}
+              />
             </motion.button>
 
             <div className="h-8 w-px bg-gray-800/50"></div>
@@ -280,7 +286,7 @@ const Calendar = () => {
       <div className="overflow-y-auto p-4">
         {/* Day Headers */}
         <div className="grid grid-cols-7 gap-3 mb-4">
-          {dayNames.map((day) => (
+          {dayNames.map(day => (
             <div
               key={day}
               className="text-center text-xs font-bold text-gray-500 uppercase py-3 tracking-wider font-mono"
@@ -309,8 +315,8 @@ const Calendar = () => {
                         ? 'bg-amber-500/15 border-amber-500/70 shadow-lg shadow-amber-500/20'
                         : 'bg-gray-800/20 border-gray-700 shadow-lg shadow-gray-800/10'
                       : currentMonthHasGap
-                      ? 'bg-gray-900/30 border-amber-500/40 hover:border-amber-500/60 hover:bg-amber-500/5 shadow-sm shadow-amber-500/10'
-                      : 'bg-gray-900/30 border-gray-800 hover:border-gray-700 hover:bg-gray-900/40'
+                        ? 'bg-gray-900/30 border-amber-500/40 hover:border-amber-500/60 hover:bg-amber-500/5 shadow-sm shadow-amber-500/10'
+                        : 'bg-gray-900/30 border-gray-800 hover:border-gray-700 hover:bg-gray-900/40'
                     : 'bg-transparent border-transparent'
                 }`}
               >
@@ -323,18 +329,18 @@ const Calendar = () => {
                             ? 'text-amber-400'
                             : 'text-gray-300'
                           : dateTracks.length > 0
-                          ? currentMonthHasGap
-                            ? 'text-amber-300'
-                            : 'text-white'
-                          : currentMonthHasGap
-                          ? 'text-amber-500/60'
-                          : 'text-gray-400'
+                            ? currentMonthHasGap
+                              ? 'text-amber-300'
+                              : 'text-white'
+                            : currentMonthHasGap
+                              ? 'text-amber-500/60'
+                              : 'text-gray-400'
                       }`}
                     >
                       {date.getDate()}
                     </div>
                     <div className="space-y-1.5">
-                      {dateTracks.slice(0, 3).map((track) => (
+                      {dateTracks.slice(0, 3).map(track => (
                         <motion.div
                           key={track.id}
                           onClick={() => handleTrackClick(track)}
@@ -350,9 +356,11 @@ const Calendar = () => {
                         </motion.div>
                       ))}
                       {dateTracks.length > 3 && (
-                        <div className={`text-xs text-center pt-1.5 font-mono ${
-                          currentMonthHasGap ? 'text-amber-400/60' : 'text-gray-500'
-                        }`}>
+                        <div
+                          className={`text-xs text-center pt-1.5 font-mono ${
+                            currentMonthHasGap ? 'text-amber-400/60' : 'text-gray-500'
+                          }`}
+                        >
                           +{dateTracks.length - 3} more
                         </div>
                       )}

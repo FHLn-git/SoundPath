@@ -33,10 +33,11 @@ export const AuthProvider = ({ children }) => {
     let mounted = true
 
     // Get initial session
-    supabase.auth.getSession()
+    supabase.auth
+      .getSession()
       .then(({ data: { session }, error }) => {
         if (!mounted) return
-        
+
         if (error) {
           console.error('Error getting session:', error)
           setLoading(false)
@@ -51,7 +52,7 @@ export const AuthProvider = ({ children }) => {
           setLoading(false)
         }
       })
-      .catch((error) => {
+      .catch(error => {
         console.error('Error in getSession:', error)
         if (mounted) {
           setLoading(false)
@@ -63,7 +64,7 @@ export const AuthProvider = ({ children }) => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return
-      
+
       // AUTH STABILITY: treat refresh/focus events as "silent" updates.
       // Only do redirects/major state resets on SIGNED_IN / SIGNED_OUT.
       setSession(session)
@@ -84,7 +85,10 @@ export const AuthProvider = ({ children }) => {
         return
       }
 
-      if (session?.user && (_event === 'SIGNED_IN' || _event === 'USER_UPDATED' || _event === 'PASSWORD_RECOVERY')) {
+      if (
+        session?.user &&
+        (_event === 'SIGNED_IN' || _event === 'USER_UPDATED' || _event === 'PASSWORD_RECOVERY')
+      ) {
         setLoading(true)
         await loadStaffProfile(session.user.id)
       }
@@ -97,7 +101,7 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   // Load staff profile from staff_members table
-  const loadStaffProfile = async (authUserId) => {
+  const loadStaffProfile = async authUserId => {
     if (!supabase) {
       console.warn('⚠️ Cannot load staff profile: Supabase not configured')
       setLoading(false)
@@ -106,7 +110,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       console.log('🔍 Loading staff profile for auth user:', authUserId)
-      
+
       // Add timeout wrapper without async Promise executor (lint-safe)
       const queryWithTimeout = () => {
         return new Promise((resolve, reject) => {
@@ -119,11 +123,11 @@ export const AuthProvider = ({ children }) => {
             .select('*')
             .eq('auth_user_id', authUserId)
             .single()
-            .then((result) => {
+            .then(result => {
               clearTimeout(timeout)
               resolve(result)
             })
-            .catch((err) => {
+            .catch(err => {
               clearTimeout(timeout)
               reject(err)
             })
@@ -138,14 +142,18 @@ export const AuthProvider = ({ children }) => {
           code: error.code,
           message: error.message,
           details: error.details,
-          hint: error.hint
+          hint: error.hint,
         })
-        
+
         // If it's a "no rows" error, the auth_user_id isn't linked
-        if (error.code === 'PGRST116' || error.message?.includes('No rows') || error.message?.includes('JSON object requested, multiple')) {
+        if (
+          error.code === 'PGRST116' ||
+          error.message?.includes('No rows') ||
+          error.message?.includes('JSON object requested, multiple')
+        ) {
           console.error('⚠️ No staff member found with this auth_user_id!')
           console.error('💡 Attempting to create staff member automatically...')
-          
+
           // Try to create staff member automatically
           try {
             const staffId = `staff_${authUserId.substring(0, 8)}_${Date.now()}`
@@ -187,20 +195,26 @@ export const AuthProvider = ({ children }) => {
           } catch (createErr) {
             console.error('❌ Exception during auto-create:', createErr)
           }
-          
+
           console.error('💡 Manual fix: Run this SQL in Supabase SQL Editor:')
-          console.error(`   INSERT INTO staff_members (id, name, role, auth_user_id) VALUES ('staff_${authUserId.substring(0, 8)}_${Date.now()}', 'User', 'Scout', '${authUserId}');`)
+          console.error(
+            `   INSERT INTO staff_members (id, name, role, auth_user_id) VALUES ('staff_${authUserId.substring(0, 8)}_${Date.now()}', 'User', 'Scout', '${authUserId}');`
+          )
         }
-        
+
         // If it's an RLS error
-        if (error.code === '42501' || error.message?.includes('permission denied') || error.message?.includes('RLS')) {
+        if (
+          error.code === '42501' ||
+          error.message?.includes('permission denied') ||
+          error.message?.includes('RLS')
+        ) {
           console.error('⚠️ RLS (Row Level Security) is blocking access!')
           console.error('💡 This might mean:')
           console.error('   1. The staff member is not in the same organization')
           console.error('   2. RLS policies need to be updated')
           console.error('   3. The auth user is not properly linked')
         }
-        
+
         // Don't set staffProfile to null immediately - allow redirect to happen
         // Set a minimal profile so user can at least access welcome page
         setStaffProfile({
@@ -289,9 +303,9 @@ export const AuthProvider = ({ children }) => {
           table: 'staff_members',
           filter: `auth_user_id=eq.${user.id}`,
         },
-        (payload) => {
+        payload => {
           if (payload?.new) {
-            setStaffProfile((prev) => ({ ...(prev || {}), ...(payload.new || {}) }))
+            setStaffProfile(prev => ({ ...(prev || {}), ...(payload.new || {}) }))
           }
         }
       )
@@ -353,7 +367,7 @@ export const AuthProvider = ({ children }) => {
   }, [staffProfile?.id])
 
   // Load user memberships
-  const loadMemberships = async (staffId) => {
+  const loadMemberships = async staffId => {
     if (!supabase || !staffId) {
       setMemberships([])
       setLoading(false)
@@ -362,13 +376,15 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const { data, error } = await supabase.rpc('get_user_memberships', {
-        user_id_param: staffId
+        user_id_param: staffId,
       })
 
       if (error) {
         console.error('Error loading memberships:', error)
-        console.warn('⚠️ Memberships table may not exist yet. Falling back to legacy organization_id.')
-        
+        console.warn(
+          '⚠️ Memberships table may not exist yet. Falling back to legacy organization_id.'
+        )
+
         // Fallback: Use legacy organization_id from staffProfile if memberships don't exist
         if (staffProfile?.organization_id) {
           const legacyOrgId = staffProfile.organization_id
@@ -394,7 +410,7 @@ export const AuthProvider = ({ children }) => {
           await switchOrganization(legacyOrgId)
           return
         }
-        
+
         setMemberships([])
         setLoading(false)
         return
@@ -422,7 +438,7 @@ export const AuthProvider = ({ children }) => {
       return { hasMemberships: true }
     } catch (error) {
       console.error('Exception loading memberships:', error)
-      
+
       // LAYOUT UNIFICATION: Legacy fallback - but still start in Personal view
       // Only use legacy organization_id if memberships completely fail AND user has legacy org
       // Even then, we should start in Personal view and let user choose
@@ -454,7 +470,7 @@ export const AuthProvider = ({ children }) => {
         setLoading(false)
         return { hasMemberships: true }
       }
-      
+
       setMemberships([])
       setActiveOrgId(null)
       setActiveMembership(null)
@@ -471,7 +487,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   // Switch active organization
-  const switchOrganization = async (orgId) => {
+  const switchOrganization = async orgId => {
     if (!supabase || !staffProfile) {
       return { error: { message: 'Not authenticated' } }
     }
@@ -493,7 +509,7 @@ export const AuthProvider = ({ children }) => {
       // Get active membership for this org
       const { data, error } = await supabase.rpc('get_active_membership', {
         user_id_param: staffProfile.id,
-        org_id_param: orgId
+        org_id_param: orgId,
       })
 
       if (error) {
@@ -545,8 +561,15 @@ export const AuthProvider = ({ children }) => {
 
       if (authError) {
         // Handle specific Supabase errors
-        if (authError.message?.includes('already registered') || authError.message?.includes('already exists')) {
-          return { error: { message: 'An account with this email already exists. Please sign in instead.' } }
+        if (
+          authError.message?.includes('already registered') ||
+          authError.message?.includes('already exists')
+        ) {
+          return {
+            error: {
+              message: 'An account with this email already exists. Please sign in instead.',
+            },
+          }
         }
         return { error: authError }
       }
@@ -604,7 +627,7 @@ export const AuthProvider = ({ children }) => {
     try {
       // Try to sign out, but don't fail if there's no session
       const { error } = await supabase.auth.signOut()
-      
+
       // Clear local state regardless of error
       setUser(null)
       setStaffProfile(null)
@@ -612,19 +635,19 @@ export const AuthProvider = ({ children }) => {
       setActiveOrgId(null)
       setActiveMembership(null)
       setSession(null)
-      
+
       if (error && !error.message?.includes('session')) {
         // Only return error if it's not a session-related error
         return { error }
       }
-      
+
       return { error: null }
     } catch (error) {
       // Clear local state even on error
       setUser(null)
       setStaffProfile(null)
       setSession(null)
-      
+
       // Only return error if it's not about missing session
       if (error.message?.includes('session')) {
         return { error: null }
@@ -634,7 +657,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   // Update staff profile
-  const updateStaffProfile = async (updates) => {
+  const updateStaffProfile = async updates => {
     if (!supabase || !staffProfile) {
       return { error: { message: 'Not authenticated' } }
     }
@@ -660,12 +683,12 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user has permission (based on active membership)
   // Agent-Centric: In Personal view (activeOrgId is null), user has full Owner permissions
-  const hasPermission = (requiredRoles) => {
+  const hasPermission = requiredRoles => {
     // Personal view: Full Owner permissions by default
     if (activeOrgId === null) {
       return true
     }
-    
+
     if (!activeMembership) return false
     if (Array.isArray(requiredRoles)) {
       return requiredRoles.includes(activeMembership.role)
@@ -739,26 +762,29 @@ export const AuthProvider = ({ children }) => {
     if (!supabase || !user?.id) return
     if (staffProfile?.user_status !== 'trialing' || !staffProfile?.trial_ends_at) return
 
-    const interval = setInterval(async () => {
-      try {
-        const { data: enforceData } = await supabase.rpc('enforce_personal_trial_status')
-        if (enforceData?.downgraded) {
-          sessionStorage.setItem('trial_just_expired', '1')
-        }
-        if (enforceData?.downgraded || enforceData?.activated) {
-          const refreshed = await supabase
-            .from('staff_members')
-            .select('*')
-            .eq('auth_user_id', user.id)
-            .single()
-          if (!refreshed?.error && refreshed?.data) {
-            setStaffProfile(refreshed.data)
+    const interval = setInterval(
+      async () => {
+        try {
+          const { data: enforceData } = await supabase.rpc('enforce_personal_trial_status')
+          if (enforceData?.downgraded) {
+            sessionStorage.setItem('trial_just_expired', '1')
           }
+          if (enforceData?.downgraded || enforceData?.activated) {
+            const refreshed = await supabase
+              .from('staff_members')
+              .select('*')
+              .eq('auth_user_id', user.id)
+              .single()
+            if (!refreshed?.error && refreshed?.data) {
+              setStaffProfile(refreshed.data)
+            }
+          }
+        } catch (_e) {
+          // ignore periodic failures
         }
-      } catch (_e) {
-        // ignore periodic failures
-      }
-    }, 5 * 60 * 1000) // every 5 minutes
+      },
+      5 * 60 * 1000
+    ) // every 5 minutes
 
     return () => clearInterval(interval)
   }, [staffProfile?.user_status, staffProfile?.trial_ends_at, user?.id])
@@ -827,9 +853,9 @@ export const AuthProvider = ({ children }) => {
     loadMemberships, // Export for refreshing memberships
     refreshStaffProfile,
     // Agent-Centric: In Personal view, user is effectively Owner
-    isOwner: activeOrgId === null ? true : (activeMembership?.role === 'Owner'),
-    isManager: activeOrgId === null ? false : (activeMembership?.role === 'Manager'),
-    isScout: activeOrgId === null ? false : (activeMembership?.role === 'Scout'),
+    isOwner: activeOrgId === null ? true : activeMembership?.role === 'Owner',
+    isManager: activeOrgId === null ? false : activeMembership?.role === 'Manager',
+    isScout: activeOrgId === null ? false : activeMembership?.role === 'Scout',
     isSystemAdmin: staffProfile?.role === 'SystemAdmin',
   }
 

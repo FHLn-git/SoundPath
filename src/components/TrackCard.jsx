@@ -13,17 +13,16 @@ const TrackCard = ({
   currentColumnIndex,
 }) => {
   const createdAt = track.createdAt instanceof Date ? track.createdAt : new Date(track.createdAt)
-  const daysInPipeline = Math.floor(
-    (new Date() - createdAt) / (1000 * 60 * 60 * 24)
-  )
+  const daysInPipeline = Math.floor((new Date() - createdAt) / (1000 * 60 * 60 * 24))
 
   // Check if in Second Listen and calculate time there
   const isInSecondListen = track.column === 'second-listen'
   let borderClass = ''
   if (isInSecondListen && track.movedToSecondListen) {
-    const movedDate = track.movedToSecondListen instanceof Date 
-      ? track.movedToSecondListen 
-      : new Date(track.movedToSecondListen)
+    const movedDate =
+      track.movedToSecondListen instanceof Date
+        ? track.movedToSecondListen
+        : new Date(track.movedToSecondListen)
     const hoursInSecondListen = (new Date() - movedDate) / (1000 * 60 * 60)
     if (hoursInSecondListen > 48) {
       borderClass = 'glow-green'
@@ -32,7 +31,7 @@ const TrackCard = ({
     }
   }
 
-  const handleArrowMove = (direction) => {
+  const handleArrowMove = direction => {
     if (direction === 'left' && canMoveLeft) {
       const newColumn = allColumns[currentColumnIndex - 1]
       onMoveTrack(track.id, newColumn.id)
@@ -72,7 +71,7 @@ const TrackCard = ({
         <div className="flex gap-1">
           {canMoveLeft && (
             <button
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation()
                 handleArrowMove('left')
               }}
@@ -84,7 +83,7 @@ const TrackCard = ({
           )}
           {canMoveRight && (
             <button
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation()
                 handleArrowMove('right')
               }}
@@ -103,10 +102,10 @@ const TrackCard = ({
             track.vibe === 'Melodic'
               ? 'bg-purple-500/20 text-purple-300'
               : track.vibe === 'Main Stage'
-              ? 'bg-recording-red/20 text-red-300'
-              : track.vibe === 'Afterhours'
-              ? 'bg-blue-500/20 text-blue-300'
-              : 'bg-pink-500/20 text-pink-300'
+                ? 'bg-recording-red/20 text-red-300'
+                : track.vibe === 'Afterhours'
+                  ? 'bg-blue-500/20 text-blue-300'
+                  : 'bg-pink-500/20 text-pink-300'
           }`}
         >
           {track.vibe}
@@ -118,7 +117,7 @@ const TrackCard = ({
 
       <div className="flex items-center gap-3">
         <button
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation()
             onVote(track.id, 1)
           }}
@@ -128,7 +127,7 @@ const TrackCard = ({
           <span className="text-xs text-gray-300">+1</span>
         </button>
         <button
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation()
             onVote(track.id, -1)
           }}
@@ -143,8 +142,8 @@ const TrackCard = ({
               track.votes > 0
                 ? 'text-green-400'
                 : track.votes < 0
-                ? 'text-red-400'
-                : 'text-gray-400'
+                  ? 'text-red-400'
+                  : 'text-gray-400'
             }`}
           >
             {track.votes > 0 ? '+' : ''}
@@ -158,7 +157,7 @@ const TrackCard = ({
           href={track.link}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
           className="block mt-2 text-xs text-neon-purple hover:underline"
         >
           View Demo →

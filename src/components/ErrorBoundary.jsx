@@ -23,11 +23,11 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     // Log error to console
     console.error('ErrorBoundary caught an error:', error, errorInfo)
-    
+
     // Store error details
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     })
 
     // Report to custom error logger
@@ -39,9 +39,9 @@ class ErrorBoundary extends React.Component {
         context: {
           componentStack: errorInfo.componentStack,
           errorName: error?.name,
-          errorString: error?.toString()
+          errorString: error?.toString(),
         },
-        severity: 'error'
+        severity: 'error',
       })
     } else {
       // Fallback if logger not initialized yet

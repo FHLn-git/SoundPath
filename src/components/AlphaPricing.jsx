@@ -44,7 +44,9 @@ export const AlphaStatusBanner = ({
               <span className="px-2 py-1 rounded-md bg-[#FFB800]/15 border border-[#FFB800]/40 text-[#FFB800] font-mono text-[11px] tracking-[0.22em] uppercase">
                 Alpha status
               </span>
-              <span className="text-xs text-gray-500 font-mono tracking-wide">TEMPORARY PRICING</span>
+              <span className="text-xs text-gray-500 font-mono tracking-wide">
+                TEMPORARY PRICING
+              </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-white leading-tight">{title}</h2>
             <p className="mt-2 text-sm text-gray-300 leading-relaxed">{subtext}</p>
@@ -69,4 +71,3 @@ export const AlphaPricingContainer = ({ className = '', children }) => {
     </div>
   )
 }
-

@@ -1,7 +1,17 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Plus, Package, Package2, Network, Inbox, Building2, MoveRight, X, Send } from 'lucide-react'
+import {
+  Plus,
+  Package,
+  Package2,
+  Network,
+  Inbox,
+  Building2,
+  MoveRight,
+  X,
+  Send,
+} from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useBilling } from '../context/BillingContext'
 import { supabase } from '../lib/supabaseClient'
@@ -23,21 +33,21 @@ const PersonalOffice = () => {
   const [toast, setToast] = useState({ isVisible: false, message: '', type: 'success' })
   const [showUpgradeOverlay, setShowUpgradeOverlay] = useState(false)
   const [hasPersonalInboxAccess, setHasPersonalInboxAccess] = useState(false)
-  
+
   // Capacity check state
   const [capacityCheck, setCapacityCheck] = useState(null)
   const [showCapacityOverlay, setShowCapacityOverlay] = useState(false)
   const [capacityLock, setCapacityLock] = useState(false)
   const [promoteCapacityCheck, setPromoteCapacityCheck] = useState(null)
   const [showPromoteCapacityOverlay, setShowPromoteCapacityOverlay] = useState(false)
-  
+
   // Quad-Crate state
   const [submissionsTracks, setSubmissionsTracks] = useState([])
   const [networkTracks, setNetworkTracks] = useState([])
   const [crate1Tracks, setCrate1Tracks] = useState([])
   const [crate2Tracks, setCrate2Tracks] = useState([])
   const [activeCrate, setActiveCrate] = useState('submissions')
-  
+
   // Promote to Label modal
   const [showMoveToLabelModal, setShowMoveToLabelModal] = useState({ isOpen: false, track: null })
 
@@ -47,13 +57,13 @@ const PersonalOffice = () => {
     const checkAccess = async () => {
       // Check system admin status with fallback - check both isSystemAdmin and staffProfile.role
       const userIsSystemAdmin = Boolean(isSystemAdmin || staffProfile?.role === 'SystemAdmin')
-      
+
       // System admins always have access to everything
       if (userIsSystemAdmin) {
         setHasPersonalInboxAccess(true)
         return
       }
-      
+
       if (activeOrgId === null) {
         // Personal view - check if user has personal inbox feature
         // For personal inbox, we need to check the user's personal organization or free plan
@@ -81,7 +91,8 @@ const PersonalOffice = () => {
         setLoading(true)
         const { data, error } = await supabase
           .from('tracks')
-          .select(`
+          .select(
+            `
             *,
             artists (
               name
@@ -90,7 +101,8 @@ const PersonalOffice = () => {
               id,
               name
             )
-          `)
+          `
+          )
           .eq('recipient_user_id', staffProfile.id)
           .is('organization_id', null)
           .eq('archived', false)
@@ -120,10 +132,43 @@ const PersonalOffice = () => {
         }))
 
         // Separate into crates (exclude pitched and signed tracks)
-        setSubmissionsTracks(transformedTracks.filter(t => t.source === 'public_form' && !t.peer_to_peer && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-        setNetworkTracks(transformedTracks.filter(t => (t.crate === 'network' || t.peer_to_peer) && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-        setCrate1Tracks(transformedTracks.filter(t => (t.crate === 'crate_a' || t.crate === 'crate_1') && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-        setCrate2Tracks(transformedTracks.filter(t => (t.crate === 'crate_b' || t.crate === 'crate_2') && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
+        setSubmissionsTracks(
+          transformedTracks.filter(
+            t =>
+              t.source === 'public_form' &&
+              !t.peer_to_peer &&
+              t.crate !== 'pitched' &&
+              t.crate !== 'signed' &&
+              !t.contractSigned
+          )
+        )
+        setNetworkTracks(
+          transformedTracks.filter(
+            t =>
+              (t.crate === 'network' || t.peer_to_peer) &&
+              t.crate !== 'pitched' &&
+              t.crate !== 'signed' &&
+              !t.contractSigned
+          )
+        )
+        setCrate1Tracks(
+          transformedTracks.filter(
+            t =>
+              (t.crate === 'crate_a' || t.crate === 'crate_1') &&
+              t.crate !== 'pitched' &&
+              t.crate !== 'signed' &&
+              !t.contractSigned
+          )
+        )
+        setCrate2Tracks(
+          transformedTracks.filter(
+            t =>
+              (t.crate === 'crate_b' || t.crate === 'crate_2') &&
+              t.crate !== 'pitched' &&
+              t.crate !== 'signed' &&
+              !t.contractSigned
+          )
+        )
       } catch (error) {
         console.error('Error loading personal tracks:', error)
         setToast({
@@ -173,16 +218,21 @@ const PersonalOffice = () => {
   // Get current crate tracks
   const currentCrateTracks = useMemo(() => {
     switch (activeCrate) {
-      case 'submissions': return submissionsTracks
-      case 'network': return networkTracks
-      case 'crate_1': return crate1Tracks
-      case 'crate_2': return crate2Tracks
-      default: return submissionsTracks
+      case 'submissions':
+        return submissionsTracks
+      case 'network':
+        return networkTracks
+      case 'crate_1':
+        return crate1Tracks
+      case 'crate_2':
+        return crate2Tracks
+      default:
+        return submissionsTracks
     }
   }, [activeCrate, submissionsTracks, networkTracks, crate1Tracks, crate2Tracks])
 
   // Handle pitching track
-  const handlePitchTrack = async (trackId) => {
+  const handlePitchTrack = async trackId => {
     if (!supabase || !staffProfile) return
 
     try {
@@ -205,7 +255,8 @@ const PersonalOffice = () => {
       // Reload personal tracks
       const { data } = await supabase
         .from('tracks')
-        .select(`
+        .select(
+          `
           *,
           artists (
             name
@@ -214,7 +265,8 @@ const PersonalOffice = () => {
             id,
             name
           )
-        `)
+        `
+        )
         .eq('recipient_user_id', staffProfile.id)
         .is('organization_id', null)
         .eq('archived', false)
@@ -240,10 +292,43 @@ const PersonalOffice = () => {
         contractSigned: track.contract_signed || false,
       }))
 
-      setSubmissionsTracks(transformedTracks.filter(t => t.source === 'public_form' && !t.peer_to_peer && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setNetworkTracks(transformedTracks.filter(t => (t.crate === 'network' || t.peer_to_peer) && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setCrate1Tracks(transformedTracks.filter(t => (t.crate === 'crate_a' || t.crate === 'crate_1') && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setCrate2Tracks(transformedTracks.filter(t => (t.crate === 'crate_b' || t.crate === 'crate_2') && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
+      setSubmissionsTracks(
+        transformedTracks.filter(
+          t =>
+            t.source === 'public_form' &&
+            !t.peer_to_peer &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setNetworkTracks(
+        transformedTracks.filter(
+          t =>
+            (t.crate === 'network' || t.peer_to_peer) &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setCrate1Tracks(
+        transformedTracks.filter(
+          t =>
+            (t.crate === 'crate_a' || t.crate === 'crate_1') &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setCrate2Tracks(
+        transformedTracks.filter(
+          t =>
+            (t.crate === 'crate_b' || t.crate === 'crate_2') &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
     } catch (error) {
       console.error('Error pitching track:', error)
       setToast({
@@ -259,11 +344,10 @@ const PersonalOffice = () => {
     if (!supabase || !staffProfile) return false
 
     try {
-      const { data, error } = await supabase
-        .rpc('check_track_capacity', {
-          user_id_param: staffProfile.id,
-          org_id_param: null
-        })
+      const { data, error } = await supabase.rpc('check_track_capacity', {
+        user_id_param: staffProfile.id,
+        org_id_param: null,
+      })
 
       if (error) throw error
 
@@ -286,15 +370,14 @@ const PersonalOffice = () => {
   }
 
   // Check capacity before promoting to label
-  const checkCapacityBeforePromote = async (orgId) => {
+  const checkCapacityBeforePromote = async orgId => {
     if (!supabase || !staffProfile) return false
 
     try {
-      const { data, error } = await supabase
-        .rpc('check_track_capacity', {
-          user_id_param: staffProfile.id,
-          org_id_param: orgId
-        })
+      const { data, error } = await supabase.rpc('check_track_capacity', {
+        user_id_param: staffProfile.id,
+        org_id_param: orgId,
+      })
 
       if (error) throw error
 
@@ -348,11 +431,12 @@ const PersonalOffice = () => {
       })
 
       setShowMoveToLabelModal({ isOpen: false, track: null })
-      
+
       // Reload personal tracks
       const { data } = await supabase
         .from('tracks')
-        .select(`
+        .select(
+          `
           *,
           artists (
             name
@@ -361,7 +445,8 @@ const PersonalOffice = () => {
             id,
             name
           )
-        `)
+        `
+        )
         .eq('recipient_user_id', staffProfile.id)
         .is('organization_id', null)
         .eq('archived', false)
@@ -386,10 +471,43 @@ const PersonalOffice = () => {
         sender: track.sender || null,
       }))
 
-      setSubmissionsTracks(transformedTracks.filter(t => t.source === 'public_form' && !t.peer_to_peer && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setNetworkTracks(transformedTracks.filter(t => (t.crate === 'network' || t.peer_to_peer) && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setCrate1Tracks(transformedTracks.filter(t => (t.crate === 'crate_a' || t.crate === 'crate_1') && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-      setCrate2Tracks(transformedTracks.filter(t => (t.crate === 'crate_b' || t.crate === 'crate_2') && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
+      setSubmissionsTracks(
+        transformedTracks.filter(
+          t =>
+            t.source === 'public_form' &&
+            !t.peer_to_peer &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setNetworkTracks(
+        transformedTracks.filter(
+          t =>
+            (t.crate === 'network' || t.peer_to_peer) &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setCrate1Tracks(
+        transformedTracks.filter(
+          t =>
+            (t.crate === 'crate_a' || t.crate === 'crate_1') &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
+      setCrate2Tracks(
+        transformedTracks.filter(
+          t =>
+            (t.crate === 'crate_b' || t.crate === 'crate_2') &&
+            t.crate !== 'pitched' &&
+            t.crate !== 'signed' &&
+            !t.contractSigned
+        )
+      )
     } catch (error) {
       console.error('Error moving track to label:', error)
       setToast({
@@ -401,13 +519,25 @@ const PersonalOffice = () => {
   }
 
   const crateConfig = [
-    { id: 'submissions', title: 'SUBMISSIONS', icon: Inbox, count: submissionsTracks.length, color: 'purple' },
+    {
+      id: 'submissions',
+      title: 'SUBMISSIONS',
+      icon: Inbox,
+      count: submissionsTracks.length,
+      color: 'purple',
+    },
     { id: 'network', title: 'NETWORK', icon: Network, count: networkTracks.length, color: 'blue' },
     { id: 'crate_1', title: 'CRATE 1', icon: Package, count: crate1Tracks.length, color: 'green' },
-    { id: 'crate_2', title: 'CRATE 2', icon: Package2, count: crate2Tracks.length, color: 'yellow' },
+    {
+      id: 'crate_2',
+      title: 'CRATE 2',
+      icon: Package2,
+      count: crate2Tracks.length,
+      color: 'yellow',
+    },
   ]
 
-  const getCrateColorClasses = (color) => {
+  const getCrateColorClasses = color => {
     const colors = {
       purple: 'bg-purple-500/20 border-purple-500/30 text-purple-400',
       blue: 'bg-blue-500/20 border-blue-500/30 text-blue-400',
@@ -506,7 +636,7 @@ const PersonalOffice = () => {
         >
           <h2 className="text-lg font-bold text-white mb-4">Personal Crates</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            {crateConfig.map((crate) => (
+            {crateConfig.map(crate => (
               <motion.button
                 key={crate.id}
                 type="button"
@@ -520,12 +650,19 @@ const PersonalOffice = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <div className="flex items-center justify-center mb-2">
-                  <crate.icon size={24} className={activeCrate === crate.id ? '' : 'text-gray-400'} />
+                  <crate.icon
+                    size={24}
+                    className={activeCrate === crate.id ? '' : 'text-gray-400'}
+                  />
                 </div>
-                <p className={`font-semibold mb-1 ${activeCrate === crate.id ? '' : 'text-gray-300'}`}>
+                <p
+                  className={`font-semibold mb-1 ${activeCrate === crate.id ? '' : 'text-gray-300'}`}
+                >
                   {crate.title}
                 </p>
-                <p className={`text-2xl font-bold ${activeCrate === crate.id ? '' : 'text-gray-400'}`}>
+                <p
+                  className={`text-2xl font-bold ${activeCrate === crate.id ? '' : 'text-gray-400'}`}
+                >
                   {crate.count}
                 </p>
               </motion.button>
@@ -535,7 +672,8 @@ const PersonalOffice = () => {
           {/* Track List for Active Crate */}
           <div className="mt-4">
             <h3 className="text-md font-semibold text-white mb-3">
-              {crateConfig.find(c => c.id === activeCrate)?.title} ({currentCrateTracks.length} tracks)
+              {crateConfig.find(c => c.id === activeCrate)?.title} ({currentCrateTracks.length}{' '}
+              tracks)
             </h3>
             {loading ? (
               <div className="text-center py-8">
@@ -547,7 +685,7 @@ const PersonalOffice = () => {
               </div>
             ) : (
               <div className="space-y-2 max-h-[600px] overflow-y-auto">
-                {currentCrateTracks.map((track) => (
+                {currentCrateTracks.map(track => (
                   <motion.div
                     key={track.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -562,12 +700,8 @@ const PersonalOffice = () => {
                           <p className="text-gray-400 text-sm truncate">{track.title}</p>
                         </div>
                         <div className="flex items-center gap-3 mt-1.5">
-                          {track.genre && (
-                            <p className="text-gray-500 text-xs">{track.genre}</p>
-                          )}
-                          {track.bpm && (
-                            <p className="text-gray-600 text-xs">{track.bpm} BPM</p>
-                          )}
+                          {track.genre && <p className="text-gray-500 text-xs">{track.genre}</p>}
+                          {track.bpm && <p className="text-gray-600 text-xs">{track.bpm} BPM</p>}
                           {track.sender && (
                             <div className="flex items-center gap-1">
                               <Network size={12} className="text-blue-400" />
@@ -645,7 +779,7 @@ const PersonalOffice = () => {
       <AddDemoModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onAdd={async (data) => {
+        onAdd={async data => {
           try {
             // Add track directly to Supabase for personal office
             if (supabase && staffProfile) {
@@ -683,29 +817,28 @@ const PersonalOffice = () => {
               }
 
               // Create track
-              const { error: trackError } = await supabase
-                .from('tracks')
-                .insert({
-                  artist_id: artistId,
-                  artist_name: data.artist,
-                  title: data.title,
-                  sc_link: data.link || '',
-                  genre: data.genre || data.vibe || GENRES[0],
-                  bpm: parseInt(data.bpm) || 128,
-                  status: 'inbox',
-                  column: 'inbox',
-                  organization_id: null,
-                  recipient_user_id: staffProfile.id,
-                  crate: 'submissions',
-                  source: 'manual',
-                })
+              const { error: trackError } = await supabase.from('tracks').insert({
+                artist_id: artistId,
+                artist_name: data.artist,
+                title: data.title,
+                sc_link: data.link || '',
+                genre: data.genre || data.vibe || GENRES[0],
+                bpm: parseInt(data.bpm) || 128,
+                status: 'inbox',
+                column: 'inbox',
+                organization_id: null,
+                recipient_user_id: staffProfile.id,
+                crate: 'submissions',
+                source: 'manual',
+              })
 
               if (trackError) throw trackError
 
               // Reload tracks
               const { data: tracksData } = await supabase
                 .from('tracks')
-                .select(`
+                .select(
+                  `
                   *,
                   artists (
                     name
@@ -714,7 +847,8 @@ const PersonalOffice = () => {
                     id,
                     name
                   )
-                `)
+                `
+                )
                 .eq('recipient_user_id', staffProfile.id)
                 .is('organization_id', null)
                 .eq('archived', false)
@@ -739,10 +873,43 @@ const PersonalOffice = () => {
                 sender: track.sender || null,
               }))
 
-              setSubmissionsTracks(transformedTracks.filter(t => t.source === 'public_form' && !t.peer_to_peer && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-              setNetworkTracks(transformedTracks.filter(t => (t.crate === 'network' || t.peer_to_peer) && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-              setCrate1Tracks(transformedTracks.filter(t => (t.crate === 'crate_a' || t.crate === 'crate_1') && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
-              setCrate2Tracks(transformedTracks.filter(t => (t.crate === 'crate_b' || t.crate === 'crate_2') && t.crate !== 'pitched' && t.crate !== 'signed' && !t.contractSigned))
+              setSubmissionsTracks(
+                transformedTracks.filter(
+                  t =>
+                    t.source === 'public_form' &&
+                    !t.peer_to_peer &&
+                    t.crate !== 'pitched' &&
+                    t.crate !== 'signed' &&
+                    !t.contractSigned
+                )
+              )
+              setNetworkTracks(
+                transformedTracks.filter(
+                  t =>
+                    (t.crate === 'network' || t.peer_to_peer) &&
+                    t.crate !== 'pitched' &&
+                    t.crate !== 'signed' &&
+                    !t.contractSigned
+                )
+              )
+              setCrate1Tracks(
+                transformedTracks.filter(
+                  t =>
+                    (t.crate === 'crate_a' || t.crate === 'crate_1') &&
+                    t.crate !== 'pitched' &&
+                    t.crate !== 'signed' &&
+                    !t.contractSigned
+                )
+              )
+              setCrate2Tracks(
+                transformedTracks.filter(
+                  t =>
+                    (t.crate === 'crate_b' || t.crate === 'crate_2') &&
+                    t.crate !== 'pitched' &&
+                    t.crate !== 'signed' &&
+                    !t.contractSigned
+                )
+              )
             }
             setIsModalOpen(false)
             setToast({
@@ -778,20 +945,27 @@ const PersonalOffice = () => {
             </p>
 
             <div className="space-y-1.5 mb-4">
-              {memberships?.map((membership) => (
+              {memberships?.map(membership => (
                 <button
                   key={membership.membership_id}
-                  onClick={() => handleMoveToLabel(showMoveToLabelModal.track.id, membership.organization_id)}
+                  onClick={() =>
+                    handleMoveToLabel(showMoveToLabelModal.track.id, membership.organization_id)
+                  }
                   className="w-full p-2.5 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded-lg text-left transition-all flex items-center justify-between group"
                 >
                   <div className="flex items-center gap-2">
                     <Building2 size={16} className="text-gray-400" />
                     <div>
-                      <p className="text-white font-semibold text-sm">{membership.organization_name}</p>
+                      <p className="text-white font-semibold text-sm">
+                        {membership.organization_name}
+                      </p>
                       <p className="text-xs text-gray-500">{membership.role}</p>
                     </div>
                   </div>
-                  <MoveRight size={14} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                  <MoveRight
+                    size={14}
+                    className="text-gray-600 group-hover:text-gray-400 transition-colors"
+                  />
                 </button>
               ))}
             </div>

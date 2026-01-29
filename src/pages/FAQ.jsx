@@ -7,67 +7,82 @@ const FAQ = () => {
   const faqs = [
     {
       question: 'What is SoundPath?',
-      answer: 'SoundPath is an A&R (Artist & Repertoire) demo tracking platform designed for record labels and music industry professionals. It helps you manage the entire demo submission pipeline from initial inbox to release.'
+      answer:
+        'SoundPath is an A&R (Artist & Repertoire) demo tracking platform designed for record labels and music industry professionals. It helps you manage the entire demo submission pipeline from initial inbox to release.',
     },
     {
       question: 'How do I submit a demo?',
-      answer: 'You can submit demos through public submission forms. Each organization has a unique submission link that you can share with artists. The link format is: your-domain.com/submit/label/organization-slug'
+      answer:
+        'You can submit demos through public submission forms. Each organization has a unique submission link that you can share with artists. The link format is: your-domain.com/submit/label/organization-slug',
     },
     {
       question: 'What are the different phases in the pipeline?',
-      answer: 'The pipeline consists of several phases: Inbox (new submissions), Second Listen (review stage), The Office (serious consideration), Contracting (negotiation), Upcoming (scheduled releases), and The Vault (released tracks).'
+      answer:
+        'The pipeline consists of several phases: Inbox (new submissions), Second Listen (review stage), The Office (serious consideration), Contracting (negotiation), Upcoming (scheduled releases), and The Vault (released tracks).',
     },
     {
       question: 'How does voting work?',
-      answer: 'In the Second Listen phase, team members can vote on tracks using +1/-1 buttons. Each staff member gets one vote per track. Only Owners and Managers can advance tracks beyond Second Listen.'
+      answer:
+        'In the Second Listen phase, team members can vote on tracks using +1/-1 buttons. Each staff member gets one vote per track. Only Owners and Managers can advance tracks beyond Second Listen.',
     },
     {
       question: 'Can I belong to multiple organizations?',
-      answer: 'Yes! SoundPath supports universal profiles, meaning you can be a member of multiple organizations. Switch between organizations using the Launchpad view.'
+      answer:
+        'Yes! SoundPath supports universal profiles, meaning you can be a member of multiple organizations. Switch between organizations using the Launchpad view.',
     },
     {
       question: 'How do I invite team members?',
-      answer: 'Organization Owners can invite team members from the Staff Management page. Enter their email address and assign a role (Owner, Manager, or Scout). They will receive an email invitation.'
+      answer:
+        'Organization Owners can invite team members from the Staff Management page. Enter their email address and assign a role (Owner, Manager, or Scout). They will receive an email invitation.',
     },
     {
       question: 'What are the subscription plans?',
-      answer: 'SoundPath offers Free, Starter, Pro, and Enterprise plans. Each plan has different limits on tracks, staff members, and features. Check the Billing page for details on your current plan.'
+      answer:
+        'SoundPath offers Free, Starter, Pro, and Enterprise plans. Each plan has different limits on tracks, staff members, and features. Check the Billing page for details on your current plan.',
     },
     {
       question: 'How do I upgrade my plan?',
-      answer: 'Organization Owners can upgrade plans from the Billing page. Select your desired plan and complete the checkout process. Your subscription will be updated immediately.'
+      answer:
+        'Organization Owners can upgrade plans from the Billing page. Select your desired plan and complete the checkout process. Your subscription will be updated immediately.',
     },
     {
       question: 'What happens if I reach my usage limits?',
-      answer: 'You will see warnings when approaching your limits. Once you reach a limit, you may need to upgrade your plan or remove some content to continue adding new items.'
+      answer:
+        'You will see warnings when approaching your limits. Once you reach a limit, you may need to upgrade your plan or remove some content to continue adding new items.',
     },
     {
       question: 'Can I export my data?',
-      answer: 'Yes! You can export all your personal data from the Data Export page in your account settings. This includes your profile, tracks, votes, and memberships.'
+      answer:
+        'Yes! You can export all your personal data from the Data Export page in your account settings. This includes your profile, tracks, votes, and memberships.',
     },
     {
       question: 'How do I delete my account?',
-      answer: 'You can delete your account from the Delete Account page. This action is permanent and cannot be undone. Make sure to export your data first if you want to keep a copy.'
+      answer:
+        'You can delete your account from the Delete Account page. This action is permanent and cannot be undone. Make sure to export your data first if you want to keep a copy.',
     },
     {
       question: 'Is my data secure?',
-      answer: 'Yes. We use industry-standard security measures including encryption in transit and at rest. All data is stored securely on Supabase infrastructure with Row-Level Security (RLS) policies.'
+      answer:
+        'Yes. We use industry-standard security measures including encryption in transit and at rest. All data is stored securely on Supabase infrastructure with Row-Level Security (RLS) policies.',
     },
     {
       question: 'Do you offer API access?',
-      answer: 'Yes! API access is available on Starter, Pro, and Enterprise plans. You can create and manage API keys from the API Keys page. Check our API documentation for details.'
+      answer:
+        'Yes! API access is available on Starter, Pro, and Enterprise plans. You can create and manage API keys from the API Keys page. Check our API documentation for details.',
     },
     {
       question: 'How do I contact support?',
-      answer: 'You can contact us through the Contact page or email support@soundpath.app. We\'ll get back to you as soon as possible.'
+      answer:
+        "You can contact us through the Contact page or email support@soundpath.app. We'll get back to you as soon as possible.",
     },
     {
-      question: 'Can I customize my organization\'s branding?',
-      answer: 'Yes! Organization Owners can customize branding settings including organization name, slug, and custom branding options from the Global Settings page.'
-    }
+      question: "Can I customize my organization's branding?",
+      answer:
+        'Yes! Organization Owners can customize branding settings including organization name, slug, and custom branding options from the Global Settings page.',
+    },
   ]
 
-  const toggleFAQ = (index) => {
+  const toggleFAQ = index => {
     setOpenIndex(openIndex === index ? null : index)
   }
 
@@ -110,8 +125,8 @@ const FAQ = () => {
             Still have questions?{' '}
             <a href="/contact" className="text-blue-400 hover:underline font-semibold">
               Contact our support team
-            </a>
-            {' '}or check out our{' '}
+            </a>{' '}
+            or check out our{' '}
             <a href="/help" className="text-blue-400 hover:underline font-semibold">
               Help Center
             </a>
