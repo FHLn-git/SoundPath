@@ -15,6 +15,7 @@ build/
 # Scratch / private notes (never commit)
 workshop
 workshop.*
+ideas.txt
 
 # IDE
 .vscode/
