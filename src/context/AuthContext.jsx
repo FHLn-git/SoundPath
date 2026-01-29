@@ -107,25 +107,26 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🔍 Loading staff profile for auth user:', authUserId)
       
-      // Add timeout wrapper
-      const queryWithTimeout = async () => {
-        return new Promise(async (resolve, reject) => {
+      // Add timeout wrapper without async Promise executor (lint-safe)
+      const queryWithTimeout = () => {
+        return new Promise((resolve, reject) => {
           const timeout = setTimeout(() => {
             reject(new Error('Query timeout after 5 seconds - RLS might be blocking'))
           }, 5000)
 
-          try {
-            const result = await supabase
-              .from('staff_members')
-              .select('*')
-              .eq('auth_user_id', authUserId)
-              .single()
-            clearTimeout(timeout)
-            resolve(result)
-          } catch (err) {
-            clearTimeout(timeout)
-            reject(err)
-          }
+          supabase
+            .from('staff_members')
+            .select('*')
+            .eq('auth_user_id', authUserId)
+            .single()
+            .then((result) => {
+              clearTimeout(timeout)
+              resolve(result)
+            })
+            .catch((err) => {
+              clearTimeout(timeout)
+              reject(err)
+            })
         })
       }
 
