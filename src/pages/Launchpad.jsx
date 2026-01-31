@@ -1854,43 +1854,6 @@ const Launchpad = () => {
           </div>
         </div>
 
-        {/* No-memberships onboarding (Welcome page removed) */}
-        {(!memberships || memberships.length === 0) && (
-          <div className="mb-4">
-            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-              <h2 className="text-xl font-bold text-white mb-2">
-                Welcome{staffProfile?.name ? `, ${staffProfile.name}` : ''}. Create your first
-                label.
-              </h2>
-              <p className="text-gray-400 text-sm mb-4">
-                You’re signed in, but you don’t belong to any labels yet. Create one now, or accept
-                an invite if you have one.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => setShowCreateLabelModal(true)}
-                  className="px-5 py-3 bg-gradient-to-r from-neon-purple to-recording-red rounded-lg text-white font-semibold transition-all"
-                >
-                  Create a Label
-                </button>
-                <button
-                  onClick={() => {
-                    setToast({
-                      isVisible: true,
-                      message:
-                        'Invite code entry is coming soon. If you were invited by email, it will appear here automatically.',
-                      type: 'info',
-                    })
-                  }}
-                  className="px-5 py-3 bg-gray-900/50 hover:bg-gray-900/70 border border-gray-800 rounded-lg text-gray-300 font-semibold transition-all"
-                >
-                  Enter Invite Code
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Main Layout: Sidebar + Content */}
         <div className="flex flex-col lg:flex-row gap-2 items-start w-full">
           {/* Main Content Column - Independent Height */}
@@ -2118,8 +2081,8 @@ const Launchpad = () => {
               </div>
             )}
 
-            {/* Label Cards Grid */}
-            {memberships && memberships.length > 0 && (
+            {/* Label Cards Grid - always show; empty state when no memberships */}
+            {memberships && (
               <div className="mb-3" style={{ height: 'fit-content' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <h2 className="text-lg font-bold text-white">Your Labels</h2>
@@ -2137,7 +2100,7 @@ const Launchpad = () => {
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2"
                   style={{ gridAutoRows: 'minmax(280px, auto)' }}
                 >
-                  {/* Personal Office Tile - First */}
+                  {/* Personal Office Tile - First (only when user has memberships or for layout) */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
