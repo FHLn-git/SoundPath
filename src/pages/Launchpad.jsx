@@ -2882,7 +2882,7 @@ const Launchpad = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-2">Label Slug</label>
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-500">soundpath.app/</span>
+                  <span className="text-gray-500">https://soundpath.app/</span>
                   <input
                     type="text"
                     value={labelSlug}

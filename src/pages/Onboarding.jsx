@@ -414,7 +414,7 @@ const Onboarding = () => {
                   <label className="block text-sm font-medium text-gray-300 mb-2">URL Slug *</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                      soundpath.app/
+                      https://soundpath.app/
                     </span>
                     <input
                       type="text"
@@ -425,7 +425,7 @@ const Onboarding = () => {
                         setSlugError('')
                       }}
                       onBlur={handleSlugBlur}
-                      className="w-full pl-32 pr-4 py-3 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple focus:ring-1 focus:ring-neon-purple transition-all"
+                      className="w-full pl-52 pr-4 py-3 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple focus:ring-1 focus:ring-neon-purple transition-all"
                       placeholder="midnight-records"
                       required
                     />
@@ -563,7 +563,7 @@ const Onboarding = () => {
                   </div>
                   <div>
                     <span className="text-gray-400 text-sm">URL Slug:</span>
-                    <p className="text-white font-semibold">soundpath.app/{labelSlug}</p>
+                    <p className="text-white font-semibold">https://soundpath.app/{labelSlug}</p>
                   </div>
                   <div>
                     <span className="text-gray-400 text-sm">Owner Name:</span>
