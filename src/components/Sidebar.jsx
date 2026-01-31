@@ -335,9 +335,8 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
         )}
       </div>
 
-      {/* Launchpad Link */}
-      {memberships && memberships.length > 0 && (
-        <div className={`border-b border-gray-800 ${collapsed ? 'p-2' : 'p-3 md:p-4'}`}>
+      {/* Launchpad Link - always show so users in Personal Office (no label memberships) can get back */}
+      <div className={`border-b border-gray-800 ${collapsed ? 'p-2' : 'p-3 md:p-4'}`}>
           <div
             className="relative"
             onMouseEnter={() => !isMobile && collapsed && setHoveredItem('launchpad')}
@@ -387,7 +386,6 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
             )}
           </div>
         </div>
-      )}
 
       <nav className={`${collapsed ? 'p-2' : 'p-3 md:p-4'} space-y-2 overflow-y-auto flex-1`}>
         {navItems.map(item => {

@@ -1,0 +1,29 @@
+---
+description: When fixing issues found during tier testing, apply fixes across all tiers and preserve feature access by plan.
+alwaysApply: true
+---
+
+# Tier Testing Fixes
+
+When the user reports an issue found while testing a specific tier (e.g. free, starter, pro, agent, enterprise), apply fixes in a way that:
+
+## 1. Fix Across All Tiers
+
+- **Assume the same bug or UX problem can exist in other tiers.** After fixing the reported tier, check and fix the same issue for every other tier where it applies.
+- Search for the same pattern (e.g. missing null check, wrong redirect, broken copy) in code paths used by other plans (e.g. `plan.id`, `staffProfile?.tier`, personal vs label workspace).
+- Do not limit the fix to only the tier where the user found the issue.
+
+## 2. Preserve Tier Feature Access
+
+- **Do not weaken or bypass plan-based gating.** Respect existing checks such as:
+  - `plan.id === 'free'` / `plan?.id`, `useUsageLimits` (`canAddTrack`, `canAddStaff`, `canMakeAPICall`, etc.)
+  - Label workspace access (pro/agent have label memberships; free/starter may only have personal workspace)
+  - API/Webhooks/Enterprise-only features
+- Default to allowing access only when the user’s plan entitles them; when in doubt, keep current restrictions.
+- See `docs/FREE_TIER_RESTRICTIONS_FIX.md` for patterns (e.g. allow when `plan === null` during load, restrict only when `plan.id === 'free'`).
+
+## 3. Quick Checklist
+
+- [ ] Fix applied in all tiers where the same code path or UI is used
+- [ ] No new code that grants paid/enterprise features to lower tiers
+- [ ] Loading/empty states still respect tier (e.g. don’t block paid users when `plan` is null)

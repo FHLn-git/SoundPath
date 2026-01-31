@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { LayoutDashboard, Users, Send, Trophy } from 'lucide-react'
+import { LayoutDashboard, Users, Send, Trophy, Rocket } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useBilling } from '../context/BillingContext'
 import { useState, useEffect } from 'react'
@@ -49,6 +49,7 @@ const BottomNav = () => {
   }
 
   const navItems = [
+    { path: '/launchpad', label: 'Launchpad', icon: Rocket },
     { path: '/personal/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     ...(hasArtistDirectoryAccess ? [{ path: '/artists', label: 'Directory', icon: Users }] : []),
     { path: '/personal/pitched', label: 'Pitched', icon: Send, isPremium: true },
@@ -86,7 +87,8 @@ const BottomNav = () => {
         {navItems.map((item, index) => {
           const isActive =
             location.pathname === item.path ||
-            (item.path === '/personal/dashboard' && location.pathname === '/personal/dashboard')
+            (item.path === '/personal/dashboard' && location.pathname === '/personal/dashboard') ||
+            (item.path === '/launchpad' && location.pathname === '/launchpad')
           const showProBadge = item.isPremium && isFreeTier
 
           return (

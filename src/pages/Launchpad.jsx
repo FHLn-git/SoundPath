@@ -2157,7 +2157,10 @@ const Launchpad = () => {
                       </span>
                     </div>
 
-                    <button className="mt-auto w-full py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-white text-sm font-semibold transition-all flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      className="mt-auto w-full py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-white text-sm font-semibold transition-all flex items-center justify-center gap-2"
+                    >
                       <span>Enter</span>
                       <ArrowRight size={14} />
                     </button>
@@ -2260,7 +2263,10 @@ const Launchpad = () => {
                           </span>
                         </div>
 
-                        <button className="mt-auto w-full py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-white text-sm font-semibold transition-all flex items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          className="mt-auto w-full py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-white text-sm font-semibold transition-all flex items-center justify-center gap-2"
+                        >
                           <span>Enter</span>
                           <ArrowRight size={14} />
                         </button>

@@ -250,9 +250,42 @@ function AppContent() {
             <Route path="/submit/:targetType/:targetSlug" element={<PublicForm />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/help" element={<HelpCenter />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/contact" element={<Contact />} />
+            <Route
+              path="/help"
+              element={
+                user && staffProfile ? (
+                  <MobileLayout>
+                    <HelpCenter />
+                  </MobileLayout>
+                ) : (
+                  <HelpCenter />
+                )
+              }
+            />
+            <Route
+              path="/faq"
+              element={
+                user && staffProfile ? (
+                  <MobileLayout>
+                    <FAQ />
+                  </MobileLayout>
+                ) : (
+                  <FAQ />
+                )
+              }
+            />
+            <Route
+              path="/contact"
+              element={
+                user && staffProfile ? (
+                  <MobileLayout>
+                    <Contact />
+                  </MobileLayout>
+                ) : (
+                  <Contact />
+                )
+              }
+            />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/plan/:planId" element={<PlanInfo />} />
 
@@ -283,27 +316,21 @@ function AppContent() {
                   element={<Navigate to="/personal/signed" replace />}
                 />
 
-                {/* Personal Workspace: /personal/dashboard (activeOrganizationId = NULL) */}
+                {/* Personal Workspace: /personal/dashboard (activeOrganizationId = NULL). All tiers can enter Personal Office; no label membership required. */}
                 <Route
                   path="/personal/dashboard"
                   element={
-                    !memberships || memberships.length === 0 ? (
-                      <Navigate to="/launchpad" />
-                    ) : (
-                      <MobileLayout showBottomNav={true}>
-                        <ErrorBoundary>
-                          <Dashboard />
-                        </ErrorBoundary>
-                      </MobileLayout>
-                    )
+                    <MobileLayout showBottomNav={true}>
+                      <ErrorBoundary>
+                        <Dashboard />
+                      </ErrorBoundary>
+                    </MobileLayout>
                   }
                 />
                 <Route
                   path="/personal/pitched"
                   element={
-                    !memberships || memberships.length === 0 ? (
-                      <Navigate to="/launchpad" />
-                    ) : activeOrgId !== null ? (
+                    activeOrgId !== null ? (
                       <Navigate to={`/labels/${activeOrgId}`} replace />
                     ) : (
                       <MobileLayout showBottomNav={true}>
@@ -315,9 +342,7 @@ function AppContent() {
                 <Route
                   path="/personal/signed"
                   element={
-                    !memberships || memberships.length === 0 ? (
-                      <Navigate to="/launchpad" />
-                    ) : activeOrgId !== null ? (
+                    activeOrgId !== null ? (
                       <Navigate to={`/labels/${activeOrgId}`} replace />
                     ) : (
                       <MobileLayout showBottomNav={true}>
@@ -355,16 +380,13 @@ function AppContent() {
                     )
                   }
                 />
+                {/* Artist Directory: personal (activeOrgId null) or label context; no membership required for personal view */}
                 <Route
                   path="/artists"
                   element={
-                    memberships?.length === 0 ? (
-                      <Navigate to="/launchpad" />
-                    ) : (
-                      <MobileLayout showBottomNav={true}>
-                        <ArtistDirectory />
-                      </MobileLayout>
-                    )
+                    <MobileLayout showBottomNav={true}>
+                      <ArtistDirectory />
+                    </MobileLayout>
                   }
                 />
                 <Route
