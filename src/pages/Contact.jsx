@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Mail, Send, Loader2, Check } from 'lucide-react'
+import { Mail, Send, Loader2, Check, ArrowLeft } from 'lucide-react'
 import Toast from '../components/Toast'
 import { sendEmail } from '../lib/emailService'
 import { supabase } from '../lib/supabaseClient'
@@ -115,6 +115,15 @@ const Contact = () => {
   return (
     <div className="min-h-screen bg-gray-950 text-white p-10">
       <div className="max-w-2xl mx-auto">
+        <div className="mb-8">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to landing page</span>
+          </button>
+        </div>
         <div className="flex items-center gap-3 mb-8">
           <Mail className="w-8 h-8 text-blue-400" />
           <h1 className="text-4xl font-bold">Contact Support</h1>

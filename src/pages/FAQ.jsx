@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { HelpCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { HelpCircle, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react'
 
 const FAQ = () => {
+  const navigate = useNavigate()
   const [openIndex, setOpenIndex] = useState(null)
 
   const faqs = [
@@ -84,6 +86,15 @@ const FAQ = () => {
   return (
     <div className="min-h-screen bg-gray-950 text-white p-10">
       <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to landing page</span>
+          </button>
+        </div>
         <div className="flex items-center gap-3 mb-8">
           <HelpCircle className="w-8 h-8 text-blue-400" />
           <h1 className="text-4xl font-bold">Frequently Asked Questions</h1>
