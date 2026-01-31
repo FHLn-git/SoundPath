@@ -51,7 +51,7 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO plans (id, name, description, price_monthly, price_yearly, interval, features, limits, trial_days, sort_order) VALUES
   ('starter', 'Starter', 'For growing labels', 29.95, 249.95, 'month',
    '{"has_basic_tracking": true, "has_analytics": true}'::jsonb,
-   '{"max_tracks": 500, "max_staff": 10, "max_storage_mb": 5000, "max_api_calls_per_month": 50000, "has_analytics": true, "has_api_access": true, "has_webhooks": false, "has_sso": false, "has_priority_support": false, "has_custom_branding": false}'::jsonb,
+   '{"max_tracks": 500, "max_staff": 10, "max_storage_mb": 5000, "max_api_calls_per_month": 50000, "has_analytics": true, "has_api_access": false, "has_webhooks": false, "has_sso": false, "has_priority_support": false, "has_custom_branding": false}'::jsonb,
    14, 2)
 ON CONFLICT (id) DO NOTHING;
 

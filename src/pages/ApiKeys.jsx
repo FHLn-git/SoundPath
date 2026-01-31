@@ -85,7 +85,7 @@ const ApiKeys = () => {
       setToast({
         isVisible: true,
         message:
-          'API access is not available on your current plan. Please upgrade to Starter, Pro, or Enterprise.',
+          'API access is not available on your current plan. Please upgrade to Pro or Enterprise.',
         type: 'error',
       })
       return
@@ -203,7 +203,7 @@ const ApiKeys = () => {
             <Key className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">API Access Not Available</h2>
             <p className="text-gray-400 mb-6">
-              API access is available on Starter, Pro, and Enterprise plans.
+              API access is available on Pro and Enterprise plans.
             </p>
             <a
               href="/billing"

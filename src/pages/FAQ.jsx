@@ -68,17 +68,12 @@ const FAQ = () => {
     {
       question: 'Do you offer API access?',
       answer:
-        'Yes! API access is available on Starter, Pro, and Enterprise plans. You can create and manage API keys from the API Keys page. Check our API documentation for details.',
+        'Yes! API access is available on Pro and Enterprise plans. You can create and manage API keys from the API Keys page. Check our API documentation for details.',
     },
     {
       question: 'How do I contact support?',
       answer:
         "You can contact us through the Contact page or email support@soundpath.app. We'll get back to you as soon as possible.",
-    },
-    {
-      question: "Can I customize my organization's branding?",
-      answer:
-        'Yes! Organization Owners can customize branding settings including organization name, slug, and custom branding options from the Global Settings page.',
     },
   ]
 
