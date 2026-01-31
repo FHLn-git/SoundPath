@@ -567,124 +567,137 @@ const Landing = () => {
                 </span>
               </div>
 
-              {/* Main Plans Grid: Free, Agent, Starter, Pro */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto mb-12">
-                {plans
-                  .filter(plan => plan.id !== 'enterprise')
-                  .map((plan, index) => {
-                    const monthlyPrice = plan.price_monthly || 0
-                    const yearlyPrice = plan.price_yearly || 0
-                    const price = billingInterval === 'year' ? yearlyPrice : monthlyPrice
-                    const monthlyEquivalent =
-                      billingInterval === 'year' && yearlyPrice > 0
-                        ? yearlyPrice / 12
-                        : monthlyPrice
-                    const savings =
-                      billingInterval === 'year' && monthlyPrice > 0 && yearlyPrice > 0
-                        ? Math.round(
-                            ((monthlyPrice * 12 - yearlyPrice) / (monthlyPrice * 12)) * 100
-                          )
-                        : 0
-                    const savingsAmount =
-                      billingInterval === 'year' && monthlyPrice > 0 && yearlyPrice > 0
-                        ? Math.round(monthlyPrice * 12 - yearlyPrice)
-                        : 0
-                    const isPopular = plan.id === 'starter'
-                    return (
-                      <motion.div
-                        key={plan.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: index * 0.1 }}
+              {/* Main Plans Grid: Free, Starter, Pro (For Labels) | Agent (For Agents) */}
+              {(() => {
+                const displayOrder = ['free', 'starter', 'pro', 'agent']
+                const nonEnterprise = plans.filter(plan => plan.id !== 'enterprise')
+                const sorted = [...nonEnterprise].sort(
+                  (a, b) => displayOrder.indexOf(a.id) - displayOrder.indexOf(b.id)
+                )
+                const labelPlans = sorted.filter(p => p.id !== 'agent')
+                const agentPlans = sorted.filter(p => p.id === 'agent')
+                const renderCard = (plan, index) => {
+                  const monthlyPrice = plan.price_monthly || 0
+                  const yearlyPrice = plan.price_yearly || 0
+                  const price = billingInterval === 'year' ? yearlyPrice : monthlyPrice
+                  const monthlyEquivalent =
+                    billingInterval === 'year' && yearlyPrice > 0
+                      ? yearlyPrice / 12
+                      : monthlyPrice
+                  const isPopular = plan.id === 'starter'
+                  return (
+                    <motion.div
+                      key={plan.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.6, delay: index * 0.1 }}
+                    >
+                      <AlphaPricingContainer
+                        className={`p-0 ${isPopular ? 'ring-2 ring-neon-purple/15' : ''}`}
                       >
-                        <AlphaPricingContainer
-                          className={`p-0 ${isPopular ? 'ring-2 ring-neon-purple/15' : ''}`}
+                        <div
+                          className={`relative p-6 bg-gray-900/50 border-2 rounded-xl flex flex-col min-h-[440px] ${
+                            isPopular ? 'border-neon-purple/50' : 'border-gray-800'
+                          }`}
                         >
-                          <div
-                            className={`relative p-8 bg-gray-900/50 border rounded-lg flex flex-col ${
-                              isPopular ? 'border-neon-purple/50' : 'border-gray-800'
-                            }`}
-                          >
-                            {plan.id !== 'free' && <AlphaOnlyTag />}
-                            {isPopular && (
-                              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                                <span className="px-4 py-1 bg-gradient-to-r from-neon-purple to-recording-red text-white text-sm font-semibold rounded-full">
-                                  Most Popular
+                          {plan.id !== 'free' && <AlphaOnlyTag />}
+                          {isPopular && (
+                            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                              <span className="px-4 py-1 bg-gradient-to-r from-neon-purple to-recording-red text-white text-sm font-semibold rounded-full">
+                                Most Popular
+                              </span>
+                            </div>
+                          )}
+                          <div className="text-center mb-6 flex-grow">
+                            <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+                            <div className="flex flex-col items-center justify-center gap-1">
+                              <div className="flex items-baseline justify-center gap-2">
+                                <span className="text-4xl font-bold text-white">
+                                  {plan.id === 'free' ? 'Free' : `$${price.toFixed(2)}`}
                                 </span>
-                              </div>
-                            )}
-                            <div className="text-center mb-6 flex-grow">
-                              <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-                              <div className="flex flex-col items-center justify-center gap-1">
-                                <div className="flex items-baseline justify-center gap-2">
-                                  <span className="text-4xl font-bold text-white">
-                                    {plan.id === 'free' ? 'Free' : `$${price.toFixed(2)}`}
-                                  </span>
-                                  {plan.id !== 'free' && (
-                                    <span className="text-gray-400">
-                                      /{billingInterval === 'year' ? 'year' : 'month'}
-                                    </span>
-                                  )}
-                                </div>
                                 {plan.id !== 'free' && (
-                                  <div className="text-sm text-gray-300 mt-1">
-                                    <span className="text-gray-300 font-medium">
-                                      Temporary Alpha Rate
-                                    </span>
-                                  </div>
+                                  <span className="text-gray-400">
+                                    /{billingInterval === 'year' ? 'year' : 'month'}
+                                  </span>
                                 )}
-                                {billingInterval === 'year' &&
-                                  plan.id !== 'free' &&
-                                  yearlyPrice > 0 && (
-                                    <>
-                                      <div className="text-sm text-gray-500 line-through">
-                                        ${(monthlyPrice * 12).toFixed(2)}/year
-                                      </div>
-                                      <div className="flex items-center gap-2 mt-1">
-                                        {plan.id === 'pro' ? (
-                                          <span className="px-2 py-0.5 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-semibold rounded">
-                                            Save $200 per year!
-                                          </span>
-                                        ) : (
-                                          <span className="text-sm text-gray-400">
-                                            ${monthlyEquivalent.toFixed(2)}/month
-                                          </span>
-                                        )}
-                                      </div>
-                                    </>
-                                  )}
                               </div>
-                              <p className="text-gray-400 text-sm mt-2">{plan.description}</p>
+                              {plan.id !== 'free' && (
+                                <div className="text-sm text-gray-300 mt-1">
+                                  <span className="text-gray-300 font-medium">
+                                    Temporary Alpha Rate
+                                  </span>
+                                </div>
+                              )}
+                              {billingInterval === 'year' &&
+                                plan.id !== 'free' &&
+                                yearlyPrice > 0 && (
+                                  <>
+                                    <div className="text-sm text-gray-500 line-through">
+                                      ${(monthlyPrice * 12).toFixed(2)}/year
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      {plan.id === 'pro' ? (
+                                        <span className="px-2 py-0.5 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-semibold rounded">
+                                          Save $200 per year!
+                                        </span>
+                                      ) : (
+                                        <span className="text-sm text-gray-400">
+                                          ${monthlyEquivalent.toFixed(2)}/month
+                                        </span>
+                                      )}
+                                    </div>
+                                  </>
+                                )}
                             </div>
-                            <div className="flex gap-3 mt-auto">
-                              <button
-                                onClick={() => navigate(`/plan/${plan.id}`)}
-                                className="flex-1 py-3 rounded-lg font-semibold transition-all bg-gray-800/50 text-gray-300 hover:bg-gray-800 border border-gray-700 hover:border-gray-600"
-                              >
-                                Learn More
-                              </button>
-                              <button
-                                onClick={() => {
-                                  if (plan.id !== 'free') {
-                                    sessionStorage.setItem(
-                                      'pendingBillingInterval',
-                                      billingInterval
-                                    )
-                                  }
-                                  navigate('/signup')
-                                }}
-                                className="flex-1 py-3 rounded-lg font-semibold transition-all bg-gradient-to-r from-neon-purple to-recording-red text-white hover:opacity-90"
-                              >
-                                {plan.id === 'free' ? 'Get Started Free' : 'Secure Alpha Access'}
-                              </button>
-                            </div>
+                            <p className="text-gray-400 text-sm mt-2">{plan.description}</p>
                           </div>
-                        </AlphaPricingContainer>
-                      </motion.div>
-                    )
-                  })}
-              </div>
+                          <div className="flex gap-3 mt-auto">
+                            <button
+                              onClick={() => navigate(`/plan/${plan.id}`)}
+                              className="flex-1 py-3 rounded-lg font-semibold transition-all bg-gray-800/50 text-gray-300 hover:bg-gray-800 border border-gray-700 hover:border-gray-600"
+                            >
+                              Learn More
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (plan.id !== 'free') {
+                                  sessionStorage.setItem(
+                                    'pendingBillingInterval',
+                                    billingInterval
+                                  )
+                                }
+                                navigate('/signup')
+                              }}
+                              className="flex-1 py-3 rounded-lg font-semibold transition-all bg-gradient-to-r from-neon-purple to-recording-red text-white hover:opacity-90"
+                            >
+                              {plan.id === 'free' ? 'Get Started Free' : 'Secure Alpha Access'}
+                            </button>
+                          </div>
+                        </div>
+                      </AlphaPricingContainer>
+                    </motion.div>
+                  )
+                }
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-12">
+                    <div className="hidden lg:block col-span-3 text-sm font-semibold text-gray-400 uppercase tracking-wide">
+                      For Labels
+                    </div>
+                    <div className="hidden lg:block text-sm font-semibold text-gray-400 uppercase tracking-wide lg:border-l lg:border-gray-700 lg:pl-8">
+                      For Agents
+                    </div>
+                    {labelPlans.map((plan, index) => renderCard(plan, index))}
+                    {agentPlans.length > 0 && (
+                      <div className="lg:border-l lg:border-gray-700 lg:pl-8">
+                        {agentPlans.map((plan, index) =>
+                          renderCard(plan, labelPlans.length + index)
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
 
               {/* Enterprise Tier - Full Width */}
               {plans.find(plan => plan.id === 'enterprise') && (

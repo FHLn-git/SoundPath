@@ -521,16 +521,16 @@ const PersonalOffice = () => {
   const crateConfig = [
     {
       id: 'submissions',
-      title: 'SUBMISSIONS',
+      title: 'Submissions',
       icon: Inbox,
       count: submissionsTracks.length,
       color: 'purple',
     },
-    { id: 'network', title: 'NETWORK', icon: Network, count: networkTracks.length, color: 'blue' },
-    { id: 'crate_1', title: 'CRATE 1', icon: Package, count: crate1Tracks.length, color: 'green' },
+    { id: 'network', title: 'Network', icon: Network, count: networkTracks.length, color: 'blue' },
+    { id: 'crate_1', title: 'Crate A', icon: Package, count: crate1Tracks.length, color: 'green' },
     {
       id: 'crate_2',
-      title: 'CRATE 2',
+      title: 'Crate B',
       icon: Package2,
       count: crate2Tracks.length,
       color: 'yellow',

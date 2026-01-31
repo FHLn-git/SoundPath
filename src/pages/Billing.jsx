@@ -472,19 +472,21 @@ const Billing = () => {
                 >
                   Yearly
                 </span>
-                {billingInterval === 'year' && (
-                  <span className="text-xs text-green-400 font-medium ml-2">Save up to 17%</span>
-                )}
               </div>
             </div>
 
-            {/* Regular Plans Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-              {plans
-                .filter(p => p.id !== 'enterprise')
-                .map(p => {
-                  // Determine plan color scheme
-                  const getPlanColors = planId => {
+            {/* Regular Plans Grid: For Labels (free, starter, pro) | For Agents (agent) */}
+            {(() => {
+              const displayOrder = ['free', 'starter', 'pro', 'agent']
+              const nonEnterprise = plans.filter(p => p.id !== 'enterprise')
+              const sorted = [...nonEnterprise].sort(
+                (a, b) => displayOrder.indexOf(a.id) - displayOrder.indexOf(b.id)
+              )
+              const labelPlans = sorted.filter(p => p.id !== 'agent')
+              const agentPlans = sorted.filter(p => p.id === 'agent')
+              const renderPlanCard = p => {
+                // Determine plan color scheme
+                const getPlanColors = planId => {
                     switch (planId) {
                       case 'free':
                         return {
@@ -576,7 +578,7 @@ const Billing = () => {
                   return (
                     <div
                       key={p.id}
-                      className={`relative overflow-visible rounded-xl p-6 border-2 transition-all flex flex-col bg-gradient-to-br ${colors.gradient} ${colors.border} ${p.id === 'starter' ? 'ring-2 ring-green-500/50' : ''}`}
+                      className={`relative overflow-visible rounded-xl p-6 border-2 transition-all flex flex-col min-h-[440px] bg-gradient-to-br ${colors.gradient} ${colors.border} ${p.id === 'starter' ? 'ring-2 ring-green-500/50' : ''}`}
                     >
                       {p.id !== 'free' && <AlphaOnlyTag />}
                       {/* Most Popular Badge for Starter - 3D Effect */}
@@ -848,8 +850,24 @@ const Billing = () => {
                       </div>
                     </div>
                   )
-                })}
-            </div>
+              }
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-4">
+                  <div className="hidden lg:block col-span-3 text-sm font-semibold text-gray-400 uppercase tracking-wide">
+                    For Labels
+                  </div>
+                  <div className="hidden lg:block text-sm font-semibold text-gray-400 uppercase tracking-wide lg:border-l lg:border-gray-700 lg:pl-6">
+                    For Agents
+                  </div>
+                  {labelPlans.map(p => renderPlanCard(p))}
+                  {agentPlans.length > 0 && (
+                    <div className="lg:border-l lg:border-gray-700 lg:pl-6">
+                      {agentPlans.map(p => renderPlanCard(p))}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
 
             {/* Enterprise Plan - Premium Wide Box */}
             {plans.find(p => p.id === 'enterprise') &&

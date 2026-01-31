@@ -449,59 +449,84 @@ const SignUp = () => {
                   )}
                 </div>
                 <div className="grid grid-cols-1 gap-3">
-                  {plans.map(plan => {
-                    const isSelected = selectedPlanId === plan.id
-                    const price =
-                      billingInterval === 'year' && plan.price_yearly
-                        ? plan.price_yearly
-                        : plan.price_monthly
-                    return (
-                      <motion.button
-                        key={plan.id}
-                        type="button"
-                        onClick={() => setSelectedPlanId(plan.id)}
-                        className={`relative p-4 rounded-lg border-2 transition-all text-left ${
-                          isSelected
-                            ? 'border-neon-purple bg-neon-purple/10'
-                            : 'border-gray-700 bg-gray-900/50 hover:border-gray-600'
-                        }`}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        {plan.id !== 'free' && <AlphaOnlyTag className="top-2 right-2" />}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                isSelected ? 'border-neon-purple bg-neon-purple' : 'border-gray-600'
-                              }`}
-                            >
-                              {isSelected && <Check size={12} className="text-white" />}
+                  {(() => {
+                    const displayOrder = ['free', 'starter', 'pro', 'agent']
+                    const nonEnterprise = plans.filter(p => p.id !== 'enterprise')
+                    const sorted = [...nonEnterprise].sort(
+                      (a, b) => displayOrder.indexOf(a.id) - displayOrder.indexOf(b.id)
+                    )
+                    const labelPlans = sorted.filter(p => p.id !== 'agent')
+                    const agentPlans = sorted.filter(p => p.id === 'agent')
+                    const renderPlanButton = plan => {
+                      const isSelected = selectedPlanId === plan.id
+                      const price =
+                        billingInterval === 'year' && plan.price_yearly
+                          ? plan.price_yearly
+                          : plan.price_monthly
+                      return (
+                        <motion.button
+                          key={plan.id}
+                          type="button"
+                          onClick={() => setSelectedPlanId(plan.id)}
+                          className={`relative p-4 rounded-lg border-2 transition-all text-left ${
+                            isSelected
+                              ? 'border-neon-purple bg-neon-purple/10'
+                              : 'border-gray-700 bg-gray-900/50 hover:border-gray-600'
+                          }`}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          {plan.id !== 'free' && <AlphaOnlyTag className="top-2 right-2" />}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                  isSelected ? 'border-neon-purple bg-neon-purple' : 'border-gray-600'
+                                }`}
+                              >
+                                {isSelected && <Check size={12} className="text-white" />}
+                              </div>
+                              <div>
+                                <div className="font-semibold text-white">{plan.name}</div>
+                                <div className="text-xs text-gray-400">{plan.description}</div>
+                              </div>
                             </div>
-                            <div>
-                              <div className="font-semibold text-white">{plan.name}</div>
-                              <div className="text-xs text-gray-400">{plan.description}</div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-bold text-white">
-                              {plan.id === 'free' ? 'Free' : `$${price.toFixed(2)}`}
+                            <div className="text-right">
+                              <div className="font-bold text-white">
+                                {plan.id === 'free' ? 'Free' : `$${price.toFixed(2)}`}
+                                {plan.id !== 'free' && (
+                                  <span className="text-xs text-gray-400 font-normal">
+                                    /{billingInterval === 'year' ? 'year' : 'mo'}
+                                  </span>
+                                )}
+                              </div>
                               {plan.id !== 'free' && (
-                                <span className="text-xs text-gray-400 font-normal">
-                                  /{billingInterval === 'year' ? 'year' : 'mo'}
-                                </span>
+                                <div className="text-[11px] text-gray-400 mt-1">
+                                  Temporary Alpha Rate
+                                </div>
                               )}
                             </div>
-                            {plan.id !== 'free' && (
-                              <div className="text-[11px] text-gray-400 mt-1">
-                                Temporary Alpha Rate
-                              </div>
-                            )}
                           </div>
+                        </motion.button>
+                      )
+                    }
+                    return (
+                      <>
+                        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                          For Labels
                         </div>
-                      </motion.button>
+                        {labelPlans.map(renderPlanButton)}
+                        {agentPlans.length > 0 && (
+                          <>
+                            <div className="pt-3 mt-3 border-t border-gray-700 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                              For Agents
+                            </div>
+                            {agentPlans.map(renderPlanButton)}
+                          </>
+                        )}
+                      </>
                     )
-                  })}
+                  })()}
                 </div>
                 {/* Show savings message when yearly is selected */}
                 {billingInterval === 'year' &&

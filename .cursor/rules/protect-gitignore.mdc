@@ -1,0 +1,22 @@
+---
+description: Never touch gitignored files; they are the user's private files—do not read, edit, or delete
+alwaysApply: true
+---
+
+# Ignore Gitignored Files Completely
+
+## Rule
+
+**Do not touch files or paths listed in this project's `.gitignore` (or that match a gitignore pattern).** They are the user's private files, stored in the project folder for easy finding. Treat them as off-limits for all agent actions.
+
+## What "ignore" means
+
+- **Do not read** gitignored files (e.g. `ideas.txt`, `workshop`, `workshop.*`, `.env`, `.env.*`, etc.).
+- **Do not edit, modify, or delete** them.
+- **Do not add them to git** or suggest committing them.
+- **Do not run commands** that would remove or change them on disk (e.g. `rm`, `git clean` on those paths).
+- If the user asks to remove something from **Git/GitHub** that was accidentally committed, do only that—remove from the repo and history. Do not delete the corresponding files from the user's disk unless they explicitly say to delete locally.
+
+## Summary
+
+Gitignored = the user's. Do not touch them at all.

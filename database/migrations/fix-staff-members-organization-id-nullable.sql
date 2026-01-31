@@ -1,0 +1,2 @@
+-- SUPERSEDED: Use nullable-organization-id-and-personal-workspace.sql instead.
+-- Run that file once in Supabase SQL Editor for all organization_id nullable + personal workspace fixes.

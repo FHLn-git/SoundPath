@@ -608,53 +608,53 @@ const Dashboard = () => {
               </span>
             </div>
 
-            {/* Crate Tabs - Quad-Inbox UI - Scrollable on mobile */}
-            <div className="flex items-center gap-1 mb-2 bg-gray-900/50 border border-gray-800 rounded-lg p-1 overflow-x-auto scrollbar-hide md:overflow-x-visible">
+            {/* Crate Tabs - Quad-Inbox UI - Evenly spaced, scrollable on small screens */}
+            <div className="flex items-center gap-1 mb-2 bg-gray-900/50 border border-gray-800 rounded-lg p-1 w-full overflow-x-auto scrollbar-hide md:overflow-x-visible">
               <button
                 onClick={() => setActiveCrate('submissions')}
-                className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
+                className={`flex-1 min-w-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
                   activeCrate === 'submissions'
                     ? 'bg-gray-800 text-white'
                     : 'text-gray-400 hover:text-gray-300'
                 }`}
               >
-                <Radio size={12} />
-                <span className="whitespace-nowrap">SUBMISSIONS ({submissionsTracks.length})</span>
+                <Radio size={12} className="flex-shrink-0" />
+                <span className="whitespace-nowrap truncate">Submissions ({submissionsTracks.length})</span>
               </button>
               <button
                 onClick={() => setActiveCrate('network')}
-                className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 relative touch-target ${
+                className={`flex-1 min-w-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 relative touch-target ${
                   activeCrate === 'network'
                     ? 'bg-gray-800 text-white'
                     : 'text-gray-400 hover:text-gray-300'
                 } ${!hasNetworkAccess ? 'opacity-60' : ''}`}
                 disabled={!hasNetworkAccess}
               >
-                <Network size={12} />
-                <span className="whitespace-nowrap">NETWORK ({networkTracks.length})</span>
-                {!hasNetworkAccess && <Crown size={10} className="text-yellow-400 ml-1" />}
+                <Network size={12} className="flex-shrink-0" />
+                <span className="whitespace-nowrap truncate">Network ({networkTracks.length})</span>
+                {!hasNetworkAccess && <Crown size={10} className="text-yellow-400 ml-1 flex-shrink-0" />}
               </button>
               <button
                 onClick={() => setActiveCrate('crate_a')}
-                className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
+                className={`flex-1 min-w-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
                   activeCrate === 'crate_a'
                     ? 'bg-gray-800 text-white'
                     : 'text-gray-400 hover:text-gray-300'
                 }`}
               >
-                <Package size={12} />
-                <span className="whitespace-nowrap">CRATE 1 ({crateATracks.length})</span>
+                <Package size={12} className="flex-shrink-0" />
+                <span className="whitespace-nowrap truncate">Crate A ({crateATracks.length})</span>
               </button>
               <button
                 onClick={() => setActiveCrate('crate_b')}
-                className={`flex-shrink-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
+                className={`flex-1 min-w-0 px-2 py-1.5 rounded text-xs font-semibold transition-all flex items-center justify-center gap-1.5 touch-target ${
                   activeCrate === 'crate_b'
                     ? 'bg-gray-800 text-white'
                     : 'text-gray-400 hover:text-gray-300'
                 }`}
               >
-                <Package2 size={12} />
-                <span className="whitespace-nowrap">CRATE 2 ({crateBTracks.length})</span>
+                <Package2 size={12} className="flex-shrink-0" />
+                <span className="whitespace-nowrap truncate">Crate B ({crateBTracks.length})</span>
               </button>
             </div>
 
@@ -672,7 +672,12 @@ const Dashboard = () => {
                   <div>
                     <Inbox size={24} className="text-gray-600 mx-auto mb-2" />
                     <p className="text-gray-400 text-sm">
-                      No tracks in {activeCrate.replace('_', ' ')}
+                      No tracks in{' '}
+                      {activeCrate === 'crate_a'
+                        ? 'Crate A'
+                        : activeCrate === 'crate_b'
+                          ? 'Crate B'
+                          : activeCrate.replace('_', ' ')}
                     </p>
                   </div>
                 </div>
