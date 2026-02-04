@@ -350,13 +350,13 @@ const Landing = ({ noHeader = false }) => {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6">
-              SoundPath One
+              SoundPath
               <span className="block bg-gradient-to-r from-neon-purple to-recording-red bg-clip-text text-transparent">
                 The Music Industry OS
               </span>
             </h1>
             <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-              One unified platform for Labels, Venues, and Artists.
+              A single, unified platform for Labels, Venues, and Artists.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <motion.button
