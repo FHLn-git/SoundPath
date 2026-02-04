@@ -192,6 +192,29 @@ const Billing = () => {
           />
         )}
 
+        {/* SoundPath One – Premier founding member tier (Alpha Pricing marketing box) */}
+        <div className="mb-8">
+          <AlphaPricingContainer>
+            <div className="rounded-xl border border-amber-400/40 bg-gradient-to-br from-amber-500/10 via-os-bg to-os-bg px-5 py-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-neon-purple to-recording-red flex items-center justify-center">
+                  <Zap size={20} className="text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-400 font-mono text-[10px] font-bold tracking-wider uppercase">Alpha</span>
+                    <span className="text-xs text-gray-500 font-mono">SOUNDPATH ONE</span>
+                  </div>
+                  <h2 className="text-lg font-bold text-white">Premier founding member tier</h2>
+                  <p className="text-sm text-gray-300 mt-1">
+                    You’re on the Music Industry OS. Alpha pricing is temporary — lock in your rate now and get full access to Label today, with Venue and Artist modules coming soon.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </AlphaPricingContainer>
+        </div>
+
         {/* Current Subscription - Only show if user has an active organization */}
         {activeOrgId && subscription && plan && (
           <div className="bg-gray-900 rounded-lg p-6 mb-8 border border-gray-800">

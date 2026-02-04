@@ -65,7 +65,7 @@ const MobileLayout = ({ children, showBottomNav = false }) => {
             >
               <Menu size={24} className="text-gray-300" />
             </button>
-            <h1 className="text-lg font-bold text-white">SoundPath</h1>
+            <h1 className="text-base font-bold text-white">SoundPath <span className="text-gray-500 font-normal">|</span> <span className="text-neon-purple/90">LABEL</span></h1>
             <div className="w-10" /> {/* Spacer for centering */}
           </header>
         )}

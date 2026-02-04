@@ -1326,7 +1326,7 @@ const Launchpad = () => {
       }
 
       // Navigate to label workspace (URL drives activeOrganizationId)
-      navigate(`/labels/${orgId}`)
+      navigate(`/app/label/labels/${orgId}`)
     } catch (error) {
       console.error('Exception switching workspace:', error)
       setToast({
@@ -1717,7 +1717,7 @@ const Launchpad = () => {
         isOpen={showTrialExpiredModal}
         onClose={() => setShowTrialExpiredModal(false)}
       />
-      <div className="w-full px-4 sm:px-6 lg:px-10 flex-shrink-0">
+      <div className="w-full px-4 sm:px-6 lg:px-10 pt-6 sm:pt-8 flex-shrink-0">
         {/* Usage Warning Banner */}
         <UsageWarningBanner />
 
@@ -1792,13 +1792,6 @@ const Launchpad = () => {
               </motion.div>
             ))}
           </motion.div>
-        )}
-
-        {/* Debug info - remove in production */}
-        {import.meta.env.DEV && (
-          <div className="mb-2 text-xs text-gray-600">
-            Invites loading: {invitesLoading ? 'Yes' : 'No'} | Found: {pendingInvites.length}
-          </div>
         )}
 
         {/* Header - Compact Top Left */}
@@ -2025,7 +2018,7 @@ const Launchpad = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-gray-900/50 rounded-lg p-4 hover:border-gray-600 transition-all cursor-pointer group backdrop-blur-sm h-full flex flex-col border border-gray-800"
-                    onClick={() => navigate('/admin/dashboard')}
+                    onClick={() => navigate('/app/label/admin/dashboard')}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -2054,7 +2047,7 @@ const Launchpad = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-gray-900/50 rounded-lg p-4 hover:border-gray-600 transition-all cursor-pointer group backdrop-blur-sm h-full flex flex-col border border-gray-800"
-                    onClick={() => navigate('/god-mode')}
+                    onClick={() => navigate('/app/label/god-mode')}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -2110,7 +2103,7 @@ const Launchpad = () => {
                       clearWorkspace()
                       localStorage.removeItem('active_org_id')
                       // Personal Office at /personal/dashboard (URL drives activeOrgId = null)
-                      navigate('/personal/dashboard')
+                      navigate('/app/label/personal/dashboard')
                     }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -2464,7 +2457,7 @@ const Launchpad = () => {
                     </button>
                   )}
                   <button
-                    onClick={() => navigate('/billing')}
+                    onClick={() => navigate('/app/settings/billing')}
                     className="block w-full text-sm text-gray-400 hover:text-gray-300 transition-colors"
                   >
                     Or go directly to billing →

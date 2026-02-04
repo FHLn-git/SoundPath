@@ -70,7 +70,7 @@ function ErrorFallback({ error, errorInfo }) {
 
   const handleGoHome = () => {
     // Prefer SPA navigation; avoid forcing a full reload (stability).
-    navigate('/launchpad', { replace: true })
+    navigate('/app/label/launchpad', { replace: true })
   }
 
   const handleReload = () => {

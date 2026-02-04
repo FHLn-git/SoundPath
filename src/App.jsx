@@ -16,7 +16,7 @@ import MobileLayout from './components/MobileLayout'
 import { Loader2 } from 'lucide-react'
 import Diagnostics from './components/Diagnostics'
 
-/** Syncs URL to activeOrganizationId: /labels/:orgId -> set org; /personal/* -> set null. */
+/** Syncs URL to activeOrganizationId: /labels/:orgId or /app/label/labels/:orgId -> set org; /personal/* or /app/label/personal/* -> set null. */
 function WorkspaceRouteSync() {
   const location = useLocation()
   const { pathname } = location
@@ -27,7 +27,7 @@ function WorkspaceRouteSync() {
     if (lastPathRef.current === pathname) return
     lastPathRef.current = pathname
 
-    const labelsMatch = pathname.match(/^\/labels\/([^/]+)/)
+    const labelsMatch = pathname.match(/^\/(?:app\/label\/)?labels\/([^/]+)/)
     if (labelsMatch) {
       const orgId = labelsMatch[1]
       const hasMembership = memberships?.some(m => m.organization_id === orgId)
@@ -37,7 +37,7 @@ function WorkspaceRouteSync() {
       return
     }
 
-    if (pathname.startsWith('/personal/')) {
+    if (pathname.startsWith('/personal/') || pathname.startsWith('/app/label/personal/')) {
       if (activeOrgId !== null) {
         clearWorkspace()
       }
@@ -47,13 +47,25 @@ function WorkspaceRouteSync() {
   return null
 }
 
-/** Renders Dashboard for /labels/:orgId only if user has membership; otherwise redirects to launchpad. */
+/** Redirect /labels/:orgId to /app/label/labels/:orgId (legacy URL support). */
+function RedirectLabelsToApp() {
+  const { orgId } = useParams()
+  return <Navigate to={`/app/label/labels/${orgId}`} replace />
+}
+
+/** Redirect /phase/:phaseId to /app/label/phase/:phaseId (legacy URL support). */
+function RedirectPhaseToApp() {
+  const { phaseId } = useParams()
+  return <Navigate to={`/app/label/phase/${phaseId}`} replace />
+}
+
+/** Renders Dashboard for /labels/:orgId or /app/label/labels/:orgId; redirects to /app/label/launchpad if no membership. */
 function LabelDashboardGuard() {
   const { orgId } = useParams()
   const { memberships } = useAuth()
   const hasMembership = memberships?.some(m => m.organization_id === orgId)
   if (!orgId || !hasMembership) {
-    return <Navigate to="/launchpad" replace />
+    return <Navigate to="/app/label/launchpad" replace />
   }
   return (
     <MobileLayout showBottomNav={true}>
@@ -102,6 +114,7 @@ const SecuritySettings = lazy(() => import('./pages/SecuritySettings'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const HealthCheck = lazy(() => import('./pages/HealthCheck'))
 const SupportWidget = lazy(() => import('./components/SupportWidget'))
+const ComingSoonApp = lazy(() => import('./pages/ComingSoonApp'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -119,18 +132,15 @@ function AppContent() {
   const [hasPersonalInbox, setHasPersonalInbox] = useState(false)
   const [checkingPersonalInbox, setCheckingPersonalInbox] = useState(true)
 
-  // Determine default route - Agent-Centric: route to launchpad if activeOrgId is null
-  // Use useMemo to prevent route from changing during renders
+  // Determine default route - Music Industry OS: /app/label/launchpad or /app/label/labels/:id
   const defaultRoute = useMemo(() => {
     if (!memberships || memberships.length === 0) {
-      return '/launchpad'
+      return '/app/label/launchpad'
     }
-    // Agent-Centric: If no active organization, user is in Personal view -> launchpad
     if (activeOrgId === null) {
-      return '/launchpad'
+      return '/app/label/launchpad'
     }
-    // If activeOrgId is set, they're in a Label workspace -> context-aware URL
-    return `/labels/${activeOrgId}`
+    return `/app/label/labels/${activeOrgId}`
   }, [memberships, activeOrgId])
 
   // Add timeout fallback to prevent infinite loading
@@ -289,251 +299,71 @@ function AppContent() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/plan/:planId" element={<PlanInfo />} />
 
-            {/* Protected Routes */}
+            {/* Protected Routes - Music Industry OS: /app/label, /app/venue, /app/artist, /app/settings */}
             {user && staffProfile ? (
               <>
-                {/* Launchpad - Universal A&R Launchpad (No Sidebar - Lobby View) */}
-                <Route
-                  path="/launchpad"
-                  element={
-                    <ErrorBoundary>
-                      <Launchpad />
-                    </ErrorBoundary>
-                  }
-                />
+                {/* Legacy path redirects to /app/* */}
+                <Route path="/launchpad" element={<Navigate to="/app/label/launchpad" replace />} />
+                <Route path="/dashboard" element={<Navigate to="/app/label/launchpad" replace />} />
+                <Route path="/personal-office" element={<Navigate to="/app/label/personal/dashboard" replace />} />
+                <Route path="/personal-office/submitted" element={<Navigate to="/app/label/personal/dashboard" replace />} />
+                <Route path="/personal-office/signed" element={<Navigate to="/app/label/personal/signed" replace />} />
+                <Route path="/labels/:orgId" element={<RedirectLabelsToApp />} />
+                <Route path="/billing" element={<Navigate to="/app/settings/billing" replace />} />
+                <Route path="/security" element={<Navigate to="/app/settings/security" replace />} />
+                <Route path="/data-export" element={<Navigate to="/app/settings/data-export" replace />} />
+                <Route path="/delete-account" element={<Navigate to="/app/settings/delete-account" replace />} />
+                <Route path="/artists" element={<Navigate to="/app/label/artists" replace />} />
+                <Route path="/admin" element={<Navigate to="/app/label/admin" replace />} />
+                <Route path="/admin/staff" element={<Navigate to="/app/label/admin/staff" replace />} />
+                <Route path="/calendar" element={<Navigate to="/app/label/calendar" replace />} />
+                <Route path="/upcoming" element={<Navigate to="/app/label/upcoming" replace />} />
+                <Route path="/vault" element={<Navigate to="/app/label/vault" replace />} />
+                <Route path="/api-keys" element={<Navigate to="/app/label/api-keys" replace />} />
+                <Route path="/webhooks" element={<Navigate to="/app/label/webhooks" replace />} />
+                <Route path="/phase/:phaseId" element={<RedirectPhaseToApp />} />
+                <Route path="/personal/dashboard" element={<Navigate to="/app/label/personal/dashboard" replace />} />
+                <Route path="/personal/pitched" element={<Navigate to="/app/label/personal/pitched" replace />} />
+                <Route path="/personal/signed" element={<Navigate to="/app/label/personal/signed" replace />} />
+                <Route path="/populate" element={<Navigate to="/app/label/populate" replace />} />
+                <Route path="/god-mode" element={<Navigate to="/app/label/god-mode" replace />} />
+                <Route path="/admin/dashboard" element={<Navigate to="/app/label/admin/dashboard" replace />} />
 
-                {/* Redirect old Personal Office routes to context-aware URLs */}
-                <Route
-                  path="/personal-office"
-                  element={<Navigate to="/personal/dashboard" replace />}
-                />
-                <Route
-                  path="/personal-office/submitted"
-                  element={<Navigate to="/personal/dashboard" replace />}
-                />
-                <Route
-                  path="/personal-office/signed"
-                  element={<Navigate to="/personal/signed" replace />}
-                />
+                {/* App root: redirect to Label launchpad */}
+                <Route path="/app" element={<Navigate to={defaultRoute} replace />} />
+                <Route path="/app/label" element={<Navigate to="/app/label/launchpad" replace />} />
 
-                {/* Personal Workspace: /personal/dashboard (activeOrganizationId = NULL). All tiers can enter Personal Office; no label membership required. */}
-                <Route
-                  path="/personal/dashboard"
-                  element={
-                    <MobileLayout showBottomNav={true}>
-                      <ErrorBoundary>
-                        <Dashboard />
-                      </ErrorBoundary>
-                    </MobileLayout>
-                  }
-                />
-                <Route
-                  path="/personal/pitched"
-                  element={
-                    activeOrgId !== null ? (
-                      <Navigate to={`/labels/${activeOrgId}`} replace />
-                    ) : (
-                      <MobileLayout showBottomNav={true}>
-                        <PersonalPitched />
-                      </MobileLayout>
-                    )
-                  }
-                />
-                <Route
-                  path="/personal/signed"
-                  element={
-                    activeOrgId !== null ? (
-                      <Navigate to={`/labels/${activeOrgId}`} replace />
-                    ) : (
-                      <MobileLayout showBottomNav={true}>
-                        <PersonalSigned />
-                      </MobileLayout>
-                    )
-                  }
-                />
+                {/* Venue & Artist - Coming Soon (placeholder + modal) */}
+                <Route path="/app/venue" element={<ComingSoonApp appName="Venue" />} />
+                <Route path="/app/artist" element={<ComingSoonApp appName="Artist" />} />
 
-                {/* Label Workspace: /labels/:orgId (activeOrganizationId from URL) */}
-                <Route
-                  path="/labels/:orgId"
-                  element={
-                    !memberships || memberships.length === 0 ? (
-                      <Navigate to="/launchpad" />
-                    ) : (
-                      <LabelDashboardGuard />
-                    )
-                  }
-                />
+                {/* Label app routes */}
+                <Route path="/app/label/launchpad" element={<ErrorBoundary><Launchpad /></ErrorBoundary>} />
+                <Route path="/app/label/labels/:orgId" element={!memberships || memberships.length === 0 ? <Navigate to="/app/label/launchpad" /> : <LabelDashboardGuard />} />
+                <Route path="/app/label/personal/dashboard" element={<MobileLayout showBottomNav={true}><ErrorBoundary><Dashboard /></ErrorBoundary></MobileLayout>} />
+                <Route path="/app/label/personal/pitched" element={activeOrgId !== null ? <Navigate to={`/app/label/labels/${activeOrgId}`} replace /> : <MobileLayout showBottomNav={true}><PersonalPitched /></MobileLayout>} />
+                <Route path="/app/label/personal/signed" element={activeOrgId !== null ? <Navigate to={`/app/label/labels/${activeOrgId}`} replace /> : <MobileLayout showBottomNav={true}><PersonalSigned /></MobileLayout>} />
+                <Route path="/app/label/phase/:phaseId" element={memberships?.length === 0 || activeOrgId === null ? <Navigate to="/app/label/launchpad" /> : <MobileLayout><PhaseDetailView /></MobileLayout>} />
+                <Route path="/app/label/artists" element={<MobileLayout showBottomNav={true}><ArtistDirectory /></MobileLayout>} />
+                <Route path="/app/label/admin" element={memberships?.length === 0 ? <Navigate to="/app/label/launchpad" /> : <MobileLayout><StaffAdmin /></MobileLayout>} />
+                <Route path="/app/label/admin/staff" element={memberships?.length === 0 ? <Navigate to="/app/label/launchpad" /> : <MobileLayout><StaffManagement /></MobileLayout>} />
+                <Route path="/app/label/calendar" element={memberships?.length === 0 ? <Navigate to="/app/label/launchpad" /> : <MobileLayout><Calendar /></MobileLayout>} />
+                <Route path="/app/label/upcoming" element={memberships?.length === 0 ? <Navigate to="/app/label/launchpad" /> : <MobileLayout><Upcoming /></MobileLayout>} />
+                <Route path="/app/label/vault" element={memberships?.length === 0 ? <Navigate to="/app/label/launchpad" /> : <MobileLayout><Vault /></MobileLayout>} />
+                <Route path="/app/label/api-keys" element={memberships?.length === 0 ? <Navigate to="/app/label/launchpad" /> : <MobileLayout><ApiKeys /></MobileLayout>} />
+                <Route path="/app/label/webhooks" element={memberships?.length === 0 ? <Navigate to="/app/label/launchpad" /> : <MobileLayout><Webhooks /></MobileLayout>} />
+                <Route path="/app/label/populate" element={<MobileLayout><PopulateTestData /></MobileLayout>} />
+                <Route path="/app/label/god-mode" element={staffProfile?.role === 'SystemAdmin' ? <GlobalPulse /> : <Navigate to="/app/label/launchpad" />} />
+                <Route path="/app/label/admin/dashboard" element={staffProfile?.role === 'SystemAdmin' ? <AdminDashboard /> : <Navigate to="/app/label/launchpad" />} />
 
-                {/* Removed generic /dashboard to prevent data collisions; redirect to launchpad */}
-                <Route path="/dashboard" element={<Navigate to="/launchpad" replace />} />
-                <Route
-                  path="/phase/:phaseId"
-                  element={
-                    memberships?.length === 0 ? (
-                      <Navigate to="/launchpad" />
-                    ) : activeOrgId === null ? (
-                      <Navigate to="/launchpad" />
-                    ) : (
-                      <MobileLayout>
-                        <PhaseDetailView />
-                      </MobileLayout>
-                    )
-                  }
-                />
-                {/* Artist Directory: personal (activeOrgId null) or label context; no membership required for personal view */}
-                <Route
-                  path="/artists"
-                  element={
-                    <MobileLayout showBottomNav={true}>
-                      <ArtistDirectory />
-                    </MobileLayout>
-                  }
-                />
-                <Route
-                  path="/admin"
-                  element={
-                    memberships?.length === 0 ? (
-                      <Navigate to="/launchpad" />
-                    ) : (
-                      <MobileLayout>
-                        <StaffAdmin />
-                      </MobileLayout>
-                    )
-                  }
-                />
-                <Route
-                  path="/admin/staff"
-                  element={
-                    memberships?.length === 0 ? (
-                      <Navigate to="/launchpad" />
-                    ) : (
-                      <MobileLayout>
-                        <StaffManagement />
-                      </MobileLayout>
-                    )
-                  }
-                />
-                <Route
-                  path="/calendar"
-                  element={
-                    memberships?.length === 0 ? (
-                      <Navigate to="/launchpad" />
-                    ) : (
-                      <MobileLayout>
-                        <Calendar />
-                      </MobileLayout>
-                    )
-                  }
-                />
-                <Route
-                  path="/upcoming"
-                  element={
-                    memberships?.length === 0 ? (
-                      <Navigate to="/launchpad" />
-                    ) : (
-                      <MobileLayout>
-                        <Upcoming />
-                      </MobileLayout>
-                    )
-                  }
-                />
-                <Route
-                  path="/vault"
-                  element={
-                    memberships?.length === 0 ? (
-                      <Navigate to="/launchpad" />
-                    ) : (
-                      <MobileLayout>
-                        <Vault />
-                      </MobileLayout>
-                    )
-                  }
-                />
-                <Route
-                  path="/billing"
-                  element={
-                    <MobileLayout>
-                      <Billing />
-                    </MobileLayout>
-                  }
-                />
-                <Route
-                  path="/api-keys"
-                  element={
-                    memberships?.length === 0 ? (
-                      <Navigate to="/launchpad" />
-                    ) : (
-                      <MobileLayout>
-                        <ApiKeys />
-                      </MobileLayout>
-                    )
-                  }
-                />
-                <Route
-                  path="/webhooks"
-                  element={
-                    memberships?.length === 0 ? (
-                      <Navigate to="/launchpad" />
-                    ) : (
-                      <MobileLayout>
-                        <Webhooks />
-                      </MobileLayout>
-                    )
-                  }
-                />
-                <Route
-                  path="/data-export"
-                  element={
-                    <MobileLayout>
-                      <DataExport />
-                    </MobileLayout>
-                  }
-                />
-                <Route
-                  path="/delete-account"
-                  element={
-                    <MobileLayout>
-                      <DeleteAccount />
-                    </MobileLayout>
-                  }
-                />
-                <Route
-                  path="/security"
-                  element={
-                    <MobileLayout>
-                      <SecuritySettings />
-                    </MobileLayout>
-                  }
-                />
+                {/* Settings app (unified Billing / Profile) */}
+                <Route path="/app/settings" element={<Navigate to="/app/settings/billing" replace />} />
+                <Route path="/app/settings/billing" element={<MobileLayout><Billing /></MobileLayout>} />
+                <Route path="/app/settings/security" element={<MobileLayout><SecuritySettings /></MobileLayout>} />
+                <Route path="/app/settings/data-export" element={<MobileLayout><DataExport /></MobileLayout>} />
+                <Route path="/app/settings/delete-account" element={<MobileLayout><DeleteAccount /></MobileLayout>} />
+
                 <Route path="/health" element={<HealthCheck />} />
-                <Route
-                  path="/populate"
-                  element={
-                    <MobileLayout>
-                      <PopulateTestData />
-                    </MobileLayout>
-                  }
-                />
-                <Route
-                  path="/god-mode"
-                  element={
-                    staffProfile?.role === 'SystemAdmin' ? (
-                      <GlobalPulse />
-                    ) : (
-                      <Navigate to="/launchpad" />
-                    )
-                  }
-                />
-                <Route
-                  path="/admin/dashboard"
-                  element={
-                    staffProfile?.role === 'SystemAdmin' ? (
-                      <AdminDashboard />
-                    ) : (
-                      <Navigate to="/launchpad" />
-                    )
-                  }
-                />
                 <Route path="*" element={<NotFound />} />
               </>
             ) : (

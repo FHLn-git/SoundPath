@@ -8,14 +8,11 @@ import {
   ArrowRight,
   X,
   Menu,
-  BarChart3,
-  Users,
-  Shield,
-  Workflow,
-  Clock,
-  CheckCircle2,
-  Star,
-  ChevronRight,
+  Building2,
+  Music,
+  FileSignature,
+  Archive,
+  GitBranch,
   Check,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -140,7 +137,7 @@ const Landing = () => {
         try {
           const { planId, billingInterval } = JSON.parse(pendingSub)
           sessionStorage.removeItem('pendingSubscription')
-          navigate(`/billing?subscribe=${planId}&interval=${billingInterval}`, { replace: true })
+          navigate(`/app/settings/billing?subscribe=${planId}&interval=${billingInterval}`, { replace: true })
           return
         } catch (e) {
           console.error('Error parsing pending subscription:', e)
@@ -148,9 +145,9 @@ const Landing = () => {
       }
 
       if (!memberships || memberships.length === 0) {
-        navigate('/launchpad', { replace: true })
+        navigate('/app/label/launchpad', { replace: true })
       } else {
-        navigate('/launchpad', { replace: true })
+        navigate('/app/label/launchpad', { replace: true })
       }
     }
   }, [user, staffProfile, memberships, navigate, hasRedirected, authLoading])
@@ -246,7 +243,7 @@ const Landing = () => {
         setTimeout(() => {
           if (user) {
             if (!staffProfile) {
-              navigate('/launchpad')
+              navigate('/app/label/launchpad')
             }
           }
         }, 2000)
@@ -274,56 +271,29 @@ const Landing = () => {
   const primaryColor = organizationBranding?.branding?.primaryColor || '#a855f7'
   const labelName = organizationBranding?.name || 'SoundPath'
 
-  const features = [
-    {
-      icon: Workflow,
-      title: 'Streamlined A&R Workflow',
-      description:
-        'Manage your entire A&R process from submission to release in one unified platform.',
-    },
-    {
-      icon: Users,
-      title: 'Team Collaboration',
-      description:
-        'Work seamlessly with your team members, assign tasks, and track progress in real-time.',
-    },
-    {
-      icon: BarChart3,
-      title: 'Analytics & Insights',
-      description:
-        'Get powerful insights into your submissions, track metrics, and make data-driven decisions.',
-    },
-    {
-      icon: Shield,
-      title: 'Enterprise Security',
-      description:
-        'Bank-level security with role-based access control and comprehensive audit logs.',
-    },
-    {
-      icon: Clock,
-      title: 'Real-time Updates',
-      description:
-        'Stay in sync with instant notifications and real-time updates across all your projects.',
-    },
-    {
-      icon: CheckCircle2,
-      title: 'Customizable Workflows',
-      description: "Tailor your workflow to match your label's unique process and requirements.",
-    },
+  const osModules = [
+    { id: 'label', icon: Building2, title: 'LABEL', description: 'A&R pipeline, submissions, releases.', badge: null },
+    { id: 'venue', icon: Music, title: 'VENUE', description: 'Booking, calendar, capacity.', badge: 'Coming Soon' },
+    { id: 'artist', icon: Music, title: 'ARTIST', description: 'Portfolio, pitches, deals.', badge: 'Coming Soon' },
+    { id: 'sign', icon: FileSignature, title: 'SIGN', description: 'Deals and contracts.', badge: 'Utility' },
+    { id: 'vault', icon: Archive, title: 'VAULT', description: 'Catalog and archive.', badge: 'Utility' },
+    { id: 'splits', icon: GitBranch, title: 'SPLITS', description: 'Royalties and splits.', badge: 'Utility' },
   ]
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-os-bg">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-gray-950/80 backdrop-blur-md border-b border-gray-800">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-os-bg/90 backdrop-blur-md border-b border-gray-800">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
+            {/* Logo: SoundPath | OS */}
+            <div className="flex items-center gap-2">
               <div className="p-2 bg-gradient-to-br from-neon-purple to-recording-red rounded-lg">
                 <Zap size={20} className="text-white" />
               </div>
               <span className="text-xl font-bold text-white">{labelName}</span>
+              <span className="text-gray-500">|</span>
+              <span className="text-sm font-semibold text-neon-purple/90">Music Industry OS</span>
             </div>
 
             {/* Desktop Navigation */}
@@ -433,7 +403,7 @@ const Landing = () => {
         </nav>
       </header>
 
-      {/* Hero Section */}
+      {/* Hero Section - SoundPath One: The Music Industry OS */}
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -443,14 +413,13 @@ const Landing = () => {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6">
-              The A&R Command Center
+              SoundPath One
               <span className="block bg-gradient-to-r from-neon-purple to-recording-red bg-clip-text text-transparent">
-                Your Label Needs
+                The Music Industry OS
               </span>
             </h1>
             <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-              Streamline your A&R workflow, manage submissions, collaborate with your team, and
-              bring music to the world faster than ever.
+              One unified platform for Labels, Venues, and Artists.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <motion.button
@@ -475,8 +444,8 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900/50">
+      {/* OS Module Grid: LABEL, VENUE, ARTIST, SIGN, VAULT, SPLITS */}
+      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900/30">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -485,29 +454,34 @@ const Landing = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">Everything You Need</h2>
+            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">One Platform. Every Role.</h2>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Powerful features designed to make your A&R process more efficient and effective.
+              Labels, venues, and artists on a single data pipeline. No duplication, no silos.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => {
-              const Icon = feature.icon
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {osModules.map((mod, index) => {
+              const Icon = mod.icon
               return (
                 <motion.div
-                  key={index}
+                  key={mod.id}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="p-6 bg-gray-900/50 border border-gray-800 rounded-lg hover:border-neon-purple/50 transition-colors"
+                  transition={{ duration: 0.6, delay: index * 0.08 }}
+                  className="relative p-6 bg-os-bg border border-gray-800 rounded-xl hover:border-neon-purple/40 transition-colors"
                 >
+                  {mod.badge && (
+                    <span className={`absolute top-3 right-3 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${mod.badge === 'Coming Soon' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-gray-700 text-gray-400 border border-gray-600'}`}>
+                      {mod.badge}
+                    </span>
+                  )}
                   <div className="p-3 bg-neon-purple/20 rounded-lg w-fit mb-4">
                     <Icon size={24} className="text-neon-purple" />
                   </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
-                  <p className="text-gray-400">{feature.description}</p>
+                  <h3 className="text-lg font-bold text-white mb-1">{mod.title}</h3>
+                  <p className="text-gray-400 text-sm">{mod.description}</p>
                 </motion.div>
               )
             })}
@@ -776,10 +750,10 @@ const Landing = () => {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-              Ready to Transform Your A&R Process?
+              Ready for the Music Industry OS?
             </h2>
             <p className="text-xl text-gray-300 mb-8">
-              Join labels already using SoundPath to streamline their workflow.
+              Join labels and teams already on SoundPath One.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <motion.button
@@ -815,7 +789,7 @@ const Landing = () => {
                 </div>
                 <span className="text-xl font-bold text-white">{labelName}</span>
               </div>
-              <p className="text-gray-400 text-sm">The A&R Command Center for modern labels.</p>
+              <p className="text-gray-400 text-sm">The Music Industry OS for labels, venues, and artists.</p>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">Product</h4>

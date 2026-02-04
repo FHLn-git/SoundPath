@@ -11,7 +11,6 @@ import {
   Key,
   HelpCircle,
   Webhook,
-  Inbox,
   Send,
   Trophy,
   Crown,
@@ -19,12 +18,17 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
+  Grid3X3,
+  Building2,
+  Music,
+  Settings,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
 import { useBilling } from '../context/BillingContext'
 import { useState, useEffect, useMemo } from 'react'
 import { useMobile } from '../hooks/useMobile'
+import ComingSoonModal from './ComingSoonModal'
 
 const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
   const { tracks, getUpcomingCount, connectionStatus } = useApp()
@@ -37,6 +41,8 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
   const [hasManagerAccess, setHasManagerAccess] = useState(false)
   const [isFreeTier, setIsFreeTier] = useState(false)
   const [hoveredItem, setHoveredItem] = useState(null)
+  const [appSwitcherOpen, setAppSwitcherOpen] = useState(false)
+  const [comingSoonApp, setComingSoonApp] = useState(null) // 'venue' | 'artist' | null
   const upcomingCount = getUpcomingCount()
   const vaultCount = tracks.filter(t => t.column === 'vault' && !t.archived).length
 
@@ -113,12 +119,15 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
     ? 'Personal Dashboard'
     : activeOrg?.organization_name || 'Dashboard'
 
-  // Workspace indicator text from URL: /labels → "[Label Name] Workspace"; /personal → "Personal Agent Office"
-  const workspaceIndicatorText = location.pathname.startsWith('/labels/')
+  // Workspace indicator: /app/label/labels/* or /labels/* → Label name; /app/label/personal* or /personal* → Personal
+  const path = location.pathname
+  const isLabelWorkspacePath = path.startsWith('/app/label/labels/') || path.startsWith('/labels/')
+  const isPersonalPath = path.startsWith('/app/label/personal') || path.startsWith('/personal')
+  const workspaceIndicatorText = isLabelWorkspacePath
     ? activeOrg
       ? `${activeOrg.organization_name} Workspace`
       : 'Label Workspace'
-    : location.pathname.startsWith('/personal')
+    : isPersonalPath
       ? 'Personal Agent Office'
       : null
 
@@ -145,35 +154,34 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
     }
   }, [staffProfile, isPersonalView, hasFeature, isSystemAdmin])
 
-  // Agent-Centric Navigation: Show Personal features when activeOrgId is null, Label features when set
-  // Personal dashboard at /personal/dashboard; Label dashboard at /labels/:orgId
+  // Music Industry OS: all label routes under /app/label/*
   const personalNavItems = [
-    { path: '/personal/dashboard', label: 'DASHBOARD', icon: LayoutDashboard },
+    { path: '/app/label/personal/dashboard', label: 'DASHBOARD', icon: LayoutDashboard },
     ...(hasArtistDirectoryAccess
-      ? [{ path: '/artists', label: 'ARTIST DIRECTORY', icon: Users }]
+      ? [{ path: '/app/label/artists', label: 'ARTIST DIRECTORY', icon: Users }]
       : []),
-    { path: '/personal/pitched', label: 'PITCHED', icon: Send, isPremium: true },
-    { path: '/personal/signed', label: 'SIGNED', icon: Trophy, isPremium: true },
-    ...(hasManagerAccess ? [{ path: '/admin', label: 'Manager', icon: Shield }] : []),
+    { path: '/app/label/personal/pitched', label: 'PITCHED', icon: Send, isPremium: true },
+    { path: '/app/label/personal/signed', label: 'SIGNED', icon: Trophy, isPremium: true },
+    ...(hasManagerAccess ? [{ path: '/app/label/admin', label: 'Manager', icon: Shield }] : []),
   ]
 
   const labelNavItems = [
     {
-      path: activeOrgId ? `/labels/${activeOrgId}` : '/launchpad',
+      path: activeOrgId ? `/app/label/labels/${activeOrgId}` : '/app/label/launchpad',
       label: dashboardLabel,
       icon: LayoutDashboard,
     },
     ...(hasArtistDirectoryAccess
-      ? [{ path: '/artists', label: 'Artist Directory', icon: Users }]
+      ? [{ path: '/app/label/artists', label: 'Artist Directory', icon: Users }]
       : []),
-    { path: '/upcoming', label: 'Upcoming', icon: Calendar, count: upcomingCount },
-    { path: '/vault', label: 'The Vault', icon: Archive, count: vaultCount },
-    { path: '/calendar', label: 'Calendar', icon: CalendarRange },
-    ...(hasManagerAccess ? [{ path: '/admin', label: 'Manager', icon: Shield }] : []),
+    { path: '/app/label/upcoming', label: 'Upcoming', icon: Calendar, count: upcomingCount },
+    { path: '/app/label/vault', label: 'The Vault', icon: Archive, count: vaultCount },
+    { path: '/app/label/calendar', label: 'Calendar', icon: CalendarRange },
+    ...(hasManagerAccess ? [{ path: '/app/label/admin', label: 'Manager', icon: Shield }] : []),
     ...(activeMembership?.role === 'Owner'
       ? [
-          { path: '/api-keys', label: 'API Keys', icon: Key },
-          { path: '/webhooks', label: 'Webhooks', icon: Webhook },
+          { path: '/app/label/api-keys', label: 'API Keys', icon: Key },
+          { path: '/app/label/webhooks', label: 'Webhooks', icon: Webhook },
         ]
       : []),
   ]
@@ -190,41 +198,72 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
     }
   }
 
+  // Return path for Coming Soon modal (current label context or launchpad)
+  const comingSoonReturnPath = activeOrgId
+    ? `/app/label/labels/${activeOrgId}`
+    : '/app/label/launchpad'
+
   // Sidebar content
   const sidebarContent = (
     <>
-      {/* SoundPath Header */}
+      {/* SoundPath OS – App Switcher (9-dot) + Branding */}
       <div className={`border-b border-gray-800 ${collapsed ? 'p-3' : 'p-4 md:p-6'}`}>
         <div
           className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between mb-2'}`}
         >
           {collapsed ? (
-            // Collapsed: Show only icon
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-neon-purple to-recording-red">
-              <Zap size={20} className="text-white" />
+            <div className="relative">
+              <button
+                onClick={() => setAppSwitcherOpen(!appSwitcherOpen)}
+                className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#0B0E14] border border-gray-700 hover:border-gray-600 transition-colors"
+                aria-label="SoundPath OS – App Switcher"
+              >
+                <Grid3X3 size={20} className="text-gray-300" />
+              </button>
+              {appSwitcherOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setAppSwitcherOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute left-full ml-2 top-0 z-50 w-52 py-2 bg-[#0B0E14] border border-gray-700 rounded-lg shadow-xl"
+                  >
+                    <NavLink to="/app/label/launchpad" onClick={() => { setAppSwitcherOpen(false); handleNavClick() }} className="flex items-center gap-2 px-3 py-2 text-white hover:bg-gray-800">
+                      <Building2 size={18} /> Label
+                    </NavLink>
+                    <button type="button" onClick={() => { setComingSoonApp('venue'); setAppSwitcherOpen(false) }} className="w-full flex items-center gap-2 px-3 py-2 text-gray-400 hover:bg-gray-800 hover:text-white">
+                      <Music size={18} /> Venue <span className="ml-auto text-[10px] text-amber-400 uppercase">Soon</span>
+                    </button>
+                    <button type="button" onClick={() => { setComingSoonApp('artist'); setAppSwitcherOpen(false) }} className="w-full flex items-center gap-2 px-3 py-2 text-gray-400 hover:bg-gray-800 hover:text-white">
+                      <Music size={18} /> Artist <span className="ml-auto text-[10px] text-amber-400 uppercase">Soon</span>
+                    </button>
+                  </motion.div>
+                </>
+              )}
             </div>
           ) : (
-            // Expanded: Show full logo
+            // Expanded: [Icon] SoundPath | LABEL
             <>
-              <motion.h1
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-xl md:text-2xl font-bold text-white"
-              >
-                SoundPath
-              </motion.h1>
-              <div className="flex items-center gap-2">
-                {/* Close button on mobile */}
+              <div className="flex items-center gap-2 min-w-0">
+                <button
+                  onClick={() => setAppSwitcherOpen(!appSwitcherOpen)}
+                  className="flex-shrink-0 p-1.5 rounded-lg bg-[#0B0E14] border border-gray-700 hover:border-gray-600 transition-colors"
+                  aria-label="SoundPath OS – App Switcher"
+                >
+                  <Grid3X3 size={18} className="text-gray-300" />
+                </button>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-lg md:text-xl font-bold text-white truncate">SoundPath</span>
+                  <span className="text-gray-500 flex-shrink-0">|</span>
+                  <span className="text-sm font-semibold text-neon-purple/90 truncate">LABEL</span>
+                </motion.div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {isMobile && onClose && (
-                  <button
-                    onClick={onClose}
-                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors touch-target"
-                    aria-label="Close menu"
-                  >
+                  <button onClick={onClose} className="p-2 hover:bg-gray-800 rounded-lg transition-colors touch-target" aria-label="Close menu">
                     <X size={20} className="text-gray-400" />
                   </button>
                 )}
-                {/* Connection Status Indicator - Only show in expanded or as tooltip in collapsed */}
                 {!collapsed && (
                   <div
                     className="relative"
@@ -252,39 +291,28 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                     )}
                   </div>
                 )}
-                {/* Connection indicator in collapsed state - show as small dot in header */}
-                {collapsed && (
-                  <div
-                    className="relative"
-                    onMouseEnter={() => setShowConnectionTooltip(true)}
-                    onMouseLeave={() => setShowConnectionTooltip(false)}
-                  >
-                    <div
-                      className={`w-2 h-2 rounded-full ${getConnectionColor()} ${getConnectionPulse()} shadow-lg cursor-help transition-all`}
-                    />
-                    {/* Tooltip */}
-                    {showConnectionTooltip && (
-                      <motion.div
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="absolute left-full ml-2 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white whitespace-nowrap z-50 shadow-xl pointer-events-none"
-                      >
-                        <div className="font-semibold mb-1">
-                          {connectionStatus.status === 'connected'
-                            ? '✓ Connected'
-                            : connectionStatus.status === 'error'
-                              ? '✗ Error'
-                              : 'Checking...'}
-                        </div>
-                        {connectionStatus.message && (
-                          <div className="text-gray-400">{connectionStatus.message}</div>
-                        )}
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 border-l border-b border-gray-700 rotate-45" />
-                      </motion.div>
-                    )}
-                  </div>
-                )}
               </div>
+              {/* App Switcher dropdown when expanded */}
+              {appSwitcherOpen && !collapsed && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setAppSwitcherOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute left-4 right-4 top-full mt-2 z-50 py-2 bg-[#0B0E14] border border-gray-700 rounded-lg shadow-xl"
+                  >
+                    <NavLink to="/app/label/launchpad" onClick={() => { setAppSwitcherOpen(false); handleNavClick() }} className="flex items-center gap-2 px-3 py-2 text-white hover:bg-gray-800">
+                      <Building2 size={18} /> Label
+                    </NavLink>
+                    <button type="button" onClick={() => { setComingSoonApp('venue'); setAppSwitcherOpen(false) }} className="w-full flex items-center gap-2 px-3 py-2 text-gray-400 hover:bg-gray-800 hover:text-white text-left">
+                      <Music size={18} /> Venue <span className="ml-auto text-[10px] text-amber-400 uppercase">Soon</span>
+                    </button>
+                    <button type="button" onClick={() => { setComingSoonApp('artist'); setAppSwitcherOpen(false) }} className="w-full flex items-center gap-2 px-3 py-2 text-gray-400 hover:bg-gray-800 hover:text-white text-left">
+                      <Music size={18} /> Artist <span className="ml-auto text-[10px] text-amber-400 uppercase">Soon</span>
+                    </button>
+                  </motion.div>
+                </>
+              )}
             </>
           )}
         </div>
@@ -335,7 +363,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
         )}
       </div>
 
-      {/* Launchpad Link - always show so users in Personal Office (no label memberships) can get back */}
+      {/* Launchpad Link - Music Industry OS: /app/label/launchpad */}
       <div className={`border-b border-gray-800 ${collapsed ? 'p-2' : 'p-3 md:p-4'}`}>
           <div
             className="relative"
@@ -343,7 +371,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
             onMouseLeave={() => setHoveredItem(null)}
           >
             <NavLink
-              to="/launchpad"
+              to="/app/label/launchpad"
               onClick={handleNavClick}
               className={({ isActive }) =>
                 `w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2'} p-2 bg-gray-900/50 hover:bg-gray-900/70 rounded-lg border transition-all relative ${
@@ -391,13 +419,13 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
         {navItems.map(item => {
           const showProBadge = isPersonalView && item.isPremium && isFreeTier
           const isDashboardPath =
-            item.path === '/personal/dashboard' ||
-            (activeOrgId && item.path === `/labels/${activeOrgId}`)
+            item.path === '/app/label/personal/dashboard' ||
+            (activeOrgId && item.path === `/app/label/labels/${activeOrgId}`)
           const isActive =
             location.pathname === item.path ||
             (isDashboardPath &&
-              (location.pathname === '/personal/dashboard' ||
-                location.pathname.match(/^\/labels\/[^/]+$/)))
+              (location.pathname === '/app/label/personal/dashboard' ||
+                location.pathname.match(/^\/app\/label\/labels\/[^/]+$/)))
 
           return (
             <div
@@ -410,9 +438,9 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                 to={item.path}
                 onClick={handleNavClick}
                 end={
-                  item.path === '/personal/dashboard' ||
+                  item.path === '/app/label/personal/dashboard' ||
                   item.path === '/' ||
-                  (activeOrgId && item.path === `/labels/${activeOrgId}`)
+                  (activeOrgId && item.path === `/app/label/labels/${activeOrgId}`)
                 }
                 className={({ isActive: navIsActive }) =>
                   `flex items-center ${collapsed ? 'justify-center' : 'justify-between'} ${collapsed ? 'px-2' : 'px-3 md:px-4'} py-2.5 md:py-3 rounded-lg transition-all duration-200 relative touch-target ${
@@ -477,6 +505,21 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
         })}
       </nav>
 
+      {/* Settings (Unified Billing/Profile) */}
+      <div className={`border-t border-gray-800 ${collapsed ? 'p-2' : 'p-3 md:p-4'}`}>
+        <div className="relative" onMouseEnter={() => !isMobile && collapsed && setHoveredItem('settings')} onMouseLeave={() => setHoveredItem(null)}>
+          <NavLink to="/app/settings/billing" onClick={handleNavClick} className={({ isActive }) => `flex items-center ${collapsed ? 'justify-center' : 'gap-3'} ${collapsed ? 'px-2' : 'px-3 md:px-4'} py-2.5 md:py-3 rounded-lg transition-all duration-200 touch-target ${isActive ? 'bg-gray-800/50 text-white border border-gray-700' : 'text-gray-400 hover:text-white hover:bg-gray-900/50'}`}>
+            <Settings size={collapsed ? 20 : 18} className="flex-shrink-0" />
+            {!collapsed && <span className="font-medium text-sm md:text-base">Settings</span>}
+          </NavLink>
+          {collapsed && hoveredItem === 'settings' && !isMobile && (
+            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="absolute left-full ml-2 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white whitespace-nowrap z-50 shadow-xl pointer-events-none">
+              Settings <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 border-l border-b border-gray-700 rotate-45" />
+            </motion.div>
+          )}
+        </div>
+      </div>
+
       {/* Help Section */}
       <div
         className={`border-t border-gray-800 bg-gray-950/95 ${collapsed ? 'p-2' : 'p-3 md:p-4'}`}
@@ -537,6 +580,14 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
           </button>
         </div>
       )}
+
+      {/* Coming Soon Alpha modal for Venue / Artist */}
+      <ComingSoonModal
+        isOpen={comingSoonApp !== null}
+        onClose={() => setComingSoonApp(null)}
+        appName={comingSoonApp === 'venue' ? 'Venue' : comingSoonApp === 'artist' ? 'Artist' : 'App'}
+        returnPath={comingSoonReturnPath}
+      />
     </>
   )
 

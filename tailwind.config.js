@@ -8,6 +8,7 @@ export default {
     extend: {
       colors: {
         'studio-dark': '#0f172a',
+        'os-bg': '#0B0E14', /* high-tech DAW / Music Industry OS */
         'neon-purple': '#a855f7',
         'recording-red': '#ef4444',
       },
