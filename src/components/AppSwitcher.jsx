@@ -1,14 +1,17 @@
 import { useState, useRef, useEffect } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { Grid3X3, Building2, Music } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { getAppBaseUrl } from '../lib/appHost'
 import ComingSoonModal from './ComingSoonModal'
 
 /**
  * Shared app switcher: grid icon button + dropdown (Label, Venue, Artist).
- * Dropdown is rendered in a portal so it always appears on top and works from sidebar or header.
+ * Uses absolute URLs: subdomains in production (https://label.soundpath.app, etc.),
+ * same-origin paths on localhost (/app/label/launchpad, /app/venue). Ensures browser
+ * switches context correctly when moving between Label and Venue apps.
  */
 export default function AppSwitcher({ variant = 'default', className = '' }) {
   const location = useLocation()
@@ -20,20 +23,22 @@ export default function AppSwitcher({ variant = 'default', className = '' }) {
 
   const isCompact = variant === 'compact'
   const path = location.pathname
-  const isVenuePath = path.startsWith('/app/venue')
+  const isLabelPath = path.startsWith('/app/label') || path.startsWith('/label')
+  const isVenuePath = path.startsWith('/app/venue') || path === '/venue' || path.startsWith('/venue/')
+
+  const labelUrl = getAppBaseUrl('label')
+  const venueUrl = getAppBaseUrl('venue')
 
   const comingSoonReturnPath = activeOrgId
     ? `/app/label/labels/${activeOrgId}`
     : '/app/label/launchpad'
 
-  // Position dropdown below trigger when open
   useEffect(() => {
     if (!open || !buttonRef.current) return
     const rect = buttonRef.current.getBoundingClientRect()
     setPosition({ top: rect.bottom + 4, left: rect.left })
   }, [open])
 
-  // Close on route change
   useEffect(() => {
     setOpen(false)
   }, [path])
@@ -62,28 +67,24 @@ export default function AppSwitcher({ variant = 'default', className = '' }) {
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
-        <NavLink
-          to="/app/label/launchpad"
+        <a
+          href={labelUrl}
           onClick={closeDropdown}
-          className={({ isActive }) =>
-            `flex items-center gap-2 px-3 py-2 text-left transition-colors block w-full ${
-              isActive ? 'text-white bg-gray-800' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-            }`
-          }
+          className={`flex items-center gap-2 px-3 py-2 text-left transition-colors block w-full ${
+            isLabelPath ? 'text-white bg-gray-800' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+          }`}
         >
           <Building2 size={18} /> Label
-        </NavLink>
-        <NavLink
-          to="/app/venue"
+        </a>
+        <a
+          href={venueUrl}
           onClick={closeDropdown}
-          className={({ isActive }) =>
-            `flex items-center gap-2 px-3 py-2 text-left transition-colors block w-full ${
-              isActive ? 'text-white bg-gray-800' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-            }`
-          }
+          className={`flex items-center gap-2 px-3 py-2 text-left transition-colors block w-full ${
+            isVenuePath ? 'text-white bg-gray-800' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+          }`}
         >
           <Music size={18} /> Venue
-        </NavLink>
+        </a>
         <button
           type="button"
           onClick={handleArtist}

@@ -3,9 +3,9 @@ import { Zap } from 'lucide-react'
 import MegaNav from './MegaNav'
 
 /**
- * Shared layout for all public marketing pages.
- * Separate from the authenticated app layout (sidebar / MobileLayout).
- * Provides seamless transition from public site to authenticated app via Sign In / Open App.
+ * Shared layout for all public marketing pages (Home, Solutions, Products, Pricing).
+ * Uses MegaNav only; do NOT use this layout for dashboard routes (/app/label, /label, /app/venue, etc.).
+ * Dashboard routes must use MobileLayout/Sidebar and must not render MarketingLayout or MegaNav.
  */
 export default function MarketingLayout() {
   return (

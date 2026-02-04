@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { useBilling } from '../context/BillingContext'
 import { useState, useEffect } from 'react'
 import { Crown } from 'lucide-react'
+import { getLabelPath } from '../lib/appHost'
 
 /**
  * Bottom Navigation Bar for Personal Workspace on Mobile
@@ -49,11 +50,11 @@ const BottomNav = () => {
   }
 
   const navItems = [
-    { path: '/launchpad', label: 'Launchpad', icon: Rocket },
-    { path: '/personal/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    ...(hasArtistDirectoryAccess ? [{ path: '/artists', label: 'Directory', icon: Users }] : []),
-    { path: '/personal/pitched', label: 'Pitched', icon: Send, isPremium: true },
-    { path: '/personal/signed', label: 'Signed', icon: Trophy, isPremium: true },
+    { path: getLabelPath('launchpad'), label: 'Launchpad', icon: Rocket },
+    { path: getLabelPath('personal/dashboard'), label: 'Dashboard', icon: LayoutDashboard },
+    ...(hasArtistDirectoryAccess ? [{ path: getLabelPath('artists'), label: 'Directory', icon: Users }] : []),
+    { path: getLabelPath('personal/pitched'), label: 'Pitched', icon: Send, isPremium: true },
+    { path: getLabelPath('personal/signed'), label: 'Signed', icon: Trophy, isPremium: true },
   ]
 
   return (
@@ -85,10 +86,7 @@ const BottomNav = () => {
         }}
       >
         {navItems.map((item, index) => {
-          const isActive =
-            location.pathname === item.path ||
-            (item.path === '/personal/dashboard' && location.pathname === '/personal/dashboard') ||
-            (item.path === '/launchpad' && location.pathname === '/launchpad')
+          const isActive = location.pathname === item.path
           const showProBadge = item.isPremium && isFreeTier
 
           return (

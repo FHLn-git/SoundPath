@@ -14,6 +14,9 @@ if (supabaseUrl && supabaseAnonKey && supabaseUrl.trim() !== '' && supabaseAnonK
     // - Persist session in localStorage for cross-tab stability
     // - Auto-refresh tokens without UI interruption
     // - Detect OAuth/email link sessions in URL on initial load
+    // - Session across subdomains (label/venue/artist.soundpath.app): use auth handoff via
+    //   /auth/continue when switching apps; for cookie domain .soundpath.app you would need
+    //   a custom storage adapter or server-side auth with Set-Cookie domain.
     const storage = typeof window !== 'undefined' ? window.localStorage : undefined
 
     supabase = createClient(supabaseUrl, supabaseAnonKey, {

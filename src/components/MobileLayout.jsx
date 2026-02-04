@@ -9,7 +9,8 @@ import { useMobile } from '../hooks/useMobile'
 import { useAuth } from '../context/AuthContext'
 
 /**
- * Layout wrapper that handles mobile sidebar and provides hamburger menu
+ * Dashboard layout: sidebar + UnifiedAppHeader. Use only for Label app routes
+ * (/app/label/*, /label/*). Do NOT use on marketing routes (MarketingLayout + MegaNav only).
  */
 const MobileLayout = ({ children, showBottomNav = false }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)

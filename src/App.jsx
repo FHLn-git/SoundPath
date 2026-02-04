@@ -15,8 +15,14 @@ import Sidebar from './components/Sidebar'
 import MobileLayout from './components/MobileLayout'
 import { Loader2 } from 'lucide-react'
 import Diagnostics from './components/Diagnostics'
+import { getAppHost } from './lib/appHost'
 
-/** Syncs URL to activeOrganizationId: /labels/:orgId or /app/label/labels/:orgId -> set org; /personal/* or /app/label/personal/* -> set null. */
+/** Base path for Label app: /label when on subdomain, /app/label when on main domain or localhost. */
+function labelBase() {
+  return getAppHost() === 'label' ? '/label' : '/app/label'
+}
+
+/** Syncs URL to activeOrganizationId: supports /labels/:id, /app/label/labels/:id, /label/labels/:id; personal/* clears org. */
 function WorkspaceRouteSync() {
   const location = useLocation()
   const { pathname } = location
@@ -27,7 +33,7 @@ function WorkspaceRouteSync() {
     if (lastPathRef.current === pathname) return
     lastPathRef.current = pathname
 
-    const labelsMatch = pathname.match(/^\/(?:app\/label\/)?labels\/([^/]+)/)
+    const labelsMatch = pathname.match(/^\/(?:app\/label\/|label\/)?labels\/([^/]+)/)
     if (labelsMatch) {
       const orgId = labelsMatch[1]
       const hasMembership = memberships?.some(m => m.organization_id === orgId)
@@ -37,7 +43,7 @@ function WorkspaceRouteSync() {
       return
     }
 
-    if (pathname.startsWith('/personal/') || pathname.startsWith('/app/label/personal/')) {
+    if (pathname.startsWith('/personal/') || pathname.startsWith('/app/label/personal/') || pathname.startsWith('/label/personal/')) {
       if (activeOrgId !== null) {
         clearWorkspace()
       }
@@ -47,25 +53,26 @@ function WorkspaceRouteSync() {
   return null
 }
 
-/** Redirect /labels/:orgId to /app/label/labels/:orgId (legacy URL support). */
+/** Redirect /labels/:orgId to label app path (subdomain or /app/label). */
 function RedirectLabelsToApp() {
   const { orgId } = useParams()
-  return <Navigate to={`/app/label/labels/${orgId}`} replace />
+  return <Navigate to={`${labelBase()}/labels/${orgId}`} replace />
 }
 
-/** Redirect /phase/:phaseId to /app/label/phase/:phaseId (legacy URL support). */
+/** Redirect /phase/:phaseId to label app path. */
 function RedirectPhaseToApp() {
   const { phaseId } = useParams()
-  return <Navigate to={`/app/label/phase/${phaseId}`} replace />
+  return <Navigate to={`${labelBase()}/phase/${phaseId}`} replace />
 }
 
-/** Renders Dashboard for /labels/:orgId or /app/label/labels/:orgId; redirects to /app/label/launchpad if no membership. */
+/** Renders Dashboard for labels/:orgId; redirects to launchpad if no membership. */
 function LabelDashboardGuard() {
   const { orgId } = useParams()
   const { memberships } = useAuth()
+  const base = labelBase()
   const hasMembership = memberships?.some(m => m.organization_id === orgId)
   if (!orgId || !hasMembership) {
-    return <Navigate to="/app/label/launchpad" replace />
+    return <Navigate to={`${base}/launchpad`} replace />
   }
   return (
     <MobileLayout showBottomNav={true}>
@@ -319,59 +326,83 @@ function AppContent() {
                 {/* App Selector */}
                 <Route path="/apps" element={<AppSelector />} />
                 {/* Legacy path redirects to /app/* */}
-                <Route path="/launchpad" element={<Navigate to="/app/label/launchpad" replace />} />
-                <Route path="/dashboard" element={<Navigate to="/app/label/launchpad" replace />} />
-                <Route path="/personal-office" element={<Navigate to="/app/label/personal/dashboard" replace />} />
-                <Route path="/personal-office/submitted" element={<Navigate to="/app/label/personal/dashboard" replace />} />
-                <Route path="/personal-office/signed" element={<Navigate to="/app/label/personal/signed" replace />} />
+                <Route path="/launchpad" element={<Navigate to={`${labelBase()}/launchpad`} replace />} />
+                <Route path="/dashboard" element={<Navigate to={`${labelBase()}/launchpad`} replace />} />
+                <Route path="/personal-office" element={<Navigate to={`${labelBase()}/personal/dashboard`} replace />} />
+                <Route path="/personal-office/submitted" element={<Navigate to={`${labelBase()}/personal/dashboard`} replace />} />
+                <Route path="/personal-office/signed" element={<Navigate to={`${labelBase()}/personal/signed`} replace />} />
                 <Route path="/labels/:orgId" element={<RedirectLabelsToApp />} />
                 <Route path="/billing" element={<Navigate to="/app/settings/billing" replace />} />
                 <Route path="/security" element={<Navigate to="/app/settings/security" replace />} />
                 <Route path="/data-export" element={<Navigate to="/app/settings/data-export" replace />} />
                 <Route path="/delete-account" element={<Navigate to="/app/settings/delete-account" replace />} />
-                <Route path="/artists" element={<Navigate to="/app/label/artists" replace />} />
-                <Route path="/admin" element={<Navigate to="/app/label/admin" replace />} />
-                <Route path="/admin/staff" element={<Navigate to="/app/label/admin/staff" replace />} />
-                <Route path="/calendar" element={<Navigate to="/app/label/calendar" replace />} />
-                <Route path="/upcoming" element={<Navigate to="/app/label/upcoming" replace />} />
-                <Route path="/vault" element={<Navigate to="/app/label/vault" replace />} />
-                <Route path="/api-keys" element={<Navigate to="/app/label/api-keys" replace />} />
-                <Route path="/webhooks" element={<Navigate to="/app/label/webhooks" replace />} />
+                <Route path="/artists" element={<Navigate to={`${labelBase()}/artists`} replace />} />
+                <Route path="/admin" element={<Navigate to={`${labelBase()}/admin`} replace />} />
+                <Route path="/admin/staff" element={<Navigate to={`${labelBase()}/admin/staff`} replace />} />
+                <Route path="/calendar" element={<Navigate to={`${labelBase()}/calendar`} replace />} />
+                <Route path="/upcoming" element={<Navigate to={`${labelBase()}/upcoming`} replace />} />
+                <Route path="/vault" element={<Navigate to={`${labelBase()}/vault`} replace />} />
+                <Route path="/api-keys" element={<Navigate to={`${labelBase()}/api-keys`} replace />} />
+                <Route path="/webhooks" element={<Navigate to={`${labelBase()}/webhooks`} replace />} />
                 <Route path="/phase/:phaseId" element={<RedirectPhaseToApp />} />
-                <Route path="/personal/dashboard" element={<Navigate to="/app/label/personal/dashboard" replace />} />
-                <Route path="/personal/pitched" element={<Navigate to="/app/label/personal/pitched" replace />} />
-                <Route path="/personal/signed" element={<Navigate to="/app/label/personal/signed" replace />} />
-                <Route path="/populate" element={<Navigate to="/app/label/populate" replace />} />
-                <Route path="/god-mode" element={<Navigate to="/app/label/god-mode" replace />} />
-                <Route path="/admin/dashboard" element={<Navigate to="/app/label/admin/dashboard" replace />} />
+                <Route path="/personal/dashboard" element={<Navigate to={`${labelBase()}/personal/dashboard`} replace />} />
+                <Route path="/personal/pitched" element={<Navigate to={`${labelBase()}/personal/pitched`} replace />} />
+                <Route path="/personal/signed" element={<Navigate to={`${labelBase()}/personal/signed`} replace />} />
+                <Route path="/populate" element={<Navigate to={`${labelBase()}/populate`} replace />} />
+                <Route path="/god-mode" element={<Navigate to={`${labelBase()}/god-mode`} replace />} />
+                <Route path="/admin/dashboard" element={<Navigate to={`${labelBase()}/admin/dashboard`} replace />} />
 
-                {/* App root: go straight to Label app (launchpad), not app selector */}
-                <Route path="/app" element={<Navigate to="/app/label/launchpad" replace />} />
-                <Route path="/app/label" element={<Navigate to="/app/label/launchpad" replace />} />
+                {/* App root: go to Label launchpad (path depends on host) */}
+                <Route path="/app" element={<Navigate to={`${labelBase()}/launchpad`} replace />} />
+                <Route path="/app/label" element={<Navigate to={`${labelBase()}/launchpad`} replace />} />
 
                 {/* Venue (ShowCheck) – full viewport only; no sidebar or Label chrome */}
+                {/* Path-based subdomain routes: /label/*, /venue, /artist */}
+                <Route path="/label" element={<Navigate to="/label/launchpad" replace />} />
+                <Route path="/label/launchpad" element={<ErrorBoundary><Launchpad /></ErrorBoundary>} />
+                <Route path="/label/labels/:orgId" element={!memberships || memberships.length === 0 ? <Navigate to="/label/launchpad" /> : <LabelDashboardGuard />} />
+                <Route path="/label/personal/dashboard" element={<MobileLayout showBottomNav={true}><ErrorBoundary><Dashboard /></ErrorBoundary></MobileLayout>} />
+                <Route path="/label/personal/pitched" element={activeOrgId !== null ? <Navigate to={`${labelBase()}/labels/${activeOrgId}`} replace /> : <MobileLayout showBottomNav={true}><PersonalPitched /></MobileLayout>} />
+                <Route path="/label/personal/signed" element={activeOrgId !== null ? <Navigate to={`${labelBase()}/labels/${activeOrgId}`} replace /> : <MobileLayout showBottomNav={true}><PersonalSigned /></MobileLayout>} />
+                <Route path="/label/phase/:phaseId" element={memberships?.length === 0 || activeOrgId === null ? <Navigate to="/label/launchpad" /> : <MobileLayout><PhaseDetailView /></MobileLayout>} />
+                <Route path="/label/artists" element={<MobileLayout showBottomNav={true}><ArtistDirectory /></MobileLayout>} />
+                <Route path="/label/admin" element={memberships?.length === 0 ? <Navigate to="/label/launchpad" /> : <MobileLayout><StaffAdmin /></MobileLayout>} />
+                <Route path="/label/admin/staff" element={memberships?.length === 0 ? <Navigate to="/label/launchpad" /> : <MobileLayout><StaffManagement /></MobileLayout>} />
+                <Route path="/label/calendar" element={memberships?.length === 0 ? <Navigate to="/label/launchpad" /> : <MobileLayout><Calendar /></MobileLayout>} />
+                <Route path="/label/upcoming" element={memberships?.length === 0 ? <Navigate to="/label/launchpad" /> : <MobileLayout><Upcoming /></MobileLayout>} />
+                <Route path="/label/vault" element={memberships?.length === 0 ? <Navigate to="/label/launchpad" /> : <MobileLayout><Vault /></MobileLayout>} />
+                <Route path="/label/api-keys" element={memberships?.length === 0 ? <Navigate to="/label/launchpad" /> : <MobileLayout><ApiKeys /></MobileLayout>} />
+                <Route path="/label/webhooks" element={memberships?.length === 0 ? <Navigate to="/label/launchpad" /> : <MobileLayout><Webhooks /></MobileLayout>} />
+                <Route path="/label/populate" element={<MobileLayout><PopulateTestData /></MobileLayout>} />
+                <Route path="/label/god-mode" element={staffProfile?.role === 'SystemAdmin' ? <GlobalPulse /> : <Navigate to="/label/launchpad" />} />
+                <Route path="/label/admin/dashboard" element={staffProfile?.role === 'SystemAdmin' ? <AdminDashboard /> : <Navigate to="/label/launchpad" />} />
+                <Route path="/venue" element={<ErrorBoundary resetKey="/venue"><VenueApp /></ErrorBoundary>} />
+                <Route path="/venue/*" element={<ErrorBoundary resetKey="/venue"><VenueApp /></ErrorBoundary>} />
+                <Route path="/artist" element={<ComingSoonApp appName="Artist" />} />
+                <Route path="/artist/*" element={<ComingSoonApp appName="Artist" />} />
+
+                {/* Venue / Artist on main domain */}
                 <Route path="/app/venue" element={<ErrorBoundary resetKey="/app/venue"><VenueApp /></ErrorBoundary>} />
-                {/* Artist - Coming Soon (placeholder + modal) */}
                 <Route path="/app/artist" element={<ComingSoonApp appName="Artist" />} />
 
-                {/* Label app routes */}
+                {/* Label app routes (main domain: /app/label/*) */}
                 <Route path="/app/label/launchpad" element={<ErrorBoundary><Launchpad /></ErrorBoundary>} />
-                <Route path="/app/label/labels/:orgId" element={!memberships || memberships.length === 0 ? <Navigate to="/app/label/launchpad" /> : <LabelDashboardGuard />} />
+                <Route path="/app/label/labels/:orgId" element={!memberships || memberships.length === 0 ? <Navigate to={`${labelBase()}/launchpad`} /> : <LabelDashboardGuard />} />
                 <Route path="/app/label/personal/dashboard" element={<MobileLayout showBottomNav={true}><ErrorBoundary><Dashboard /></ErrorBoundary></MobileLayout>} />
-                <Route path="/app/label/personal/pitched" element={activeOrgId !== null ? <Navigate to={`/app/label/labels/${activeOrgId}`} replace /> : <MobileLayout showBottomNav={true}><PersonalPitched /></MobileLayout>} />
-                <Route path="/app/label/personal/signed" element={activeOrgId !== null ? <Navigate to={`/app/label/labels/${activeOrgId}`} replace /> : <MobileLayout showBottomNav={true}><PersonalSigned /></MobileLayout>} />
-                <Route path="/app/label/phase/:phaseId" element={memberships?.length === 0 || activeOrgId === null ? <Navigate to="/app/label/launchpad" /> : <MobileLayout><PhaseDetailView /></MobileLayout>} />
+                <Route path="/app/label/personal/pitched" element={activeOrgId !== null ? <Navigate to={`${labelBase()}/labels/${activeOrgId}`} replace /> : <MobileLayout showBottomNav={true}><PersonalPitched /></MobileLayout>} />
+                <Route path="/app/label/personal/signed" element={activeOrgId !== null ? <Navigate to={`${labelBase()}/labels/${activeOrgId}`} replace /> : <MobileLayout showBottomNav={true}><PersonalSigned /></MobileLayout>} />
+                <Route path="/app/label/phase/:phaseId" element={memberships?.length === 0 || activeOrgId === null ? <Navigate to={`${labelBase()}/launchpad`} /> : <MobileLayout><PhaseDetailView /></MobileLayout>} />
                 <Route path="/app/label/artists" element={<MobileLayout showBottomNav={true}><ArtistDirectory /></MobileLayout>} />
-                <Route path="/app/label/admin" element={memberships?.length === 0 ? <Navigate to="/app/label/launchpad" /> : <MobileLayout><StaffAdmin /></MobileLayout>} />
-                <Route path="/app/label/admin/staff" element={memberships?.length === 0 ? <Navigate to="/app/label/launchpad" /> : <MobileLayout><StaffManagement /></MobileLayout>} />
-                <Route path="/app/label/calendar" element={memberships?.length === 0 ? <Navigate to="/app/label/launchpad" /> : <MobileLayout><Calendar /></MobileLayout>} />
-                <Route path="/app/label/upcoming" element={memberships?.length === 0 ? <Navigate to="/app/label/launchpad" /> : <MobileLayout><Upcoming /></MobileLayout>} />
-                <Route path="/app/label/vault" element={memberships?.length === 0 ? <Navigate to="/app/label/launchpad" /> : <MobileLayout><Vault /></MobileLayout>} />
-                <Route path="/app/label/api-keys" element={memberships?.length === 0 ? <Navigate to="/app/label/launchpad" /> : <MobileLayout><ApiKeys /></MobileLayout>} />
-                <Route path="/app/label/webhooks" element={memberships?.length === 0 ? <Navigate to="/app/label/launchpad" /> : <MobileLayout><Webhooks /></MobileLayout>} />
+                <Route path="/app/label/admin" element={memberships?.length === 0 ? <Navigate to={`${labelBase()}/launchpad`} /> : <MobileLayout><StaffAdmin /></MobileLayout>} />
+                <Route path="/app/label/admin/staff" element={memberships?.length === 0 ? <Navigate to={`${labelBase()}/launchpad`} /> : <MobileLayout><StaffManagement /></MobileLayout>} />
+                <Route path="/app/label/calendar" element={memberships?.length === 0 ? <Navigate to={`${labelBase()}/launchpad`} /> : <MobileLayout><Calendar /></MobileLayout>} />
+                <Route path="/app/label/upcoming" element={memberships?.length === 0 ? <Navigate to={`${labelBase()}/launchpad`} /> : <MobileLayout><Upcoming /></MobileLayout>} />
+                <Route path="/app/label/vault" element={memberships?.length === 0 ? <Navigate to={`${labelBase()}/launchpad`} /> : <MobileLayout><Vault /></MobileLayout>} />
+                <Route path="/app/label/api-keys" element={memberships?.length === 0 ? <Navigate to={`${labelBase()}/launchpad`} /> : <MobileLayout><ApiKeys /></MobileLayout>} />
+                <Route path="/app/label/webhooks" element={memberships?.length === 0 ? <Navigate to={`${labelBase()}/launchpad`} /> : <MobileLayout><Webhooks /></MobileLayout>} />
                 <Route path="/app/label/populate" element={<MobileLayout><PopulateTestData /></MobileLayout>} />
-                <Route path="/app/label/god-mode" element={staffProfile?.role === 'SystemAdmin' ? <GlobalPulse /> : <Navigate to="/app/label/launchpad" />} />
-                <Route path="/app/label/admin/dashboard" element={staffProfile?.role === 'SystemAdmin' ? <AdminDashboard /> : <Navigate to="/app/label/launchpad" />} />
+                <Route path="/app/label/god-mode" element={staffProfile?.role === 'SystemAdmin' ? <GlobalPulse /> : <Navigate to={`${labelBase()}/launchpad`} />} />
+                <Route path="/app/label/admin/dashboard" element={staffProfile?.role === 'SystemAdmin' ? <AdminDashboard /> : <Navigate to={`${labelBase()}/launchpad`} />} />
 
                 {/* Settings app (unified Billing / Profile) */}
                 <Route path="/app/settings" element={<Navigate to="/app/settings/billing" replace />} />

@@ -1,20 +1,38 @@
 /**
  * SoundPath App Selector – shown after login.
- * Unified behavior: open apps inside SoundPath (no cross-domain token handoff).
+ * Uses absolute subdomain URLs in production (label.soundpath.app, venue.soundpath.app)
+ * so the browser switches context; path-based on localhost.
  */
 import { Building2, Music, User, LogOut, Zap } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { getAppBaseUrl } from '../lib/appHost'
 
 export default function AppSelector() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
 
   const openLabel = () => {
+    const url = getAppBaseUrl('label')
+    try {
+      const targetHost = new URL(url).host
+      if (url.startsWith('http') && targetHost !== window.location.host) {
+        window.location.href = url
+        return
+      }
+    } catch (_) {}
     navigate('/app/label/launchpad')
   }
 
   const openVenue = () => {
+    const url = getAppBaseUrl('venue')
+    try {
+      const targetHost = new URL(url).host
+      if (url.startsWith('http') && targetHost !== window.location.host) {
+        window.location.href = url
+        return
+      }
+    } catch (_) {}
     navigate('/app/venue')
   }
 

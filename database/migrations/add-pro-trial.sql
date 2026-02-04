@@ -175,6 +175,11 @@ BEGIN
     'downgraded', v_downgraded,
     'activated', v_activated
   );
+EXCEPTION
+  WHEN undefined_column THEN
+    RETURN jsonb_build_object('ok', false, 'error', 'schema_or_runtime');
+  WHEN OTHERS THEN
+    RETURN jsonb_build_object('ok', false, 'error', 'schema_or_runtime');
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

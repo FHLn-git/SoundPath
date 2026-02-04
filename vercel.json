@@ -4,22 +4,14 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "vite",
-  "redirects": [
-    {
-      "source": "/:path*",
-      "has": [{ "type": "host", "value": "label.soundpath.app" }],
-      "destination": "https://soundpath.app/app/label/launchpad",
-      "permanent": false
-    },
-    {
-      "source": "/:path*",
-      "has": [{ "type": "host", "value": "venue.soundpath.app" }],
-      "destination": "https://soundpath.app/app/venue",
-      "permanent": false
-    }
-  ],
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api/:path*" },
+    { "source": "/label", "destination": "/index.html" },
+    { "source": "/label/:path*", "destination": "/index.html" },
+    { "source": "/venue", "destination": "/index.html" },
+    { "source": "/venue/:path*", "destination": "/index.html" },
+    { "source": "/artist", "destination": "/index.html" },
+    { "source": "/artist/:path*", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

@@ -25,6 +25,7 @@ import { useAuth } from '../context/AuthContext'
 import { useBilling } from '../context/BillingContext'
 import { useState, useEffect, useMemo } from 'react'
 import { useMobile } from '../hooks/useMobile'
+import { getLabelPath } from '../lib/appHost'
 
 const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse, topOffset = 0 }) => {
   const { tracks, getUpcomingCount, connectionStatus } = useApp()
@@ -154,34 +155,30 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse, topOffset = 0
     }
   }, [staffProfile, isPersonalView, hasFeature, isSystemAdmin])
 
-  // Music Industry OS: all label routes under /app/label/*
+  // Music Industry OS: label routes (context-aware: /label/* on subdomain, /app/label/* on main/localhost)
   const personalNavItems = [
-    { path: '/app/label/personal/dashboard', label: 'DASHBOARD', icon: LayoutDashboard },
-    ...(hasArtistDirectoryAccess
-      ? [{ path: '/app/label/artists', label: 'ARTIST DIRECTORY', icon: Users }]
-      : []),
-    { path: '/app/label/personal/pitched', label: 'PITCHED', icon: Send, isPremium: true },
-    { path: '/app/label/personal/signed', label: 'SIGNED', icon: Trophy, isPremium: true },
-    ...(hasManagerAccess ? [{ path: '/app/label/admin', label: 'Manager', icon: Shield }] : []),
+    { path: getLabelPath('personal/dashboard'), label: 'DASHBOARD', icon: LayoutDashboard },
+    ...(hasArtistDirectoryAccess ? [{ path: getLabelPath('artists'), label: 'ARTIST DIRECTORY', icon: Users }] : []),
+    { path: getLabelPath('personal/pitched'), label: 'PITCHED', icon: Send, isPremium: true },
+    { path: getLabelPath('personal/signed'), label: 'SIGNED', icon: Trophy, isPremium: true },
+    ...(hasManagerAccess ? [{ path: getLabelPath('admin'), label: 'Manager', icon: Shield }] : []),
   ]
 
   const labelNavItems = [
     {
-      path: activeOrgId ? `/app/label/labels/${activeOrgId}` : '/app/label/launchpad',
+      path: activeOrgId ? getLabelPath(`labels/${activeOrgId}`) : getLabelPath('launchpad'),
       label: dashboardLabel,
       icon: LayoutDashboard,
     },
-    ...(hasArtistDirectoryAccess
-      ? [{ path: '/app/label/artists', label: 'Artist Directory', icon: Users }]
-      : []),
-    { path: '/app/label/upcoming', label: 'Upcoming', icon: Calendar, count: upcomingCount },
-    { path: '/app/label/vault', label: 'The Vault', icon: Archive, count: vaultCount },
-    { path: '/app/label/calendar', label: 'Calendar', icon: CalendarRange },
-    ...(hasManagerAccess ? [{ path: '/app/label/admin', label: 'Manager', icon: Shield }] : []),
+    ...(hasArtistDirectoryAccess ? [{ path: getLabelPath('artists'), label: 'Artist Directory', icon: Users }] : []),
+    { path: getLabelPath('upcoming'), label: 'Upcoming', icon: Calendar, count: upcomingCount },
+    { path: getLabelPath('vault'), label: 'The Vault', icon: Archive, count: vaultCount },
+    { path: getLabelPath('calendar'), label: 'Calendar', icon: CalendarRange },
+    ...(hasManagerAccess ? [{ path: getLabelPath('admin'), label: 'Manager', icon: Shield }] : []),
     ...(activeMembership?.role === 'Owner'
       ? [
-          { path: '/app/label/api-keys', label: 'API Keys', icon: Key },
-          { path: '/app/label/webhooks', label: 'Webhooks', icon: Webhook },
+          { path: getLabelPath('api-keys'), label: 'API Keys', icon: Key },
+          { path: getLabelPath('webhooks'), label: 'Webhooks', icon: Webhook },
         ]
       : []),
   ]
@@ -253,7 +250,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse, topOffset = 0
         </motion.div>
       )}
 
-      {/* Launchpad Link - Music Industry OS: /app/label/launchpad */}
+      {/* Launchpad Link - context-aware: /label/launchpad or /app/label/launchpad */}
       <div className={`border-b border-gray-800 ${collapsed ? 'p-2' : 'p-3 md:p-4'}`}>
           <div
             className="relative"
@@ -261,7 +258,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse, topOffset = 0
             onMouseLeave={() => setHoveredItem(null)}
           >
             <NavLink
-              to="/app/label/launchpad"
+              to={getLabelPath('launchpad')}
               onClick={handleNavClick}
               className={({ isActive }) =>
                 `w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2'} p-2 bg-gray-900/50 hover:bg-gray-900/70 rounded-lg border transition-all relative ${
@@ -309,13 +306,13 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse, topOffset = 0
         {navItems.map(item => {
           const showProBadge = isPersonalView && item.isPremium && isFreeTier
           const isDashboardPath =
-            item.path === '/app/label/personal/dashboard' ||
-            (activeOrgId && item.path === `/app/label/labels/${activeOrgId}`)
+            item.path === getLabelPath('personal/dashboard') ||
+            (activeOrgId && item.path === getLabelPath(`labels/${activeOrgId}`))
           const isActive =
             location.pathname === item.path ||
             (isDashboardPath &&
-              (location.pathname === '/app/label/personal/dashboard' ||
-                location.pathname.match(/^\/app\/label\/labels\/[^/]+$/)))
+              (location.pathname === getLabelPath('personal/dashboard') ||
+                location.pathname.match(/^\/(?:app\/label|label)\/labels\/[^/]+$/)))
 
           return (
             <div
@@ -328,9 +325,9 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse, topOffset = 0
                 to={item.path}
                 onClick={handleNavClick}
                 end={
-                  item.path === '/app/label/personal/dashboard' ||
+                  item.path === getLabelPath('personal/dashboard') ||
                   item.path === '/' ||
-                  (activeOrgId && item.path === `/app/label/labels/${activeOrgId}`)
+                  (activeOrgId && item.path === getLabelPath(`labels/${activeOrgId}`))
                 }
                 className={({ isActive: navIsActive }) =>
                   `flex items-center ${collapsed ? 'justify-center' : 'justify-between'} ${collapsed ? 'px-2' : 'px-3 md:px-4'} py-2.5 md:py-3 rounded-lg transition-all duration-200 relative touch-target ${
