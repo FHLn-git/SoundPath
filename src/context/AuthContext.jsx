@@ -1,7 +1,17 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
 const AuthContext = createContext()
+
+// Single getSession for entire app lifecycle (avoids Strict Mode double-mount abort storm)
+let getSessionPromise = null
+function getOrCreateGetSessionPromise() {
+  if (!supabase) return null
+  if (getSessionPromise === null) {
+    getSessionPromise = supabase.auth.getSession()
+  }
+  return getSessionPromise
+}
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
@@ -21,43 +31,40 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null)
   const [staffRealtimeChannel, setStaffRealtimeChannel] = useState(null)
   const [membershipsRealtimeChannel, setMembershipsRealtimeChannel] = useState(null)
+  const loadProfileInFlightRef = useRef(null)
+  const lastLoadedAuthUserIdRef = useRef(null)
 
-  // Load user session on mount
+  // Load user session on mount (single getSession shared across Strict Mode remounts)
   useEffect(() => {
     if (!supabase) {
-      console.warn('⚠️ Supabase not configured - showing login screen')
       setLoading(false)
       return
     }
 
     let mounted = true
-
-    // Get initial session
-    supabase.auth
-      .getSession()
-      .then(({ data: { session }, error }) => {
-        if (!mounted) return
-
-        if (error) {
-          console.error('Error getting session:', error)
-          setLoading(false)
-          return
-        }
-
-        setSession(session)
-        setUser(session?.user ?? null)
-        if (session?.user) {
-          loadStaffProfile(session.user.id)
-        } else {
-          setLoading(false)
-        }
-      })
-      .catch(error => {
-        console.error('Error in getSession:', error)
-        if (mounted) {
-          setLoading(false)
-        }
-      })
+    const sessionPromise = getOrCreateGetSessionPromise()
+    if (sessionPromise) {
+      sessionPromise
+        .then(({ data: { session }, error }) => {
+          if (!mounted) return
+          if (error) {
+            setLoading(false)
+            return
+          }
+          setSession(session)
+          setUser(session?.user ?? null)
+          if (session?.user) {
+            loadStaffProfile(session.user.id)
+          } else {
+            setLoading(false)
+          }
+        })
+        .catch(err => {
+          if (!mounted) return
+          const isAbort = err?.message?.includes?.('Abort') || err?.name === 'AbortError'
+          if (!isAbort) setLoading(false)
+        })
+    }
 
     // Listen for auth changes
     const {
@@ -72,6 +79,7 @@ export const AuthProvider = ({ children }) => {
 
       // Supabase v2 events include: INITIAL_SESSION, SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, USER_UPDATED, PASSWORD_RECOVERY
       if (_event === 'SIGNED_OUT') {
+        lastLoadedAuthUserIdRef.current = null
         setStaffProfile(null)
         setMemberships([])
         setActiveOrgId(null)
@@ -107,9 +115,18 @@ export const AuthProvider = ({ children }) => {
       setLoading(false)
       return
     }
+    if (loadProfileInFlightRef.current === authUserId) {
+      return
+    }
+    if (lastLoadedAuthUserIdRef.current === authUserId) {
+      setLoading(false)
+      return
+    }
+    loadProfileInFlightRef.current = authUserId
 
     try {
-      console.log('🔍 Loading staff profile for auth user:', authUserId)
+      if (import.meta.env.DEV) {
+      }
 
       // Add timeout wrapper without async Promise executor (lint-safe)
       const queryWithTimeout = () => {
@@ -137,13 +154,15 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await queryWithTimeout()
 
       if (error) {
-        console.error('❌ Error loading staff profile:', error)
-        console.error('Error details:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-        })
+        const isAbort = error?.message?.includes?.('Abort') || error?.name === 'AbortError'
+        if (isAbort) {
+          setLoading(false)
+          loadProfileInFlightRef.current = null
+          return
+        }
+        if (import.meta.env.DEV) {
+          console.warn('Staff profile query error:', error.code, error.message)
+        }
 
         // If it's a "no rows" error, the auth_user_id isn't linked
         if (
@@ -177,14 +196,12 @@ export const AuthProvider = ({ children }) => {
             if (!createError && newStaff) {
               console.log('✅ Successfully created staff member automatically')
               setStaffProfile(newStaff)
-              // Enforce trial expiry / activation on login (best-effort)
-              try {
-                const { data: enforceData } = await supabase.rpc('enforce_personal_trial_status')
-                if (enforceData?.downgraded) {
-                  sessionStorage.setItem('trial_just_expired', '1')
-                }
-              } catch (_e) {
-                // ignore
+              // Enforce trial expiry on login (best-effort); skip in dev to avoid 400 if migration not run
+              if (import.meta.env.PROD) {
+                try {
+                  const { data: enforceData } = await supabase.rpc('enforce_personal_trial_status')
+                  if (enforceData?.downgraded) sessionStorage.setItem('trial_just_expired', '1')
+                } catch (_e) { /* ignore */ }
               }
               await loadMemberships(newStaff.id)
               setLoading(false)
@@ -228,46 +245,50 @@ export const AuthProvider = ({ children }) => {
         setActiveMembership(null)
         setLoading(false)
       } else {
-        console.log('✅ Staff profile loaded:', data)
+        lastLoadedAuthUserIdRef.current = authUserId
         setStaffProfile(data)
-        // Enforce trial expiry / activation on login (best-effort)
-        // This acts like middleware: if trial ended and no subscription_id, downgrade to free.
-        try {
-          const { data: enforceData } = await supabase.rpc('enforce_personal_trial_status')
-          if (enforceData?.downgraded) {
-            sessionStorage.setItem('trial_just_expired', '1')
-          }
-          // If enforcement changed anything, refresh the staff profile once.
-          if (enforceData?.downgraded || enforceData?.activated) {
-            const refreshed = await supabase
-              .from('staff_members')
-              .select('*')
-              .eq('auth_user_id', authUserId)
-              .single()
-            if (!refreshed?.error && refreshed?.data) {
-              setStaffProfile(refreshed.data)
+        // Enforce trial expiry / activation on login (best-effort). Skip in dev to avoid 400 if migration not run.
+        if (import.meta.env.PROD) {
+          try {
+            const { data: enforceData, error: rpcError } = await supabase.rpc('enforce_personal_trial_status')
+            if (rpcError) {
+              const isSchemaMismatch = rpcError.message?.includes('subscription_id') || rpcError.code === '400'
+              if (!isSchemaMismatch) console.warn('Trial enforcement RPC (non-fatal):', rpcError.message)
+            } else if (enforceData?.downgraded) {
+              sessionStorage.setItem('trial_just_expired', '1')
             }
+            if (enforceData?.downgraded || enforceData?.activated) {
+              const refreshed = await supabase
+                .from('staff_members')
+                .select('*')
+                .eq('auth_user_id', authUserId)
+                .single()
+              if (!refreshed?.error && refreshed?.data) {
+                setStaffProfile(refreshed.data)
+              }
+            }
+          } catch (_e) {
+            // RPC missing or network error; app works without it
           }
-        } catch (e) {
-          console.warn('Trial enforcement check failed (non-fatal):', e?.message || e)
         }
         // Load memberships after profile is loaded
         await loadMemberships(data.id)
       }
     } catch (error) {
-      console.error('❌ Exception loading staff profile:', error)
-      if (error.message?.includes('timeout')) {
-        console.error('⚠️ Query timed out - this might be an RLS issue or network problem')
-        console.error('💡 Check:')
-        console.error('   1. Is the staff member linked to this auth user?')
-        console.error('   2. Are RLS policies correctly configured?')
-        console.error('   3. Is the database accessible?')
+      const isAbort = error?.message?.includes?.('Abort') || error?.name === 'AbortError'
+      if (!isAbort) {
+        // Only log non-timeout errors; timeout often retries and succeeds
+        if (import.meta.env.DEV && !error?.message?.includes?.('timeout')) {
+          console.warn('Staff profile load failed:', error?.message)
+        }
+        setStaffProfile(null)
+        setMemberships([])
+        setActiveOrgId(null)
+        setActiveMembership(null)
       }
-      setStaffProfile(null)
-      setMemberships([])
-      setActiveOrgId(null)
-      setActiveMembership(null)
       setLoading(false)
+    } finally {
+      loadProfileInFlightRef.current = null
     }
   }
 
@@ -759,7 +780,7 @@ export const AuthProvider = ({ children }) => {
 
   // Background enforcement: if a trial expires while the app is open, downgrade/activate without requiring a full reload.
   useEffect(() => {
-    if (!supabase || !user?.id) return
+    if (!import.meta.env.PROD || !supabase || !user?.id) return
     if (staffProfile?.user_status !== 'trialing' || !staffProfile?.trial_ends_at) return
 
     const interval = setInterval(

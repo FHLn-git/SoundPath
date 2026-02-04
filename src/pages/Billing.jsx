@@ -207,7 +207,7 @@ const Billing = () => {
                   </div>
                   <h2 className="text-lg font-bold text-white">Premier founding member tier</h2>
                   <p className="text-sm text-gray-300 mt-1">
-                    You’re on the Music Industry OS. Alpha pricing is temporary — lock in your rate now and get full access to Label today, with Venue and Artist modules coming soon.
+                    You’re on the Music Industry OS. Alpha pricing is temporary — lock in your rate now and get full access to Label and Venue today, with the Artist module coming soon.
                   </p>
                 </div>
               </div>

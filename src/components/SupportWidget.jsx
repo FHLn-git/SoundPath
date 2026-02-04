@@ -8,10 +8,7 @@ const SupportWidget = () => {
     const provider = import.meta.env.VITE_SUPPORT_PROVIDER || 'crisp'
     const apiKey = import.meta.env.VITE_SUPPORT_API_KEY
 
-    if (!apiKey) {
-      console.warn('Support widget API key not configured')
-      return
-    }
+    if (!apiKey) return
 
     if (provider === 'crisp') {
       // Crisp integration

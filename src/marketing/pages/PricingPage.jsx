@@ -9,7 +9,7 @@ const YEARLY_DISCOUNT = 0.2 // 20%
 
 const BUNDLE_FEATURES = [
   'Label Hub (A&R pipeline, submissions, releases)',
-  'Venue Hub (when available)',
+  'Venue Hub',
   'Artist Hub (when available)',
   'Sign, Vault, Splits utilities',
   'Unified data model, no silos',

@@ -115,6 +115,9 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const HealthCheck = lazy(() => import('./pages/HealthCheck'))
 const SupportWidget = lazy(() => import('./components/SupportWidget'))
 const ComingSoonApp = lazy(() => import('./pages/ComingSoonApp'))
+const VenueApp = lazy(() => import('./pages/VenueApp'))
+const AppSelector = lazy(() => import('./pages/AppSelector'))
+const AuthContinue = lazy(() => import('./pages/AuthContinue'))
 const MarketingLayout = lazy(() => import('./marketing/MarketingLayout'))
 const SolutionPage = lazy(() => import('./marketing/pages/SolutionPage'))
 const ProductPage = lazy(() => import('./marketing/pages/ProductPage'))
@@ -136,15 +139,9 @@ function AppContent() {
   const [hasPersonalInbox, setHasPersonalInbox] = useState(false)
   const [checkingPersonalInbox, setCheckingPersonalInbox] = useState(true)
 
-  // Determine default route - Music Industry OS: /app/label/launchpad or /app/label/labels/:id
+  // Unified default: after login, show the App Selector.
   const defaultRoute = useMemo(() => {
-    if (!memberships || memberships.length === 0) {
-      return '/app/label/launchpad'
-    }
-    if (activeOrgId === null) {
-      return '/app/label/launchpad'
-    }
-    return `/app/label/labels/${activeOrgId}`
+    return '/apps'
   }, [memberships, activeOrgId])
 
   // Add timeout fallback to prevent infinite loading
@@ -297,6 +294,9 @@ function AppContent() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/plan/:planId" element={<PlanInfo />} />
 
+            {/* Auth handoff: Label app receives tokens from app selector and sets session */}
+            <Route path="/auth/continue" element={<AuthContinue />} />
+
             {/* Marketing ecosystem: home + solutions, products, pricing, resources (shared MarketingLayout + MegaNav) */}
             <Route element={<MarketingLayout />}>
               <Route
@@ -316,6 +316,8 @@ function AppContent() {
             {/* Protected Routes - Music Industry OS: /app/label, /app/venue, /app/artist, /app/settings */}
             {user && staffProfile ? (
               <>
+                {/* App Selector */}
+                <Route path="/apps" element={<AppSelector />} />
                 {/* Legacy path redirects to /app/* */}
                 <Route path="/launchpad" element={<Navigate to="/app/label/launchpad" replace />} />
                 <Route path="/dashboard" element={<Navigate to="/app/label/launchpad" replace />} />
@@ -343,12 +345,13 @@ function AppContent() {
                 <Route path="/god-mode" element={<Navigate to="/app/label/god-mode" replace />} />
                 <Route path="/admin/dashboard" element={<Navigate to="/app/label/admin/dashboard" replace />} />
 
-                {/* App root: redirect to Label launchpad */}
-                <Route path="/app" element={<Navigate to={defaultRoute} replace />} />
+                {/* App root: go straight to Label app (launchpad), not app selector */}
+                <Route path="/app" element={<Navigate to="/app/label/launchpad" replace />} />
                 <Route path="/app/label" element={<Navigate to="/app/label/launchpad" replace />} />
 
-                {/* Venue & Artist - Coming Soon (placeholder + modal) */}
-                <Route path="/app/venue" element={<ComingSoonApp appName="Venue" />} />
+                {/* Venue (ShowCheck) – full viewport only; no sidebar or Label chrome */}
+                <Route path="/app/venue" element={<ErrorBoundary resetKey="/app/venue"><VenueApp /></ErrorBoundary>} />
+                {/* Artist - Coming Soon (placeholder + modal) */}
                 <Route path="/app/artist" element={<ComingSoonApp appName="Artist" />} />
 
                 {/* Label app routes */}
@@ -380,6 +383,11 @@ function AppContent() {
                 <Route path="/health" element={<HealthCheck />} />
                 <Route path="*" element={<NotFound />} />
               </>
+            ) : user ? (
+              // User is authenticated but staffProfile is still loading/failed once.
+              // Keep the current path and show nothing here so we don't redirect to '/'
+              // and lose the original deep-link (/app/label/launchpad).
+              <Route path="*" element={null} />
             ) : (
               <Route path="*" element={<Navigate to="/" />} />
             )}

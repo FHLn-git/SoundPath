@@ -23,10 +23,15 @@ export const initErrorLogger = () => {
       })
     })
 
-    // Catch unhandled promise rejections
+    // Catch unhandled promise rejections (ignore AbortError - expected when auth/tracks are cancelled)
     window.addEventListener('unhandledrejection', event => {
+      const msg = event.reason?.message || ''
+      if (msg.includes('AbortError') || msg.includes('aborted')) {
+        event.preventDefault()
+        return
+      }
       logError({
-        message: event.reason?.message || 'Unhandled promise rejection',
+        message: msg || 'Unhandled promise rejection',
         stack: event.reason?.stack,
         url: window.location.href,
         component: 'Promise Rejection',
@@ -78,6 +83,11 @@ const getBrowserInfo = () => {
   }
 }
 
+function isAbortError(message) {
+  if (!message || typeof message !== 'string') return false
+  return message.includes('AbortError') || message.includes('aborted')
+}
+
 // Main error logging function
 export const logError = async ({
   message,
@@ -90,6 +100,7 @@ export const logError = async ({
   staffMember = null,
   organization = null,
 }) => {
+  if (isAbortError(message)) return
   if (!supabase) {
     console.error('Error logger: Supabase not available', { message, stack })
     return
@@ -126,13 +137,13 @@ export const logError = async ({
       p_severity: severity,
     })
 
-    if (error) {
+    if (error && !isAbortError(error.message)) {
       console.error('Failed to log error to database:', error)
-    } else {
+    } else if (!error) {
       console.log('Error logged to database:', data)
     }
   } catch (error) {
-    // Don't let error logging break the app
+    if (isAbortError(error?.message)) return
     console.error('Error in error logger:', error)
   }
 }

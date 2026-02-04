@@ -34,6 +34,7 @@ import UsageWarningBanner from '../components/UsageWarningBanner'
 import TrialExpiredModal from '../components/TrialExpiredModal'
 import GlobalIntakeDropdown from '../components/GlobalIntakeDropdown'
 import AddDemoModal from '../components/AddDemoModal'
+import UnifiedAppHeader from '../components/UnifiedAppHeader'
 
 const Launchpad = () => {
   const navigate = useNavigate()
@@ -1717,6 +1718,7 @@ const Launchpad = () => {
         isOpen={showTrialExpiredModal}
         onClose={() => setShowTrialExpiredModal(false)}
       />
+      <UnifiedAppHeader appLabel="LABEL" />
       <div className="w-full px-4 sm:px-6 lg:px-10 pt-6 sm:pt-8 flex-shrink-0">
         {/* Usage Warning Banner */}
         <UsageWarningBanner />
@@ -1794,10 +1796,10 @@ const Launchpad = () => {
           </motion.div>
         )}
 
-        {/* Header - Compact Top Left */}
+        {/* Page title and actions */}
         <div className="mb-2 flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white mb-0.5">A&R Launchpad</h1>
+            <h1 className="text-xl font-bold text-white mb-0.5">A&R Launchpad</h1>
             <p className="text-gray-500 text-sm">Review vitals before entering your workspace</p>
           </div>
           <div className="flex items-center gap-2">

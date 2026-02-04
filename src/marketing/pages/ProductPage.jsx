@@ -48,7 +48,7 @@ const PRODUCTS = {
     name: 'Venue',
     tagline: 'Booking, calendar, and capacity in one hub.',
     icon: Music,
-    status: 'coming_soon',
+    status: 'live',
     features: [
       {
         title: 'Booking & capacity',
@@ -64,7 +64,7 @@ const PRODUCTS = {
       { spec: 'Booking pipeline', value: 'Inquiry to settlement' },
       { spec: 'Integrations', value: 'Sign, Splits' },
     ],
-    mockupLabel: 'Venue Hub – Coming Soon',
+    mockupLabel: 'Venue Hub',
   },
   artist: {
     name: 'Artist',

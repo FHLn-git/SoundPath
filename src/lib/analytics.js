@@ -11,10 +11,7 @@ export const initAnalytics = () => {
   const provider = import.meta.env.VITE_ANALYTICS_PROVIDER || 'posthog'
   const apiKey = import.meta.env.VITE_ANALYTICS_API_KEY
 
-  if (!apiKey) {
-    console.warn('Analytics API key not configured')
-    return
-  }
+  if (!apiKey) return
 
   try {
     if (provider === 'posthog') {

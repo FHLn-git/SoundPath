@@ -56,6 +56,12 @@ npm install
 npm run dev
 ```
 
+   **Unified dev (main app + Venue):** To run the main app and the Venue app (ShowCheck) together so you can use the app selector and Venue in one go:
+```bash
+npm run dev:all
+```
+   This starts the main app on port 5173 and ShowCheck on port 3001 in one terminal.
+
 3. Build for production:
 ```bash
 npm run build
@@ -89,12 +95,16 @@ npm run build
 
 ```
 SoundPath/
-  ├── src/                    # React application source code
+  ├── src/                    # React application source code (Label app)
   │   ├── components/         # Reusable React components
   │   ├── pages/              # Page components
   │   ├── context/            # React context providers
   │   ├── hooks/              # Custom React hooks
   │   └── lib/                # Utility libraries
+  ├── ShowCheck/              # SoundPath Venue (sub-repo) – venue & promoter app
+  │   ├── app/                # Next.js app router
+  │   ├── components/         # Venue admin, promoter portal, show builder, etc.
+  │   └── package.json        # pnpm + Next.js 16, React 19
   ├── database/               # Database SQL files
   │   ├── schemas/            # Main database schemas
   │   ├── migrations/         # Feature migrations
@@ -104,6 +114,18 @@ SoundPath/
   ├── supabase/               # Supabase edge functions
   └── public/                 # Static assets
 ```
+
+### ShowCheck (SoundPath Venue)
+
+`ShowCheck/` is the **SoundPath Venue** app (internal name: ShowCheck). It is a separate Git repo and runs as its own Next.js app. It is integrated into the main SoundPath site via the **App Switcher** (Label | Venue | Artist) and is available at `/app/venue`.
+
+- **Tech:** Next.js 16, React 19, TypeScript, Tailwind, Radix UI.
+- **Run locally:** From the repo root, `cd ShowCheck`, then `npm install` and `npm run dev` (default port 3000; for in-app embedding in SoundPath, run on port 3001: `npm run dev -- -p 3001`).
+- **In production:** Set `VITE_VENUE_APP_URL` to your deployed Venue app URL so the main site can embed it.
+
+### Domains and Vercel (soundpath.app, label.soundpath.app, venue.soundpath.app)
+
+To serve **soundpath.app** as the landing/marketing site and **label.soundpath.app** / **venue.soundpath.app** as the Label and Venue apps, see **[docs/SETUP_DOMAINS_AND_VERCEL.md](docs/SETUP_DOMAINS_AND_VERCEL.md)** for step-by-step instructions (Vercel projects, env vars, DNS, and Supabase redirect URLs).
 
 ### Database Setup
 

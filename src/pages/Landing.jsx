@@ -282,7 +282,7 @@ const Landing = ({ noHeader = false }) => {
 
   const osModules = [
     { id: 'label', icon: Building2, title: 'LABEL', description: 'A&R pipeline, submissions, releases.', badge: null },
-    { id: 'venue', icon: Music, title: 'VENUE', description: 'Booking, calendar, capacity.', badge: 'Coming Soon' },
+    { id: 'venue', icon: Music, title: 'VENUE', description: 'Booking, calendar, capacity.', badge: null },
     { id: 'artist', icon: Music, title: 'ARTIST', description: 'Portfolio, pitches, deals.', badge: 'Coming Soon' },
     { id: 'sign', icon: FileSignature, title: 'SIGN', description: 'Deals and contracts.', badge: 'Utility' },
     { id: 'vault', icon: Archive, title: 'VAULT', description: 'Catalog and archive.', badge: 'Utility' },

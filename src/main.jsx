@@ -13,8 +13,7 @@ initErrorTracking()
 // Initialize product analytics
 initAnalytics()
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-)
+// Strict Mode disabled: it double-mounts effects and causes Supabase auth getSession/subscriptions
+// to abort each other, leading to loading/error/app-selector glitching. Re-enable when auth is
+// fully resilient to double init or run production build (no double-mount there).
+ReactDOM.createRoot(document.getElementById('root')).render(<App />)

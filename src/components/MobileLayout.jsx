@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
-import { Menu, X } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import Sidebar from './Sidebar'
 import BottomNav from './BottomNav'
+import UnifiedAppHeader from './UnifiedAppHeader'
 import { useMobile } from '../hooks/useMobile'
 import { useAuth } from '../context/AuthContext'
 
@@ -41,40 +42,40 @@ const MobileLayout = ({ children, showBottomNav = false }) => {
   const sidebarWidth = isMobile ? 0 : isCollapsed ? 64 : 256
 
   return (
-    <div className="flex min-h-screen bg-gray-950">
-      {/* Sidebar - hidden on mobile, shown via drawer */}
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        isCollapsed={isCollapsed}
-        onToggleCollapse={handleToggleCollapse}
-      />
-
-      {/* Main Content */}
-      <main
-        className="flex-1 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
-        style={{ marginLeft: isMobile ? 0 : `${sidebarWidth}px` }}
-      >
-        {/* Mobile Header with Hamburger */}
-        {isMobile && (
-          <header className="sticky top-0 z-30 bg-gray-950/95 backdrop-blur-lg border-b border-gray-800 px-4 py-3 flex items-center justify-between">
+    <div className="flex flex-col min-h-screen bg-gray-950">
+      {/* Unified top header: full width, app switcher left */}
+      <UnifiedAppHeader
+        appLabel="LABEL"
+        rightSlot={
+          isMobile ? (
             <button
               onClick={() => setSidebarOpen(true)}
               className="p-2 hover:bg-gray-800 rounded-lg transition-colors touch-target"
               aria-label="Open menu"
             >
-              <Menu size={24} className="text-gray-300" />
+              <Menu size={22} className="text-gray-300" />
             </button>
-            <h1 className="text-base font-bold text-white">SoundPath <span className="text-gray-500 font-normal">|</span> <span className="text-neon-purple/90">LABEL</span></h1>
-            <div className="w-10" /> {/* Spacer for centering */}
-          </header>
-        )}
+          ) : null
+        }
+      />
 
-        {/* Content Area */}
-        <div className={`${isMobile ? 'p-4 pb-20' : 'max-w-[1600px] ml-0 p-10'}`}>{children}</div>
-      </main>
+      <div className="flex flex-1 min-h-0">
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          isCollapsed={isCollapsed}
+          onToggleCollapse={handleToggleCollapse}
+          topOffset={56}
+        />
 
-      {/* Bottom Navigation for Personal Workspace on Mobile */}
+        <main
+          className="flex-1 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] min-w-0"
+          style={{ marginLeft: isMobile ? 0 : `${sidebarWidth}px` }}
+        >
+          <div className={`${isMobile ? 'p-4 pb-20' : 'max-w-[1600px] ml-0 p-10'}`}>{children}</div>
+        </main>
+      </div>
+
       <AnimatePresence mode="wait">
         {isMobile && showBottomNav && isPersonalView && <BottomNav key={location.pathname} />}
       </AnimatePresence>

@@ -194,17 +194,23 @@ export const AppProvider = ({ children }) => {
       })
 
       if (tracksError) {
-        console.error('❌ Supabase tracks fetch error:', tracksError)
-        console.error('Error code:', tracksError.code)
-        console.error('Error message:', tracksError.message)
-        console.error('Error details:', tracksError.details)
-        console.error('Error hint:', tracksError.hint)
+        const isAbort = tracksError.message?.includes('AbortError') || tracksError.message?.includes('aborted')
+        if (!isAbort) {
+          if (import.meta.env.DEV) {
+            console.warn('Tracks fetch error:', tracksError.message)
+          }
+        }
 
         // If table doesn't exist, that's okay - just use empty array
         if (tracksError.code === 'PGRST116' || tracksError.message?.includes('does not exist')) {
           console.warn(
             'Tracks table does not exist yet. Please run database/schemas/master-schema.sql script.'
           )
+          setTracks([])
+          setLoading(false)
+          return
+        }
+        if (isAbort) {
           setTracks([])
           setLoading(false)
           return
@@ -251,13 +257,10 @@ export const AppProvider = ({ children }) => {
       console.log(`✅ Loaded ${transformedTracks.length} tracks from Supabase`)
       setTracks(transformedTracks)
     } catch (error) {
-      console.error('Error loading tracks from Supabase:', error)
-      console.error('Error details:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-      })
-      // Fallback to empty array on error - app will still work
+      const isAbort = error?.message?.includes('AbortError') || error?.message?.includes('aborted')
+      if (!isAbort && import.meta.env.DEV) {
+        console.warn('Tracks load error:', error?.message)
+      }
       setTracks([])
       // Don't block the UI - let the app render with empty tracks
     } finally {

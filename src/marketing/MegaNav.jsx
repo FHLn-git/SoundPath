@@ -31,7 +31,7 @@ const SOLUTIONS = [
 /* Products = the reality/sales. Short copy for mega-menu. */
 const CORE_HUBS = [
   { id: 'label', label: 'Label', href: '/products/label', icon: Building2, description: 'A&R pipeline from inbox to vault' },
-  { id: 'venue', label: 'Venue', href: '/products/venue', icon: Music, description: 'Booking & capacity hub (coming soon)' },
+  { id: 'venue', label: 'Venue', href: '/products/venue', icon: Music, description: 'Booking & capacity hub for venues' },
   { id: 'artist', label: 'Artist', href: '/products/artist', icon: UserCircle, description: 'Portfolio & deal hub (coming soon)' },
 ]
 

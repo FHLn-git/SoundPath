@@ -9,10 +9,8 @@ export const initErrorTracking = () => {
   // Only initialize once
   if (errorTrackingInitialized) return
 
-  // Initialize our custom error logger
   initErrorLogger()
   errorTrackingInitialized = true
-  console.log('✅ Custom error tracking initialized')
 }
 
 export const captureException = (error, context = {}) => {
