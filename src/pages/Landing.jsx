@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Zap,
@@ -20,7 +20,7 @@ import { supabase } from '../lib/supabaseClient'
 import Toast from '../components/Toast'
 import { AlphaOnlyTag, AlphaPricingContainer, AlphaStatusBanner } from '../components/AlphaPricing'
 
-const Landing = () => {
+const Landing = ({ noHeader = false }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -28,6 +28,7 @@ const Landing = () => {
   const [toast, setToast] = useState({ isVisible: false, message: '', type: 'error' })
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { signIn, user, staffProfile, memberships, loading: authLoading } = useAuth()
   const slug = searchParams.get('slug') || null
   const message = searchParams.get('message')
@@ -85,6 +86,14 @@ const Landing = () => {
     }
     loadPlans()
   }, [])
+
+  // Open login modal when navigating from MegaNav "Sign In" (state.openLogin)
+  useEffect(() => {
+    if (location.state?.openLogin) {
+      setShowLoginModal(true)
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location.state?.openLogin, navigate, location.pathname])
 
   // Show success messages and open login modal if needed
   useEffect(() => {
@@ -282,129 +291,57 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-os-bg">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-os-bg/90 backdrop-blur-md border-b border-gray-800">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo: SoundPath | OS */}
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-gradient-to-br from-neon-purple to-recording-red rounded-lg">
-                <Zap size={20} className="text-white" />
-              </div>
-              <span className="text-xl font-bold text-white">{labelName}</span>
-              <span className="text-gray-500">|</span>
-              <span className="text-sm font-semibold text-neon-purple/90">Music Industry OS</span>
-            </div>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-8">
-              <button
-                onClick={() => scrollToSection('features')}
-                className="text-gray-300 hover:text-white transition-colors"
-              >
-                Features
-              </button>
-              <button
-                onClick={() => scrollToSection('pricing')}
-                className="text-gray-300 hover:text-white transition-colors"
-              >
-                Pricing
-              </button>
-              <button
-                onClick={() => navigate('/help')}
-                className="text-gray-300 hover:text-white transition-colors"
-              >
-                Help
-              </button>
-              <button
-                onClick={() => navigate('/contact')}
-                className="text-gray-300 hover:text-white transition-colors"
-              >
-                Contact
-              </button>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setShowLoginModal(true)}
-                  className="px-4 py-2 bg-gradient-to-r from-neon-purple to-recording-red text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
-                >
-                  Login
-                </button>
-                <button
-                  onClick={() => navigate('/signup')}
-                  className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg font-semibold hover:border-gray-600 hover:text-white transition-colors"
-                >
-                  Sign Up
-                </button>
-              </div>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden text-gray-300 hover:text-white"
-            >
-              <Menu size={24} />
-            </button>
-          </div>
-
-          {/* Mobile Menu */}
-          <AnimatePresence>
-            {mobileMenuOpen && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="md:hidden py-4 space-y-3"
-              >
-                <button
-                  onClick={() => scrollToSection('features')}
-                  className="block w-full text-left text-gray-300 hover:text-white transition-colors"
-                >
-                  Features
-                </button>
-                <button
-                  onClick={() => scrollToSection('pricing')}
-                  className="block w-full text-left text-gray-300 hover:text-white transition-colors"
-                >
-                  Pricing
-                </button>
-                <button
-                  onClick={() => navigate('/help')}
-                  className="block w-full text-left text-gray-300 hover:text-white transition-colors"
-                >
-                  Help
-                </button>
-                <button
-                  onClick={() => navigate('/contact')}
-                  className="block w-full text-left text-gray-300 hover:text-white transition-colors"
-                >
-                  Contact
-                </button>
-                <div className="pt-3 space-y-2 border-t border-gray-800">
-                  <button
-                    onClick={() => {
-                      setShowLoginModal(true)
-                      setMobileMenuOpen(false)
-                    }}
-                    className="w-full px-4 py-2 bg-gradient-to-r from-neon-purple to-recording-red text-white rounded-lg font-semibold"
-                  >
-                    Login
-                  </button>
-                  <button
-                    onClick={() => navigate('/signup')}
-                    className="w-full px-4 py-2 border border-gray-700 text-gray-300 rounded-lg font-semibold"
-                  >
-                    Sign Up
-                  </button>
+      {!noHeader && (
+        <>
+          {/* Header (only when not using MarketingLayout) */}
+          <header className="fixed top-0 left-0 right-0 z-50 bg-os-bg/90 backdrop-blur-md border-b border-gray-800">
+            <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between h-16">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-gradient-to-br from-neon-purple to-recording-red rounded-lg">
+                    <Zap size={20} className="text-white" />
+                  </div>
+                  <span className="text-xl font-bold text-white">{labelName}</span>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </nav>
-      </header>
+                <div className="hidden md:flex items-center gap-8">
+                  <button onClick={() => navigate('/solutions/labels')} className="text-gray-300 hover:text-white transition-colors">Solutions</button>
+                  <button onClick={() => navigate('/products/label')} className="text-gray-300 hover:text-white transition-colors">Products</button>
+                  <button onClick={() => scrollToSection('features')} className="text-gray-300 hover:text-white transition-colors">Features</button>
+                  <button onClick={() => scrollToSection('pricing')} className="text-gray-300 hover:text-white transition-colors">Pricing</button>
+                  <button onClick={() => navigate('/resources/help')} className="text-gray-300 hover:text-white transition-colors">Help</button>
+                  <button onClick={() => navigate('/resources/contact')} className="text-gray-300 hover:text-white transition-colors">Contact</button>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => setShowLoginModal(true)} className="px-4 py-2 bg-gradient-to-r from-neon-purple to-recording-red text-white rounded-lg font-semibold hover:opacity-90 transition-opacity">Login</button>
+                    <button onClick={() => navigate('/signup')} className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg font-semibold hover:border-gray-600 hover:text-white transition-colors">Sign Up</button>
+                  </div>
+                </div>
+                <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden text-gray-300 hover:text-white">
+                  <Menu size={24} />
+                </button>
+              </div>
+              <AnimatePresence>
+                {mobileMenuOpen && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="md:hidden py-4 space-y-3">
+                    <button onClick={() => navigate('/solutions/labels')} className="block w-full text-left text-gray-300 hover:text-white transition-colors">Solutions</button>
+                    <button onClick={() => navigate('/products/label')} className="block w-full text-left text-gray-300 hover:text-white transition-colors">Products</button>
+                    <button onClick={() => scrollToSection('features')} className="block w-full text-left text-gray-300 hover:text-white transition-colors">Features</button>
+                    <button onClick={() => scrollToSection('pricing')} className="block w-full text-left text-gray-300 hover:text-white transition-colors">Pricing</button>
+                    <button onClick={() => navigate('/resources/help')} className="block w-full text-left text-gray-300 hover:text-white transition-colors">Help</button>
+                    <button onClick={() => navigate('/resources/contact')} className="block w-full text-left text-gray-300 hover:text-white transition-colors">Contact</button>
+                    <div className="pt-3 space-y-2 border-t border-gray-800">
+                      <button onClick={() => { setShowLoginModal(true); setMobileMenuOpen(false) }} className="w-full px-4 py-2 bg-gradient-to-r from-neon-purple to-recording-red text-white rounded-lg font-semibold">Login</button>
+                      <button onClick={() => navigate('/signup')} className="w-full px-4 py-2 border border-gray-700 text-gray-300 rounded-lg font-semibold">Sign Up</button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </nav>
+          </header>
+        </>
+      )}
 
       {/* Hero Section - SoundPath One: The Music Industry OS */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+      <section className={`${noHeader ? 'pt-16' : 'pt-32'} pb-20 px-4 sm:px-6 lg:px-8`}>
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -778,98 +715,62 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-gray-800">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-gradient-to-br from-neon-purple to-recording-red rounded-lg">
-                  <Zap size={20} className="text-white" />
+      {!noHeader && (
+        <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-gray-800">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-gradient-to-br from-neon-purple to-recording-red rounded-lg">
+                    <Zap size={20} className="text-white" />
+                  </div>
+                  <span className="text-xl font-bold text-white">{labelName}</span>
                 </div>
-                <span className="text-xl font-bold text-white">{labelName}</span>
+                <p className="text-gray-400 text-sm">The Music Industry OS for labels, venues, and artists.</p>
               </div>
-              <p className="text-gray-400 text-sm">The Music Industry OS for labels, venues, and artists.</p>
+              <div>
+                <h4 className="text-white font-semibold mb-4">Product</h4>
+                <ul className="space-y-2">
+                  <li>
+                    <button onClick={() => scrollToSection('features')} className="text-gray-400 hover:text-white text-sm transition-colors">Features</button>
+                  </li>
+                  <li>
+                    <button onClick={() => scrollToSection('pricing')} className="text-gray-400 hover:text-white text-sm transition-colors">Pricing</button>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-white font-semibold mb-4">Support</h4>
+                <ul className="space-y-2">
+                  <li>
+                    <button onClick={() => navigate('/help')} className="text-gray-400 hover:text-white text-sm transition-colors">Help Center</button>
+                  </li>
+                  <li>
+                    <button onClick={() => navigate('/contact')} className="text-gray-400 hover:text-white text-sm transition-colors">Contact</button>
+                  </li>
+                  <li>
+                    <button onClick={() => navigate('/faq')} className="text-gray-400 hover:text-white text-sm transition-colors">FAQ</button>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-white font-semibold mb-4">Legal</h4>
+                <ul className="space-y-2">
+                  <li>
+                    <button onClick={() => navigate('/terms')} className="text-gray-400 hover:text-white text-sm transition-colors">Terms of Service</button>
+                  </li>
+                  <li>
+                    <button onClick={() => navigate('/privacy')} className="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</button>
+                  </li>
+                </ul>
+              </div>
             </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Product</h4>
-              <ul className="space-y-2">
-                <li>
-                  <button
-                    onClick={() => scrollToSection('features')}
-                    className="text-gray-400 hover:text-white text-sm transition-colors"
-                  >
-                    Features
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => scrollToSection('pricing')}
-                    className="text-gray-400 hover:text-white text-sm transition-colors"
-                  >
-                    Pricing
-                  </button>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Support</h4>
-              <ul className="space-y-2">
-                <li>
-                  <button
-                    onClick={() => navigate('/help')}
-                    className="text-gray-400 hover:text-white text-sm transition-colors"
-                  >
-                    Help Center
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => navigate('/contact')}
-                    className="text-gray-400 hover:text-white text-sm transition-colors"
-                  >
-                    Contact
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => navigate('/faq')}
-                    className="text-gray-400 hover:text-white text-sm transition-colors"
-                  >
-                    FAQ
-                  </button>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2">
-                <li>
-                  <button
-                    onClick={() => navigate('/terms')}
-                    className="text-gray-400 hover:text-white text-sm transition-colors"
-                  >
-                    Terms of Service
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => navigate('/privacy')}
-                    className="text-gray-400 hover:text-white text-sm transition-colors"
-                  >
-                    Privacy Policy
-                  </button>
-                </li>
-              </ul>
+            <div className="mt-8 pt-8 border-t border-gray-800 text-center">
+              <p className="text-gray-400 text-sm">© {new Date().getFullYear()} {labelName}. All rights reserved.</p>
             </div>
           </div>
-          <div className="mt-8 pt-8 border-t border-gray-800 text-center">
-            <p className="text-gray-400 text-sm">
-              © {new Date().getFullYear()} {labelName}. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      )}
 
       {/* Login Modal */}
       <AnimatePresence>

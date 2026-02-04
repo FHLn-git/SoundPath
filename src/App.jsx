@@ -115,6 +115,10 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const HealthCheck = lazy(() => import('./pages/HealthCheck'))
 const SupportWidget = lazy(() => import('./components/SupportWidget'))
 const ComingSoonApp = lazy(() => import('./pages/ComingSoonApp'))
+const MarketingLayout = lazy(() => import('./marketing/MarketingLayout'))
+const SolutionPage = lazy(() => import('./marketing/pages/SolutionPage'))
+const ProductPage = lazy(() => import('./marketing/pages/ProductPage'))
+const PricingPage = lazy(() => import('./marketing/pages/PricingPage'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -242,12 +246,6 @@ function AppContent() {
           <Routes>
             {/* Public Routes */}
             <Route
-              path="/"
-              element={
-                !user || !staffProfile ? <Landing /> : <Navigate to={defaultRoute} replace />
-              }
-            />
-            <Route
               path="/signup"
               element={!user || !staffProfile ? <SignUp /> : <Navigate to={defaultRoute} replace />}
             />
@@ -298,6 +296,22 @@ function AppContent() {
             />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/plan/:planId" element={<PlanInfo />} />
+
+            {/* Marketing ecosystem: home + solutions, products, pricing, resources (shared MarketingLayout + MegaNav) */}
+            <Route element={<MarketingLayout />}>
+              <Route
+                index
+                element={
+                  !user || !staffProfile ? <Landing noHeader /> : <Navigate to={defaultRoute} replace />
+                }
+              />
+              <Route path="solutions/:persona" element={<SolutionPage />} />
+              <Route path="products/:app_name" element={<ProductPage />} />
+              <Route path="pricing" element={<PricingPage />} />
+              <Route path="resources/faq" element={<FAQ />} />
+              <Route path="resources/help" element={<HelpCenter />} />
+              <Route path="resources/contact" element={<Contact />} />
+            </Route>
 
             {/* Protected Routes - Music Industry OS: /app/label, /app/venue, /app/artist, /app/settings */}
             {user && staffProfile ? (
