@@ -1,4 +1,4 @@
-# SoundPath (Label OS) - Comprehensive Software Report
+# SoundPath – Comprehensive Software Report
 
 **Generated:** January 25, 2026  
 **Version:** 1.0.0  
@@ -27,7 +27,7 @@
 
 ## Executive Summary
 
-**SoundPath** (formerly Label OS) is a comprehensive, production-ready SaaS platform designed for record labels and A&R (Artists & Repertoire) professionals to manage the complete demo submission and artist discovery pipeline. The application has evolved from a simple demo tracker into a full-featured, multi-tenant SaaS platform with agent-centric architecture, subscription billing, REST API, webhooks, and enterprise-grade security.
+**SoundPath** is a comprehensive, production-ready SaaS platform designed for record labels and A&R (Artists & Repertoire) professionals to manage the complete demo submission and artist discovery pipeline. The application has evolved from a simple demo tracker into a full-featured, multi-tenant SaaS platform with agent-centric architecture, subscription billing, REST API, webhooks, and enterprise-grade security.
 
 ### Key Highlights
 
@@ -96,7 +96,7 @@ The application uses an **agent-centric architecture** where:
 ### Application Structure
 
 ```
-Label_OS/
+SoundPath/
 ├── src/                    # React frontend
 │   ├── components/         # Reusable UI components
 │   ├── pages/              # Route pages

@@ -1,4 +1,4 @@
-# SoundPath (Label OS) - Comprehensive System Blueprint
+# SoundPath – Comprehensive System Blueprint
 
 **Document Type:** Technical Source of Truth for Gemini Gem System Instruction  
 **Generated:** January 25, 2026  
@@ -125,7 +125,7 @@
 ### Folder Structure
 
 ```
-Label_OS/
+SoundPath/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml                    # CI/CD pipeline configuration

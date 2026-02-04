@@ -1,7 +1,7 @@
 # Stripe Integration Guide - Step by Step
 
 ## Overview
-This guide will walk you through integrating Stripe payment processing into Label OS.
+This guide will walk you through integrating Stripe payment processing into SoundPath.
 
 ---
 

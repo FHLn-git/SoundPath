@@ -88,7 +88,7 @@ npm run build
 ## Project Structure
 
 ```
-Label_OS/
+SoundPath/
   ├── src/                    # React application source code
   │   ├── components/         # Reusable React components
   │   ├── pages/              # Page components

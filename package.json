@@ -1,7 +1,7 @@
 {
-  "name": "label-os",
+  "name": "soundpath",
   "version": "1.0.1",
-  "description": "A&R Demo Tracker for Record Label",
+  "description": "SoundPath – Music Industry OS: A&R Management, Venue Booking, Artist Tools",
   "type": "module",
   "scripts": {
     "dev": "vite --force",
