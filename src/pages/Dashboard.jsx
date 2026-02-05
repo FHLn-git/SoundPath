@@ -41,6 +41,8 @@ const Dashboard = () => {
     getStaffActivity,
     getCompanyHealth,
     moveTrack,
+    subsidiaryFilter,
+    setSubsidiaryFilter,
   } = useApp()
   const { isOwner, staffProfile, memberships, activeOrgId, isSystemAdmin } = useAuth()
   const { hasFeature } = useBilling()
@@ -68,6 +70,7 @@ const Dashboard = () => {
   const [crateATracks, setCrateATracks] = useState([])
   const [crateBTracks, setCrateBTracks] = useState([])
   const [loadingPersonalTracks, setLoadingPersonalTracks] = useState(false)
+  const [orgChildren, setOrgChildren] = useState([]) // child orgs for subsidiary filter (label view)
 
   const upcomingReleases = getUpcomingReleases()
   const watchedTracks = getWatchedTracks()
@@ -274,6 +277,26 @@ const Dashboard = () => {
       getCompanyHealth().then(setCompanyHealth)
     }
   }, [isOwner, getCompanyHealth, activeOrgId, isPersonalView])
+
+  // Fetch child organizations for subsidiary filter (label view, hierarchy)
+  useEffect(() => {
+    if (!activeOrgId || isPersonalView || !supabase) {
+      setOrgChildren([])
+      return
+    }
+    let mounted = true
+    supabase
+      .rpc('get_org_children', { org_id_param: activeOrgId })
+      .then(({ data, error }) => {
+        if (!mounted) return
+        if (error) {
+          setOrgChildren([])
+          return
+        }
+        setOrgChildren(Array.isArray(data) ? data : [])
+      })
+    return () => { mounted = false }
+  }, [activeOrgId, isPersonalView])
 
   // Handle pitching track - available to all users
   const handlePitchTrack = async trackId => {
@@ -505,6 +528,30 @@ const Dashboard = () => {
             </div>
           </motion.div>
         </div>
+
+        {/* Subsidiary filter: All sub-labels vs specific subsidiary (label hierarchy) */}
+        {!isPersonalView && orgChildren.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-3 flex items-center gap-2"
+          >
+            <span className="text-gray-500 text-sm">Submissions:</span>
+            <select
+              value={subsidiaryFilter}
+              onChange={e => setSubsidiaryFilter(e.target.value)}
+              className="bg-gray-900/80 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-purple-500/50 focus:border-gray-600 outline-none"
+              aria-label="Filter by subsidiary"
+            >
+              <option value="all">All sub-labels</option>
+              {orgChildren.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </motion.div>
+        )}
 
         {/* Stats Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-3">

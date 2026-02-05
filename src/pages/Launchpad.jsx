@@ -2161,113 +2161,131 @@ const Launchpad = () => {
                     </button>
                   </motion.div>
 
-                  {memberships.map(membership => {
-                    const stats = labelStats[membership.organization_id] || {
-                      inboxCount: 0,
-                      notificationsCount: 0,
-                    }
-                    const cognitiveLoad = labelCognitiveLoad[membership.organization_id] || {
-                      status: 'Optimal',
-                      color: 'green',
-                      weeklyListens: 0,
-                      weeklyDemos: 0,
-                      percentage: 0,
-                    }
-                    const hasCriticalGap = labelGaps[membership.organization_id] || false
-
+                  {(() => {
                     const getStatusColor = color => {
                       switch (color) {
-                        case 'green':
-                          return 'bg-green-500'
-                        case 'yellow':
-                          return 'bg-yellow-500'
-                        case 'blue':
-                          return 'bg-blue-500'
-                        case 'orange':
-                          return 'bg-orange-500'
-                        default:
-                          return 'bg-gray-500'
+                        case 'green': return 'bg-green-500'
+                        case 'yellow': return 'bg-yellow-500'
+                        case 'blue': return 'bg-blue-500'
+                        case 'orange': return 'bg-orange-500'
+                        default: return 'bg-gray-500'
                       }
                     }
-
-                    return (
-                      <motion.div
-                        key={membership.membership_id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`bg-gray-900/50 rounded-lg p-3 hover:border-gray-600 transition-all cursor-pointer group backdrop-blur-sm h-full flex flex-col ${
-                          hasCriticalGap
-                            ? 'border-2 border-amber-500/60 shadow-lg shadow-amber-500/10'
-                            : 'border border-gray-800'
-                        }`}
-                        onClick={() => handleEnterWorkspace(membership.organization_id)}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-10 h-10 rounded-lg bg-gray-800/50 flex items-center justify-center border border-gray-700 flex-shrink-0">
-                            <Building2 size={20} className="text-gray-400" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-bold text-white break-words leading-tight">
-                              {membership.organization_name}
-                            </h3>
-                            <p className="text-xs text-gray-500 mt-0.5">{membership.role}</p>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 mb-3">
-                          <div className="bg-gray-900/30 rounded-lg p-2 border border-gray-800">
-                            <div className="flex items-center gap-1.5 mb-0.5">
-                              <Inbox size={12} className="text-gray-500" />
-                              <span className="text-xs text-gray-500">Inbox</span>
-                            </div>
-                            <p className="text-xl font-bold text-white">{stats.inboxCount}</p>
-                          </div>
-                          <div className="bg-gray-900/30 rounded-lg p-2 border border-gray-800">
-                            <div className="flex items-center gap-1.5 mb-0.5">
-                              <Bell size={12} className="text-gray-500" />
-                              <span className="text-xs text-gray-500">New</span>
-                            </div>
-                            <p className="text-xl font-bold text-white">
-                              {stats.notificationsCount}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Cognitive Load Status */}
-                        <div className="mb-2 flex items-center gap-2">
-                          <div
-                            className={`w-2.5 h-2.5 rounded-full ${getStatusColor(cognitiveLoad.color)}`}
-                          />
-                          <span
-                            className={`text-xs font-semibold ${
-                              cognitiveLoad.color === 'green'
-                                ? 'text-green-400'
-                                : cognitiveLoad.color === 'yellow'
-                                  ? 'text-yellow-400'
-                                  : cognitiveLoad.color === 'blue'
-                                    ? 'text-blue-400'
-                                    : 'text-orange-400'
-                            }`}
-                          >
-                            {cognitiveLoad.status}
-                          </span>
-                          <span className="text-xs text-gray-600 ml-auto">
-                            {cognitiveLoad.weeklyListens}/{cognitiveLoad.weeklyDemos}
-                          </span>
-                        </div>
-
-                        <button
-                          type="button"
-                          className="mt-auto w-full py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-white text-sm font-semibold transition-all flex items-center justify-center gap-2"
+                    const renderLabelCard = membership => {
+                      const stats = labelStats[membership.organization_id] || {
+                        inboxCount: 0,
+                        notificationsCount: 0,
+                      }
+                      const cognitiveLoad = labelCognitiveLoad[membership.organization_id] || {
+                        status: 'Optimal',
+                        color: 'green',
+                        weeklyListens: 0,
+                        weeklyDemos: 0,
+                        percentage: 0,
+                      }
+                      const hasCriticalGap = labelGaps[membership.organization_id] || false
+                      return (
+                        <motion.div
+                          key={membership.membership_id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className={`bg-gray-900/50 rounded-lg p-3 hover:border-gray-600 transition-all cursor-pointer group backdrop-blur-sm h-full flex flex-col ${
+                            hasCriticalGap
+                              ? 'border-2 border-amber-500/60 shadow-lg shadow-amber-500/10'
+                              : 'border border-gray-800'
+                          }`}
+                          onClick={() => handleEnterWorkspace(membership.organization_id)}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                         >
-                          <span>Enter</span>
-                          <ArrowRight size={14} />
-                        </button>
-                      </motion.div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-10 h-10 rounded-lg bg-gray-800/50 flex items-center justify-center border border-gray-700 flex-shrink-0">
+                              <Building2 size={20} className="text-gray-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-lg font-bold text-white break-words leading-tight">
+                                {membership.organization_name}
+                              </h3>
+                              <p className="text-xs text-gray-500 mt-0.5">{membership.role}</p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 mb-3">
+                            <div className="bg-gray-900/30 rounded-lg p-2 border border-gray-800">
+                              <div className="flex items-center gap-1.5 mb-0.5">
+                                <Inbox size={12} className="text-gray-500" />
+                                <span className="text-xs text-gray-500">Inbox</span>
+                              </div>
+                              <p className="text-xl font-bold text-white">{stats.inboxCount}</p>
+                            </div>
+                            <div className="bg-gray-900/30 rounded-lg p-2 border border-gray-800">
+                              <div className="flex items-center gap-1.5 mb-0.5">
+                                <Bell size={12} className="text-gray-500" />
+                                <span className="text-xs text-gray-500">New</span>
+                              </div>
+                              <p className="text-xl font-bold text-white">
+                                {stats.notificationsCount}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="mb-2 flex items-center gap-2">
+                            <div
+                              className={`w-2.5 h-2.5 rounded-full ${getStatusColor(cognitiveLoad.color)}`}
+                            />
+                            <span
+                              className={`text-xs font-semibold ${
+                                cognitiveLoad.color === 'green'
+                                  ? 'text-green-400'
+                                  : cognitiveLoad.color === 'yellow'
+                                    ? 'text-yellow-400'
+                                    : cognitiveLoad.color === 'blue'
+                                      ? 'text-blue-400'
+                                      : 'text-orange-400'
+                              }`}
+                            >
+                              {cognitiveLoad.status}
+                            </span>
+                            <span className="text-xs text-gray-600 ml-auto">
+                              {cognitiveLoad.weeklyListens}/{cognitiveLoad.weeklyDemos}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            className="mt-auto w-full py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-white text-sm font-semibold transition-all flex items-center justify-center gap-2"
+                          >
+                            <span>Enter</span>
+                            <ArrowRight size={14} />
+                          </button>
+                        </motion.div>
+                      )
+                    }
+                    const orgIds = new Set(memberships.map(m => m.organization_id))
+                    const roots = memberships.filter(
+                      m => !m.parent_id || !orgIds.has(m.parent_id)
                     )
-                  })}
+                    const getChildren = parentId =>
+                      memberships.filter(m => m.parent_id === parentId)
+                    return (
+                      <>
+                        {roots.map(root => {
+                          const children = getChildren(root.organization_id)
+                          return (
+                            <div key={root.membership_id} className="space-y-2">
+                              {renderLabelCard(root)}
+                              {children.length > 0 && (
+                                <div className="pl-4 ml-2 border-l-2 border-gray-700/80 space-y-2">
+                                  {children.map(child => (
+                                    <div key={child.membership_id}>
+                                      {renderLabelCard(child)}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </>
+                    )
+                  })()}
                 </div>
 
                 {/* Global Close Watch Section */}

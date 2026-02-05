@@ -1,9 +1,11 @@
 import AppSwitcher from './AppSwitcher'
+import OrgBreadcrumb from './OrgBreadcrumb'
 
 /**
- * Unified top header: [App switcher] [SoundPath | app label]. Same position and style across Label app, Launchpad, and mobile.
+ * Unified top header: [App switcher] [SoundPath | app label] [Parent > Subsidiary] [rightSlot].
+ * Breadcrumb shown when activeOrgId is set and org has a parent (hierarchy).
  */
-export default function UnifiedAppHeader({ appLabel = 'LABEL', rightSlot = null, className = '' }) {
+export default function UnifiedAppHeader({ appLabel = 'LABEL', rightSlot = null, className = '', activeOrgId = null }) {
   return (
     <header
       className={
@@ -17,6 +19,7 @@ export default function UnifiedAppHeader({ appLabel = 'LABEL', rightSlot = null,
         <span className="text-gray-500 flex-shrink-0">|</span>
         <span className="text-sm font-semibold text-neon-purple/90 truncate">{appLabel}</span>
       </div>
+      {activeOrgId && <OrgBreadcrumb orgId={activeOrgId} className="hidden sm:block" />}
       {rightSlot != null && <div className="flex items-center gap-2 flex-shrink-0">{rightSlot}</div>}
     </header>
   )

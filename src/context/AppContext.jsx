@@ -21,6 +21,8 @@ export const AppProvider = ({ children }) => {
   const systemAdminCheck = isSystemAdmin || staffProfile?.role === 'SystemAdmin'
   const [tracks, setTracks] = useState([])
   const [loading, setLoading] = useState(true)
+  /** Label hierarchy: 'all' = parent + all subsidiaries, or specific org id for one subsidiary */
+  const [subsidiaryFilter, setSubsidiaryFilter] = useState('all')
   const [cognitiveLoadCache, setCognitiveLoadCache] = useState({})
   const [companyHealthCache, setCompanyHealthCache] = useState(null)
   const [connectionStatus, setConnectionStatus] = useState({
@@ -148,6 +150,7 @@ export const AppProvider = ({ children }) => {
 
   // Load tracks from Supabase (can be called manually for real-time updates)
   const loadTracks = async () => {
+    let labelOrgIds = null // set in label workspace branch for use in votes query
     try {
       setLoading(true)
 
@@ -185,8 +188,17 @@ export const AppProvider = ({ children }) => {
           .is('organization_id', null)
           .eq('recipient_user_id', staffProfile.id)
       } else {
-        // Label workspace - load Label tracks
-        tracksQuery = tracksQuery.eq('organization_id', activeOrgId)
+        // Label workspace - load Label tracks (optionally all sub-labels or one subsidiary)
+        labelOrgIds = [activeOrgId]
+        if (subsidiaryFilter === 'all') {
+          const { data: hierarchyRows } = await supabase.rpc('get_org_hierarchy', {
+            parent_org_id: activeOrgId,
+          })
+          labelOrgIds = hierarchyRows?.map(r => r.id) ?? [activeOrgId]
+        } else {
+          labelOrgIds = [subsidiaryFilter]
+        }
+        tracksQuery = tracksQuery.in('organization_id', labelOrgIds)
       }
 
       const { data: tracksData, error: tracksError } = await tracksQuery.order('created_at', {
@@ -227,8 +239,12 @@ export const AppProvider = ({ children }) => {
         // Personal view - votes for personal inbox tracks (organization_id IS NULL)
         votesQuery = votesQuery.is('organization_id', null)
       } else {
-        // Label workspace - votes for label tracks
-        votesQuery = votesQuery.eq('organization_id', activeOrgId)
+        // Label workspace - votes for label tracks (same org set as tracks when subsidiary filter)
+        if (labelOrgIds && labelOrgIds.length > 0) {
+          votesQuery = votesQuery.in('organization_id', labelOrgIds)
+        } else {
+          votesQuery = votesQuery.eq('organization_id', activeOrgId)
+        }
       }
       const { data: votesData, error: votesError } = await votesQuery
 
@@ -267,6 +283,11 @@ export const AppProvider = ({ children }) => {
       setLoading(false)
     }
   }
+
+  // Reset subsidiary filter when switching label workspace
+  useEffect(() => {
+    setSubsidiaryFilter('all')
+  }, [activeOrgId])
 
   // Keep a ref to the latest loadTracks (avoids effect dependency churn).
   const loadTracksRef = useRef(loadTracks)
@@ -354,7 +375,7 @@ export const AppProvider = ({ children }) => {
         supabase.removeChannel(tracksChannel)
       }
     }
-  }, [staffProfile, user, activeOrgId]) // Re-run when activeOrgId changes to reload tracks for new workspace
+  }, [staffProfile, user, activeOrgId, subsidiaryFilter]) // Re-run when activeOrgId or subsidiary filter changes
 
   // Heartbeat: move scheduled releases from Upcoming to Vault when release date arrives
   useEffect(() => {
@@ -1820,6 +1841,8 @@ export const AppProvider = ({ children }) => {
     loading,
     connectionStatus,
     loadTracks, // Expose for manual refresh
+    subsidiaryFilter,
+    setSubsidiaryFilter,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

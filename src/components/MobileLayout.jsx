@@ -47,6 +47,7 @@ const MobileLayout = ({ children, showBottomNav = false }) => {
       {/* Unified top header: full width, app switcher left */}
       <UnifiedAppHeader
         appLabel="LABEL"
+        activeOrgId={activeOrgId}
         rightSlot={
           isMobile ? (
             <button

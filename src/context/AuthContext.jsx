@@ -396,6 +396,26 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
+      // Prefer hierarchy RPC when available (parent_id, parent_name for tree/breadcrumb)
+      const { data: hierarchyData, error: hierarchyError } = await supabase.rpc(
+        'get_user_memberships_with_hierarchy',
+        { user_id_param: staffId }
+      )
+      if (!hierarchyError && hierarchyData && hierarchyData.length > 0) {
+        const membershipsList = hierarchyData.map(m => ({
+          ...m,
+          parent_id: m.parent_id ?? undefined,
+          parent_name: m.parent_name ?? undefined,
+        }))
+        setMemberships(membershipsList)
+        if (membershipsList.length === 0) {
+          setActiveOrgId(null)
+          setActiveMembership(null)
+        }
+        setLoading(false)
+        return { hasMemberships: membershipsList.length > 0 }
+      }
+
       const { data, error } = await supabase.rpc('get_user_memberships', {
         user_id_param: staffId,
       })
