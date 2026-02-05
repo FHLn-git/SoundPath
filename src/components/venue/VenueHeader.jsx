@@ -3,7 +3,7 @@
  * In-app navigation (Link) so one SPA, one sign-in.
  */
 import { Link } from 'react-router-dom'
-import { Building2, Music2, Music, ChevronDown, Plus, Grid3X3 } from 'lucide-react'
+import { Building2, Music, ChevronDown, Plus, Grid3X3 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { formatVenueAddressLine } from '../../lib/venueApi'
@@ -78,9 +78,6 @@ export default function VenueHeader({
               )}
             </div>
 
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-neon-purple/10 border border-neon-purple/30">
-              <Music2 className="w-5 h-5 text-neon-purple" />
-            </div>
             <div>
               <h1 className="text-lg font-semibold text-white tracking-tight">
                 SoundPath <span className="text-gray-500 font-normal">| VENUE</span>

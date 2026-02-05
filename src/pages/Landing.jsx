@@ -400,6 +400,12 @@ const Landing = ({ noHeader = false }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {osModules.map((mod, index) => {
               const Icon = mod.icon
+              const isVenue = mod.id === 'venue'
+              const isArtist = mod.id === 'artist'
+              const isUtility = ['sign', 'vault', 'splits'].includes(mod.id)
+              const iconBoxClass = isVenue ? 'bg-emerald-500/20' : isArtist ? 'bg-amber-500/20' : isUtility ? 'bg-gray-600/20' : 'bg-neon-purple/20'
+              const iconClass = isVenue ? 'text-emerald-500' : isArtist ? 'text-amber-400' : isUtility ? 'text-gray-400' : 'text-neon-purple'
+              const hoverBorderClass = isVenue ? 'hover:border-emerald-500/40' : isArtist ? 'hover:border-amber-500/40' : isUtility ? 'hover:border-gray-500/40' : 'hover:border-neon-purple/40'
               return (
                 <motion.div
                   key={mod.id}
@@ -407,15 +413,15 @@ const Landing = ({ noHeader = false }) => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: index * 0.08 }}
-                  className="relative p-6 bg-os-bg border border-gray-800 rounded-xl hover:border-neon-purple/40 transition-colors"
+                  className={`relative p-6 bg-os-bg border border-gray-800 rounded-xl transition-colors ${hoverBorderClass}`}
                 >
                   {mod.badge && (
                     <span className={`absolute top-3 right-3 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${mod.badge === 'Coming Soon' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-gray-700 text-gray-400 border border-gray-600'}`}>
                       {mod.badge}
                     </span>
                   )}
-                  <div className="p-3 bg-neon-purple/20 rounded-lg w-fit mb-4">
-                    <Icon size={24} className="text-neon-purple" />
+                  <div className={`p-3 rounded-lg w-fit mb-4 ${iconBoxClass}`}>
+                    <Icon size={24} className={iconClass} />
                   </div>
                   <h3 className="text-lg font-bold text-white mb-1">{mod.title}</h3>
                   <p className="text-gray-400 text-sm">{mod.description}</p>

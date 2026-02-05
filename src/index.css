@@ -1,8 +1,46 @@
 @import "tailwindcss";
 
+/* Tailwind v4 theme: restore custom colors + full semantic palette (one place for the whole app) */
+@theme {
+  /* Brand / DAW colors (from original tailwind.config) */
+  --color-studio-dark: #0f172a;
+  --color-os-bg: #0B0E14;
+  --color-neon-purple: #a855f7;
+  --color-recording-red: #ef4444;
+  /* Semantic theme for modern UI (Label, Venue, components) */
+  --color-primary: #a855f7;
+  --color-secondary: #1e293b;
+  --color-muted: #64748b;
+  --color-accent: #334155;
+  --color-foreground: #f8fafc;
+  --color-background: #0B0E14;
+  --color-card: #0f172a;
+  --color-border: #334155;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #fef2f2;
+  --color-muted-foreground: #94a3b8;
+  --color-primary-foreground: #ffffff;
+  --color-secondary-foreground: #f1f5f9;
+  --color-accent-foreground: #f8fafc;
+  --color-card-foreground: #f8fafc;
+  --color-border-foreground: #94a3b8;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  /* Focus ring for accessibility */
+  --color-ring: #a855f7;
+  --ring-offset-color: #0B0E14;
+}
+
+/* Venue app only: cyber green vibe (same layout, different accent from Label purple) */
+.venue-app-theme {
+  --color-neon-purple: #10b981;
+  --color-primary: #10b981;
+  --color-ring: #10b981;
+  --color-primary-foreground: #ffffff;
+}
+
 @layer base {
   body {
-    @apply bg-gray-950 text-white font-mono;
+    @apply bg-os-bg text-foreground font-mono;
   }
 
   /* Mobile scaling: Reduce base sizes by 20% on screens < 768px */

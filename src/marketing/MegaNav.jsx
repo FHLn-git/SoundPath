@@ -143,6 +143,10 @@ export default function MegaNav() {
               <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-1">
                 {SOLUTIONS.map((item) => {
                   const Icon = item.icon
+                  const isVenue = item.id === 'venues'
+                  const isArtist = item.id === 'artists'
+                  const iconBoxClass = isVenue ? 'bg-emerald-500/20' : isArtist ? 'bg-amber-500/20' : 'bg-neon-purple/20'
+                  const iconClass = isVenue ? 'text-emerald-500' : isArtist ? 'text-amber-400' : 'text-neon-purple'
                   return (
                     <Link
                       key={item.id}
@@ -150,8 +154,8 @@ export default function MegaNav() {
                       onClick={closeDropdown}
                       className="flex items-start gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
                     >
-                      <div className="p-1.5 rounded-lg bg-neon-purple/20 shrink-0">
-                        <Icon className="w-4 h-4 text-neon-purple" />
+                      <div className={`p-1.5 rounded-lg shrink-0 ${iconBoxClass}`}>
+                        <Icon className={`w-4 h-4 ${iconClass}`} />
                       </div>
                       <div className="text-left min-w-0">
                         <div className="font-medium text-white">{item.label}</div>
@@ -174,6 +178,9 @@ export default function MegaNav() {
                   <div className="px-3 py-1.5 text-xs font-semibold text-gray-500 tracking-wider">Core Hubs</div>
                   {CORE_HUBS.map((item) => {
                     const Icon = item.icon
+                    const isVenue = item.id === 'venue'
+                    const isArtist = item.id === 'artist'
+                    const iconClass = isVenue ? 'text-emerald-500' : isArtist ? 'text-amber-400' : 'text-neon-purple'
                     return (
                       <Link
                         key={item.id}
@@ -181,7 +188,7 @@ export default function MegaNav() {
                         onClick={closeDropdown}
                         className="flex items-start gap-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
                       >
-                        <Icon className="w-4 h-4 text-neon-purple shrink-0 mt-0.5" />
+                        <Icon className={`w-4 h-4 shrink-0 mt-0.5 ${iconClass}`} />
                         <div className="min-w-0">
                           <span className="font-medium text-white">{item.label}</span>
                           <span className="block text-xs text-gray-500 mt-0.5">{item.description}</span>
@@ -201,7 +208,7 @@ export default function MegaNav() {
                         onClick={closeDropdown}
                         className="flex items-start gap-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
                       >
-                        <Icon className="w-4 h-4 text-neon-purple shrink-0 mt-0.5" />
+                        <Icon className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
                         <div className="min-w-0">
                           <span className="font-medium text-white">{item.label}</span>
                           <span className="block text-xs text-gray-500 mt-0.5">{item.description}</span>
@@ -305,6 +312,9 @@ export default function MegaNav() {
                   <div className="space-y-1">
                     {SOLUTIONS.map((item) => {
                       const Icon = item.icon
+                      const isVenue = item.id === 'venues'
+                      const isArtist = item.id === 'artists'
+                      const iconClass = isVenue ? 'text-emerald-500' : isArtist ? 'text-amber-400' : 'text-neon-purple'
                       return (
                         <button
                           key={item.id}
@@ -312,7 +322,7 @@ export default function MegaNav() {
                           onClick={() => handleNav(item.href)}
                           className="w-full flex items-start gap-2 p-3 rounded-lg bg-white/5 text-left hover:bg-white/10"
                         >
-                          <Icon className="w-4 h-4 text-neon-purple shrink-0 mt-0.5" />
+                          <Icon className={`w-4 h-4 shrink-0 mt-0.5 ${iconClass}`} />
                           <div>
                             <span className="text-sm font-medium text-white">{item.label}</span>
                             <span className="block text-xs text-gray-500 mt-0.5">{item.description}</span>
@@ -328,6 +338,9 @@ export default function MegaNav() {
                     <div className="px-3 py-1 text-[10px] font-semibold text-gray-500">Core Hubs</div>
                     {CORE_HUBS.map((item) => {
                       const Icon = item.icon
+                      const isVenue = item.id === 'venue'
+                      const isArtist = item.id === 'artist'
+                      const iconClass = isVenue ? 'text-emerald-500' : isArtist ? 'text-amber-400' : 'text-neon-purple'
                       return (
                         <button
                           key={item.id}
@@ -335,7 +348,7 @@ export default function MegaNav() {
                           onClick={() => handleNav(item.href)}
                           className="w-full flex items-start gap-2 p-3 rounded-lg bg-white/5 text-left hover:bg-white/10"
                         >
-                          <Icon className="w-4 h-4 text-neon-purple shrink-0 mt-0.5" />
+                          <Icon className={`w-4 h-4 shrink-0 mt-0.5 ${iconClass}`} />
                           <div>
                             <span className="text-sm font-medium text-white">{item.label}</span>
                             <span className="block text-xs text-gray-500 mt-0.5">{item.description}</span>
@@ -353,7 +366,7 @@ export default function MegaNav() {
                           onClick={() => handleNav(item.href)}
                           className="w-full flex items-start gap-2 p-3 rounded-lg bg-white/5 text-left hover:bg-white/10"
                         >
-                          <Icon className="w-4 h-4 text-neon-purple shrink-0 mt-0.5" />
+                          <Icon className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
                           <div>
                             <span className="text-sm font-medium text-white">{item.label}</span>
                             <span className="block text-xs text-gray-500 mt-0.5">{item.description}</span>

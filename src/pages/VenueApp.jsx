@@ -38,7 +38,7 @@ export default function VenueApp() {
   // Not signed in – same Supabase session as Label; show sign-in so user uses one account
   if (!venueLoading && !userId) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-gray-950">
+      <div className="venue-app-theme fixed inset-0 flex flex-col bg-gray-950">
         <VenueSignIn />
       </div>
     )
@@ -51,7 +51,7 @@ export default function VenueApp() {
       fallbackReason: 'Check your connection and sign-in, then try again.',
     })
     return (
-      <div className="fixed inset-0 flex flex-col bg-gray-950">
+      <div className="venue-app-theme fixed inset-0 flex flex-col bg-gray-950">
         <div className="flex flex-col items-center justify-center py-20 text-center px-4 max-w-md mx-auto">
           <p className="text-red-400 font-medium mb-1">Couldn't load venues</p>
           <p className="text-sm text-gray-500">{message}</p>
@@ -63,7 +63,7 @@ export default function VenueApp() {
   const loading = venueLoading || (activeVenueId && showsLoading)
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-gray-950">
+    <div className="venue-app-theme fixed inset-0 flex flex-col bg-gray-950">
       <VenueHeader
         currentView={currentView}
         onViewChange={setCurrentView}

@@ -165,6 +165,12 @@ export default function ProductPage() {
 
   const Icon = product.icon
   const isComingSoon = product.status === 'coming_soon'
+  const isVenue = productId === 'venue'
+  const isArtist = productId === 'artist'
+  const isUtility = ['sign', 'vault', 'splits'].includes(productId)
+  const accentBg = isVenue ? 'bg-emerald-500/20' : isArtist ? 'bg-amber-500/20' : isUtility ? 'bg-gray-600/20' : 'bg-neon-purple/20'
+  const accentText = isVenue ? 'text-emerald-500' : isArtist ? 'text-amber-400' : isUtility ? 'text-gray-400' : 'text-neon-purple'
+  const accentGradient = isVenue ? 'from-emerald-500 to-emerald-600' : isArtist ? 'from-amber-500 to-amber-600' : isUtility ? 'from-gray-500 to-gray-600' : 'from-neon-purple to-recording-red'
 
   return (
     <div className="bg-os-bg min-h-screen">
@@ -177,8 +183,8 @@ export default function ProductPage() {
             transition={{ duration: 0.5 }}
             className="text-center mb-10"
           >
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-neon-purple/20 mb-6">
-              <Icon className="w-8 h-8 text-neon-purple" />
+            <div className={`inline-flex items-center justify-center w-16 h-16 rounded-xl ${accentBg} mb-6`}>
+              <Icon className={`w-8 h-8 ${accentText}`} />
             </div>
             <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3">
               SoundPath {product.name}
@@ -249,7 +255,7 @@ export default function ProductPage() {
                 viewport={{ once: true }}
                 className="text-xl font-bold text-white mb-4 flex items-center gap-2"
               >
-                <Zap className="w-5 h-5 text-neon-purple" />
+                <Zap className={`w-5 h-5 ${accentText}`} />
                 {block.title}
               </motion.h2>
               <ul className="space-y-3 mb-8">
@@ -264,7 +270,7 @@ export default function ProductPage() {
                 <button
                   type="button"
                   onClick={() => navigate('/signup')}
-                  className="px-5 py-2.5 bg-gradient-to-r from-neon-purple to-recording-red text-white rounded-lg font-semibold hover:opacity-90 inline-flex items-center gap-2 text-sm"
+                  className={`px-5 py-2.5 bg-gradient-to-r ${accentGradient} text-white rounded-lg font-semibold hover:opacity-90 inline-flex items-center gap-2 text-sm`}
                 >
                   {isComingSoon ? 'Join waitlist' : 'Alpha Access'}
                   <ArrowRight size={16} />
@@ -326,7 +332,7 @@ export default function ProductPage() {
           <button
             type="button"
             onClick={() => navigate('/signup')}
-            className="px-8 py-3 bg-gradient-to-r from-neon-purple to-recording-red text-white rounded-lg font-semibold hover:opacity-90 inline-flex items-center gap-2"
+            className={`px-8 py-3 bg-gradient-to-r ${accentGradient} text-white rounded-lg font-semibold hover:opacity-90 inline-flex items-center gap-2`}
           >
             {isComingSoon ? 'Join waitlist' : 'Secure Alpha Access'}
             <ArrowRight size={18} />

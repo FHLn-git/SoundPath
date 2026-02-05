@@ -111,7 +111,17 @@ const PERSONAS = {
 }
 
 /** Simple conceptual diagram: Fragmented (multiple boxes) vs. SoundPath OS (one flow). */
-function DataFlowDiagram({ personaTitle }) {
+function DataFlowDiagram({ personaTitle, accentGreen = false, accentAmber = false }) {
+  const chipClass = accentGreen
+    ? 'px-3 py-2 rounded-lg border border-emerald-500/50 bg-emerald-500/10 text-white text-xs font-medium'
+    : accentAmber
+      ? 'px-3 py-2 rounded-lg border border-amber-500/50 bg-amber-500/10 text-white text-xs font-medium'
+      : 'px-3 py-2 rounded-lg border border-neon-purple/50 bg-neon-purple/10 text-white text-xs font-medium'
+  const headingClass = accentGreen
+    ? 'text-sm font-semibold text-emerald-500 uppercase tracking-wider mb-4'
+    : accentAmber
+      ? 'text-sm font-semibold text-amber-400 uppercase tracking-wider mb-4'
+      : 'text-sm font-semibold text-neon-purple uppercase tracking-wider mb-4'
   return (
     <div className="rounded-2xl border border-gray-800 bg-gradient-to-br from-gray-900/60 to-os-bg p-6 sm:p-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -133,15 +143,15 @@ function DataFlowDiagram({ personaTitle }) {
         </div>
         {/* SoundPath OS */}
         <div>
-          <h3 className="text-sm font-semibold text-neon-purple uppercase tracking-wider mb-4">The SoundPath OS</h3>
+          <h3 className={headingClass}>The SoundPath OS</h3>
           <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-            <div className="px-3 py-2 rounded-lg border border-neon-purple/50 bg-neon-purple/10 text-white text-xs font-medium">
+            <div className={chipClass}>
               {personaTitle} Hub
             </div>
-            <div className="px-3 py-2 rounded-lg border border-neon-purple/50 bg-neon-purple/10 text-white text-xs font-medium">
+            <div className={chipClass}>
               Sign
             </div>
-            <div className="px-3 py-2 rounded-lg border border-neon-purple/50 bg-neon-purple/10 text-white text-xs font-medium">
+            <div className={chipClass}>
               Splits
             </div>
           </div>
@@ -162,6 +172,13 @@ export default function SolutionPage() {
   }
 
   const Icon = data.icon
+  const isVenuePersona = persona?.toLowerCase() === 'venues'
+  const isArtistPersona = persona?.toLowerCase() === 'artists'
+  const accentBg = isVenuePersona ? 'bg-emerald-500/20' : isArtistPersona ? 'bg-amber-500/20' : 'bg-neon-purple/20'
+  const accentText = isVenuePersona ? 'text-emerald-500' : isArtistPersona ? 'text-amber-400' : 'text-neon-purple'
+  const accentBorder = isVenuePersona ? 'border-emerald-500/40' : isArtistPersona ? 'border-amber-500/40' : 'border-neon-purple/40'
+  const accentHover = isVenuePersona ? 'hover:bg-emerald-500/30' : isArtistPersona ? 'hover:bg-amber-500/30' : 'hover:bg-neon-purple/30'
+  const accentGradient = isVenuePersona ? 'from-emerald-500 to-emerald-600' : isArtistPersona ? 'from-amber-500 to-amber-600' : 'from-neon-purple to-recording-red'
 
   return (
     <div className="bg-os-bg min-h-screen">
@@ -173,8 +190,8 @@ export default function SolutionPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-neon-purple/20 mb-6">
-              <Icon className="w-8 h-8 text-neon-purple" />
+            <div className={`inline-flex items-center justify-center w-16 h-16 rounded-xl ${accentBg} mb-6`}>
+              <Icon className={`w-8 h-8 ${accentText}`} />
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4">
               {data.heroTitle}
@@ -189,7 +206,7 @@ export default function SolutionPage() {
               <button
                 type="button"
                 onClick={() => navigate('/signup')}
-                className="px-6 py-3 bg-gradient-to-r from-neon-purple to-recording-red text-white rounded-lg font-semibold hover:opacity-90 flex items-center gap-2"
+                className={`px-6 py-3 bg-gradient-to-r ${accentGradient} text-white rounded-lg font-semibold hover:opacity-90 flex items-center gap-2`}
               >
                 Get Started
                 <ArrowRight size={18} />
@@ -225,7 +242,7 @@ export default function SolutionPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <DataFlowDiagram personaTitle={data.title} />
+            <DataFlowDiagram personaTitle={data.title} accentGreen={isVenuePersona} accentAmber={isArtistPersona} />
           </motion.div>
         </div>
       </section>
@@ -240,7 +257,7 @@ export default function SolutionPage() {
             className="p-8 rounded-2xl border border-gray-800 bg-os-bg/80"
           >
             <div className="flex items-center gap-2 mb-4">
-              <Layers className="w-5 h-5 text-neon-purple" />
+              <Layers className={`w-5 h-5 ${accentText}`} />
               <h2 className="text-xl font-bold text-white">{data.dayInTheLife.title}</h2>
             </div>
             <p className="text-gray-300 leading-relaxed">
@@ -249,7 +266,7 @@ export default function SolutionPage() {
             <button
               type="button"
               onClick={() => navigate('/pricing')}
-              className="mt-6 px-5 py-2.5 bg-neon-purple/20 border border-neon-purple/40 text-neon-purple rounded-lg font-semibold hover:bg-neon-purple/30 transition-colors"
+              className={`mt-6 px-5 py-2.5 ${accentBg} border ${accentBorder} ${accentText} rounded-lg font-semibold ${accentHover} transition-colors`}
             >
               See pricing
             </button>
@@ -320,10 +337,10 @@ export default function SolutionPage() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.08 }}
-                  className="flex gap-4 p-6 rounded-xl bg-os-bg border border-gray-800 hover:border-neon-purple/30 transition-colors"
+                  className={`flex gap-4 p-6 rounded-xl bg-os-bg border border-gray-800 transition-colors ${isVenuePersona ? 'hover:border-emerald-500/30' : isArtistPersona ? 'hover:border-amber-500/30' : 'hover:border-neon-purple/30'}`}
                 >
-                  <div className="shrink-0 p-3 rounded-lg bg-neon-purple/20">
-                    <AppIcon className="w-6 h-6 text-neon-purple" />
+                  <div className={`shrink-0 p-3 rounded-lg ${accentBg}`}>
+                    <AppIcon className={`w-6 h-6 ${accentText}`} />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-1">SoundPath {item.app}</h3>
@@ -344,7 +361,7 @@ export default function SolutionPage() {
           <button
             type="button"
             onClick={() => navigate('/signup')}
-            className="px-8 py-3 bg-gradient-to-r from-neon-purple to-recording-red text-white rounded-lg font-semibold hover:opacity-90 inline-flex items-center gap-2"
+            className={`px-8 py-3 bg-gradient-to-r ${accentGradient} text-white rounded-lg font-semibold hover:opacity-90 inline-flex items-center gap-2`}
           >
             Secure Alpha Access
             <ArrowRight size={18} />

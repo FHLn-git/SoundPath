@@ -118,7 +118,7 @@ export default function PricingPage() {
                     return (
                       <tr key={row.id} className="border-b border-gray-800/80">
                         <td className="p-4 flex items-center gap-2 text-white">
-                          <Icon className="w-4 h-4 text-neon-purple shrink-0" />
+                          <Icon className={`w-4 h-4 shrink-0 ${row.id === 'venue' ? 'text-emerald-500' : row.id === 'artist' ? 'text-amber-400' : 'text-neon-purple'}`} />
                           {row.name}
                         </td>
                         <td className="p-4 text-center text-gray-500 text-sm">

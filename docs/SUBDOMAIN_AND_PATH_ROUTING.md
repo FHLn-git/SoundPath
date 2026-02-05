@@ -40,13 +40,13 @@ Session is **not** shared via a single cookie domain today. The app uses:
 ## 5. Coming Soon and error handling
 
 - **Artist** – Routes `/app/artist` and `/artist` (and `/artist/*`) render `ComingSoonApp` (Alpha teaser).
-- **Venue** – Renders `VenueApp` (iframe or Coming Soon when `VITE_VENUE_APP_URL` is not set).
+- **Venue** – Renders `VenueApp` (iframe to Venue sub-app on the same site; prod default same-origin `/venue`, dev default `http://localhost:3001`).
 - **Sign / Vault / Splits** – Vault is a real page under the Label app. Sign and Splits can be added as top-level app routes that render a Coming Soon layout if needed.
 
 ## 6. Layout audit
 
 - **Marketing** – Only routes under `MarketingLayout` (index, solutions, products, pricing, resources) show MegaNav. No dashboard sidebar.
-- **Dashboard** – Only Label routes (`/app/label/*`, `/label/*`) and settings use `MobileLayout` + Sidebar. Venue and Artist use their own full-viewport or Coming Soon layout.
+- **Dashboard** – Only Label routes (`/app/label/*`, `/label/*`) and settings use `MobileLayout` + Sidebar. Venue and Artist are sub-apps (Venue: full-viewport iframe at same-origin `/venue`; Artist: Coming Soon).
 
 ## Quick reference
 
