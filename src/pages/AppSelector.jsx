@@ -3,7 +3,7 @@
  * Uses absolute subdomain URLs in production (label.soundpath.app, venue.soundpath.app)
  * so the browser switches context; path-based on localhost.
  */
-import { Building2, Music, User, LogOut, Zap } from 'lucide-react'
+import { Building2, Music, User, LogOut, Zap, FileSignature, Archive, GitBranch } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getAppBaseUrl } from '../lib/appHost'
@@ -65,52 +65,86 @@ export default function AppSelector() {
           Open the app you want to use. You’re already signed in—no need to log in again.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl">
-          <button
-            type="button"
-            onClick={openLabel}
-            className="flex flex-col items-center gap-4 p-6 rounded-xl border-2 border-gray-700 bg-gray-900/50 hover:border-[#a855f7] hover:bg-gray-800/50 transition-all text-left group"
-          >
-            <div className="w-14 h-14 rounded-xl bg-gray-800 flex items-center justify-center group-hover:bg-[#a855f7]/20 transition-colors">
-              <Building2 className="w-7 h-7 text-[#a855f7]" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-white mb-1">Label</h2>
-              <p className="text-sm text-gray-400">
-                A&R pipeline, demos, artists, and label workspace.
-              </p>
-            </div>
-            <span className="text-sm text-[#a855f7] font-medium mt-auto">Open Label app →</span>
-          </button>
+        <div className="w-full max-w-3xl space-y-10">
+          {/* Core hubs */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <button
+              type="button"
+              onClick={openLabel}
+              className="flex flex-col items-center gap-4 p-6 rounded-xl border-2 border-gray-700 bg-gray-900/50 hover:border-neon-purple hover:bg-gray-800/50 transition-all text-left group"
+            >
+              <div className="w-14 h-14 rounded-xl bg-gray-800 flex items-center justify-center group-hover:bg-neon-purple/20 transition-colors">
+                <Building2 className="w-7 h-7 text-neon-purple" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-white mb-1">Label</h2>
+                <p className="text-sm text-gray-400">
+                  A&R pipeline, demos, artists, and label workspace.
+                </p>
+              </div>
+              <span className="text-sm text-neon-purple font-medium mt-auto">Open Label app →</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={openVenue}
-            className="flex flex-col items-center gap-4 p-6 rounded-xl border-2 border-gray-700 bg-gray-900/50 hover:border-[#a855f7] hover:bg-gray-800/50 transition-all text-left group"
-          >
-            <div className="w-14 h-14 rounded-xl bg-gray-800 flex items-center justify-center group-hover:bg-[#a855f7]/20 transition-colors">
-              <Music className="w-7 h-7 text-[#a855f7]" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-white mb-1">Venue</h2>
-              <p className="text-sm text-gray-400">
-                Events, run-of-show, promoter portal, and settlements.
-              </p>
-            </div>
-            <span className="text-sm text-[#a855f7] font-medium mt-auto">Open Venue app →</span>
-          </button>
+            <button
+              type="button"
+              onClick={openVenue}
+              className="flex flex-col items-center gap-4 p-6 rounded-xl border-2 border-gray-700 bg-gray-900/50 hover:border-emerald-500 hover:bg-gray-800/50 transition-all text-left group"
+            >
+              <div className="w-14 h-14 rounded-xl bg-gray-800 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+                <Music className="w-7 h-7 text-emerald-500" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-white mb-1">Venue</h2>
+                <p className="text-sm text-gray-400">
+                  Events, run-of-show, promoter portal, and settlements.
+                </p>
+              </div>
+              <span className="text-sm text-emerald-500 font-medium mt-auto">Open Venue app →</span>
+            </button>
 
-          <div className="flex flex-col items-center gap-4 p-6 rounded-xl border-2 border-dashed border-gray-700 bg-gray-900/30 opacity-80 cursor-not-allowed">
-            <div className="w-14 h-14 rounded-xl bg-gray-800 flex items-center justify-center">
-              <User className="w-7 h-7 text-gray-500" />
+            <div className="flex flex-col items-center gap-4 p-6 rounded-xl border-2 border-dashed border-gray-700 bg-gray-900/30 opacity-80 cursor-not-allowed">
+              <div className="w-14 h-14 rounded-xl bg-gray-800 flex items-center justify-center">
+                <User className="w-7 h-7 text-amber-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-500 mb-1">Artist</h2>
+                <p className="text-sm text-gray-500">
+                  Submissions, releases, and artist tools.
+                </p>
+              </div>
+              <span className="text-xs text-amber-400 font-medium mt-auto uppercase">Coming soon</span>
             </div>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-500 mb-1">Artist</h2>
-              <p className="text-sm text-gray-500">
-                Submissions, releases, and artist tools.
-              </p>
+          </div>
+
+          {/* Utility apps */}
+          <div>
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 text-center">Utility apps</h2>
+            <p className="text-gray-500 text-sm text-center mb-4 max-w-md mx-auto">
+              Deals, catalog, and splits—coming soon. These will be available as add-ons to your hub.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                { id: 'sign', label: 'Sign', description: 'Metadata-aware contracts and deals.', icon: FileSignature },
+                { id: 'vault', label: 'Vault', description: 'Catalog and release archive.', icon: Archive },
+                { id: 'splits', label: 'Splits', description: 'Royalties and splits per deal.', icon: GitBranch },
+              ].map(({ id, label, description, icon: Icon }) => (
+                <div
+                  key={id}
+                  className="flex flex-col items-center gap-4 p-6 rounded-xl border-2 border-dashed border-gray-700 bg-gray-900/30 opacity-80 cursor-not-allowed"
+                >
+                  <div className="w-14 h-14 rounded-xl bg-gray-800 flex items-center justify-center">
+                    <Icon className="w-7 h-7 text-gray-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-500 mb-1">{label}</h2>
+                    <p className="text-sm text-gray-500">
+                      {description}
+                    </p>
+                  </div>
+                  <span className="text-xs text-gray-500 font-medium mt-auto uppercase">Coming soon</span>
+                </div>
+              ))}
             </div>
-            <span className="text-xs text-amber-400/90 font-medium mt-auto uppercase">Coming soon</span>
           </div>
         </div>
       </main>

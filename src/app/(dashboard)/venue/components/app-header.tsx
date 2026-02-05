@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Building2, Users, Music2, Grid3X3, Music, ChevronDown, Plus } from "lucide-react"
+import { Building2, Users, Music2, Grid3X3, Music, ChevronDown, Plus, FileSignature, Archive, GitBranch } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -84,26 +84,43 @@ export function AppHeader({
                     <Grid3X3 className="w-5 h-5 text-primary" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-52">
-                  <DropdownMenuItem asChild>
-                    <a
-                      href={`${soundPathOrigin}/app/label/launchpad`}
-                      {...(isInIframe ? { target: "_parent", rel: "noopener noreferrer" } : {})}
-                      className="flex items-center gap-2 cursor-pointer no-underline text-inherit"
-                    >
-                      <Building2 className="w-4 h-4" />
-                      Label
-                    </a>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="bg-accent/50 cursor-default">
-                    <Music className="w-4 h-4" />
-                    Venue
-                  </DropdownMenuItem>
-                  <DropdownMenuItem disabled className="opacity-80">
-                    <Music className="w-4 h-4" />
-                    Artist
-                    <span className="ml-auto text-[10px] text-amber-500 uppercase">Soon</span>
-                  </DropdownMenuItem>
+                <DropdownMenuContent align="start" className="w-auto min-w-[18rem] p-0">
+                  <div className="grid grid-cols-[1fr_1fr] gap-0">
+                    <div className="py-1">
+                      <DropdownMenuItem asChild>
+                        <a
+                          href={`${soundPathOrigin}/app/label/launchpad`}
+                          {...(isInIframe ? { target: "_parent", rel: "noopener noreferrer" } : {})}
+                          className="flex items-center gap-2 cursor-pointer no-underline text-inherit"
+                        >
+                          <Building2 className="w-4 h-4 shrink-0 text-[#a855f7]" />
+                          Label
+                        </a>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="bg-accent/50 cursor-default">
+                        <Music className="w-4 h-4 shrink-0 text-emerald-500" />
+                        Venue
+                      </DropdownMenuItem>
+                      <DropdownMenuItem disabled className="opacity-80">
+                        <Music className="w-4 h-4 shrink-0 text-amber-400" />
+                        Artist
+                        <span className="ml-auto text-[10px] text-amber-400 uppercase">Soon</span>
+                      </DropdownMenuItem>
+                    </div>
+                    <div className="py-1 border-l border-border pl-1">
+                      {[
+                        { label: "Sign", icon: FileSignature },
+                        { label: "Vault", icon: Archive },
+                        { label: "Splits", icon: GitBranch },
+                      ].map(({ label, icon: Icon }) => (
+                        <DropdownMenuItem key={label} disabled className="opacity-80 text-muted-foreground">
+                          <Icon className="w-4 h-4 shrink-0 text-gray-400" />
+                          <span className="flex-1">{label}</span>
+                          <span className="text-[10px] text-gray-500 uppercase">Soon</span>
+                        </DropdownMenuItem>
+                      ))}
+                    </div>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}

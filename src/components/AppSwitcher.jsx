@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
-import { Grid3X3, Building2, Music } from 'lucide-react'
+import { Grid3X3, Building2, Music, FileSignature, Archive, GitBranch } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { getAppBaseUrl } from '../lib/appHost'
 import ComingSoonModal from './ComingSoonModal'
@@ -45,11 +45,16 @@ export default function AppSwitcher({ variant = 'default', className = '' }) {
 
   const closeDropdown = () => setOpen(false)
 
-  const handleArtist = (e) => {
-    e.preventDefault()
+  const handleComingSoon = (appKey) => {
     setOpen(false)
-    setComingSoonApp('artist')
+    setComingSoonApp(appKey)
   }
+
+  const utilityApps = [
+    { id: 'sign', label: 'Sign', icon: FileSignature },
+    { id: 'vault', label: 'Vault', icon: Archive },
+    { id: 'splits', label: 'Splits', icon: GitBranch },
+  ]
 
   const dropdownContent = (
     <>
@@ -62,36 +67,57 @@ export default function AppSwitcher({ variant = 'default', className = '' }) {
         role="menu"
         initial={{ opacity: 0, y: -4 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed z-[101] w-52 py-2 bg-[#0B0E14] border border-gray-700 rounded-lg shadow-xl"
+        className="fixed z-[101] min-w-[18rem] py-2 bg-[#0B0E14] border border-gray-700 rounded-lg shadow-xl"
         style={{ top: position.top, left: position.left }}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
-        <a
-          href={labelUrl}
-          onClick={closeDropdown}
-          className={`flex items-center gap-2 px-3 py-2 text-left transition-colors block w-full ${
-            isLabelPath ? 'text-white bg-gray-800' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-          }`}
-        >
-          <Building2 size={18} /> Label
-        </a>
-        <a
-          href={venueUrl}
-          onClick={closeDropdown}
-          className={`flex items-center gap-2 px-3 py-2 text-left transition-colors block w-full ${
-            isVenuePath ? 'text-white bg-gray-800' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-          }`}
-        >
-          <Music size={18} /> Venue
-        </a>
-        <button
-          type="button"
-          onClick={handleArtist}
-          className="w-full flex items-center gap-2 px-3 py-2 text-left text-gray-400 hover:bg-gray-800 hover:text-white"
-        >
-          <Music size={18} /> Artist <span className="ml-auto text-[10px] text-amber-400 uppercase">Soon</span>
-        </button>
+        <div className="grid grid-cols-[1fr_1fr] gap-0">
+          {/* Core hubs */}
+          <div className="py-1">
+            <a
+              href={labelUrl}
+              onClick={closeDropdown}
+              className={`flex items-center gap-2 px-3 py-2 text-left transition-colors block w-full ${
+                isLabelPath ? 'text-white bg-gray-800' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              <Building2 size={18} className="shrink-0 text-[#a855f7]" /> Label
+            </a>
+            <a
+              href={venueUrl}
+              onClick={closeDropdown}
+              className={`flex items-center gap-2 px-3 py-2 text-left transition-colors block w-full ${
+                isVenuePath ? 'text-white bg-gray-800' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              <Music size={18} className="shrink-0 text-emerald-500" /> Venue
+            </a>
+            <button
+              type="button"
+              onClick={() => handleComingSoon('artist')}
+              className="w-full flex items-center gap-2 px-3 py-2 text-left text-gray-400 hover:bg-gray-800 hover:text-white"
+            >
+              <Music size={18} className="shrink-0 text-amber-400" /> Artist <span className="ml-auto text-[10px] text-amber-400 uppercase">Soon</span>
+            </button>
+          </div>
+          {/* Utility apps */}
+          <div className="py-1 border-l border-gray-700 pl-1">
+            {utilityApps.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => handleComingSoon(id)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-left text-gray-500 hover:bg-gray-800 hover:text-gray-300"
+                title="Coming soon"
+              >
+                <Icon size={18} className="shrink-0 text-gray-400" />
+                <span className="flex-1">{label}</span>
+                <span className="text-[10px] text-gray-500 uppercase">Soon</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </motion.div>
     </>
   )
@@ -118,7 +144,7 @@ export default function AppSwitcher({ variant = 'default', className = '' }) {
       <ComingSoonModal
         isOpen={comingSoonApp !== null}
         onClose={() => setComingSoonApp(null)}
-        appName={comingSoonApp === 'artist' ? 'Artist' : 'App'}
+        appName={comingSoonApp ? comingSoonApp.charAt(0).toUpperCase() + comingSoonApp.slice(1) : 'App'}
         returnPath={comingSoonReturnPath}
       />
     </>

@@ -3,7 +3,7 @@
  * In-app navigation (Link) so one SPA, one sign-in.
  */
 import { Link } from 'react-router-dom'
-import { Building2, Music, ChevronDown, Plus, Grid3X3 } from 'lucide-react'
+import { Building2, Music, ChevronDown, Plus, Grid3X3, FileSignature, Archive, GitBranch } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { formatVenueAddressLine } from '../../lib/venueApi'
@@ -58,21 +58,36 @@ export default function VenueHeader({
                 <motion.div
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="absolute left-0 top-full mt-1 w-52 py-2 bg-[#0B0E14] border border-gray-700 rounded-lg shadow-xl z-50"
+                  className="absolute left-0 top-full mt-1 min-w-[18rem] py-2 bg-[#0B0E14] border border-gray-700 rounded-lg shadow-xl z-50 grid grid-cols-[1fr_1fr] gap-0"
                 >
-                  <Link
-                    to="/app/label/launchpad"
-                    className="flex items-center gap-2 px-3 py-2 text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
-                    onClick={() => setAppDropdownOpen(false)}
-                  >
-                    <Building2 className="w-4 h-4" /> Label
-                  </Link>
-                  <div className="flex items-center gap-2 px-3 py-2 text-white bg-gray-800">
-                    <Music className="w-4 h-4" /> Venue
+                  <div className="py-1">
+                    <Link
+                      to="/app/label/launchpad"
+                      className="flex items-center gap-2 px-3 py-2 text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+                      onClick={() => setAppDropdownOpen(false)}
+                    >
+                      <Building2 className="w-4 h-4 shrink-0 text-[#a855f7]" /> Label
+                    </Link>
+                    <div className="flex items-center gap-2 px-3 py-2 text-white bg-gray-800">
+                      <Music className="w-4 h-4 shrink-0 text-emerald-500" /> Venue
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-2 text-gray-500 cursor-not-allowed">
+                      <Music className="w-4 h-4 shrink-0 text-amber-400" /> Artist
+                      <span className="ml-auto text-[10px] text-amber-400 uppercase">Soon</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 px-3 py-2 text-gray-500 cursor-not-allowed">
-                    <Music className="w-4 h-4" /> Artist
-                    <span className="ml-auto text-[10px] text-amber-500 uppercase">Soon</span>
+                  <div className="py-1 border-l border-gray-700 pl-1">
+                    {[
+                      { label: 'Sign', icon: FileSignature },
+                      { label: 'Vault', icon: Archive },
+                      { label: 'Splits', icon: GitBranch },
+                    ].map(({ label, icon: Icon }) => (
+                      <div key={label} className="flex items-center gap-2 px-3 py-2 text-gray-500 cursor-not-allowed">
+                        <Icon className="w-4 h-4 shrink-0 text-gray-400" />
+                        <span className="flex-1">{label}</span>
+                        <span className="text-[10px] text-gray-500 uppercase">Soon</span>
+                      </div>
+                    ))}
                   </div>
                 </motion.div>
               )}
