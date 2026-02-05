@@ -34,7 +34,7 @@ export default function ComingSoonApp({ appName = 'Venue' }) {
         </div>
         <h1 className="text-2xl font-bold text-white mb-2">SoundPath {appName}</h1>
         <p className="text-gray-400 text-sm mb-6">
-          This module is coming soon. Use the Label app to manage your A&R pipeline today.
+          This module is coming soon. Open the Label tool in SoundPath to manage your A&R pipeline today.
         </p>
         <button
           onClick={() => navigate('/app/label/launchpad')}

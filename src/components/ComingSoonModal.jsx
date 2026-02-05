@@ -57,7 +57,7 @@ export default function ComingSoonModal({ isOpen, onClose, appName = 'Venue', re
                   SoundPath {appName}
                 </h2>
                 <p className="text-gray-400 text-sm text-center mb-6">
-                  The {appName} module is in development. You’ll be the first to know when it’s ready. Until then, use the Label app to manage your A&R pipeline.
+                  The {appName} module is in development. You’ll be the first to know when it’s ready. Until then, open the Label tool in SoundPath to manage your A&R pipeline.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <button
