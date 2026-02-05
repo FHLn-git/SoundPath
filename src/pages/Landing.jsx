@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
+import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Zap,
@@ -407,25 +407,26 @@ const Landing = ({ noHeader = false }) => {
               const iconClass = isVenue ? 'text-emerald-500' : isArtist ? 'text-amber-400' : isUtility ? 'text-gray-400' : 'text-neon-purple'
               const hoverBorderClass = isVenue ? 'hover:border-emerald-500/40' : isArtist ? 'hover:border-amber-500/40' : isUtility ? 'hover:border-gray-500/40' : 'hover:border-neon-purple/40'
               return (
-                <motion.div
-                  key={mod.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: index * 0.08 }}
-                  className={`relative p-6 bg-os-bg border border-gray-800 rounded-xl transition-colors ${hoverBorderClass}`}
-                >
-                  {mod.badge && (
-                    <span className={`absolute top-3 right-3 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${mod.badge === 'Coming Soon' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-gray-700 text-gray-400 border border-gray-600'}`}>
-                      {mod.badge}
-                    </span>
-                  )}
-                  <div className={`p-3 rounded-lg w-fit mb-4 ${iconBoxClass}`}>
-                    <Icon size={24} className={iconClass} />
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-1">{mod.title}</h3>
-                  <p className="text-gray-400 text-sm">{mod.description}</p>
-                </motion.div>
+                <Link key={mod.id} to={`/products/${mod.id}`} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-purple focus-visible:ring-offset-2 focus-visible:ring-offset-os-bg rounded-xl">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: index * 0.08 }}
+                    className={`relative p-6 bg-os-bg border border-gray-800 rounded-xl transition-colors cursor-pointer ${hoverBorderClass}`}
+                  >
+                    {mod.badge && (
+                      <span className={`absolute top-3 right-3 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${mod.badge === 'Coming Soon' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-gray-700 text-gray-400 border border-gray-600'}`}>
+                        {mod.badge}
+                      </span>
+                    )}
+                    <div className={`p-3 rounded-lg w-fit mb-4 ${iconBoxClass}`}>
+                      <Icon size={24} className={iconClass} />
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-1">{mod.title}</h3>
+                    <p className="text-gray-400 text-sm">{mod.description}</p>
+                  </motion.div>
+                </Link>
               )
             })}
           </div>

@@ -157,7 +157,8 @@ const PRODUCTS = {
 export default function ProductPage() {
   const { app_name } = useParams()
   const navigate = useNavigate()
-  const product = app_name ? PRODUCTS[app_name.toLowerCase()] : null
+  const productId = app_name?.toLowerCase() ?? ''
+  const product = productId ? PRODUCTS[productId] : null
 
   if (!product) {
     return <Navigate to="/products/label" replace />
