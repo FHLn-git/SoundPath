@@ -1,9 +1,39 @@
 /**
  * Venue dashboard: stat widgets, tabs (Overview, Venue Settings, Logistics), list shows. Same Supabase as rest of SoundPath.
+ * Title shows stage name or "Venue overview" with a switcher; header dropdown is venue selector.
  */
-import { useState } from 'react'
-import { CalendarPlus, Calendar, Clock, CheckCircle2, LayoutDashboard, Settings, Truck, AlertCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { CalendarPlus, Calendar, Clock, CheckCircle2, LayoutDashboard, Settings, Truck, AlertCircle, ChevronDown, Box, Trash2, X } from 'lucide-react'
 import { upsertShow } from '../../lib/showApi'
+import { updateVenue, archiveVenue } from '../../lib/venueApi'
+import { supabase } from '../../lib/supabaseClient'
+import VenueHouseMinimums from './VenueHouseMinimums'
+import VenueCatalogManager from './VenueCatalogManager'
+import VenueGreenRoomCatalog from './VenueGreenRoomCatalog'
+import VenueStagesEditor from './VenueStagesEditor'
+
+const MACRO_VIEW_ID = '__macro__'
+
+function useStages(venueId, refetchDeps = []) {
+  const [stages, setStages] = useState([])
+  useEffect(() => {
+    if (!supabase || !venueId) {
+      setStages([])
+      return
+    }
+    let cancelled = false
+    supabase
+      .from('stages')
+      .select('*')
+      .eq('venue_id', venueId)
+      .order('name')
+      .then(({ data }) => {
+        if (!cancelled) setStages(data ?? [])
+      })
+    return () => { cancelled = true }
+  }, [venueId, ...refetchDeps])
+  return stages
+}
 
 function formatTime(time) {
   if (!time) return '—'
@@ -32,17 +62,167 @@ const defaultEvent = () => ({
   specialRequests: '',
 })
 
+function sharedFacilitiesFromVenue(venue) {
+  if (!venue?.shared_facilities_json) return []
+  const raw = venue.shared_facilities_json
+  if (Array.isArray(raw)) return raw
+  if (raw?.facilities && Array.isArray(raw.facilities)) return raw.facilities
+  return []
+}
+
+function MacroVenueView({ venue, stages }) {
+  const facilities = sharedFacilitiesFromVenue(venue)
+  return (
+    <div className="space-y-6">
+      <p className="text-sm text-gray-500">Shared resources and stages for this venue</p>
+      {facilities.length > 0 && (
+        <section className="space-y-3">
+          <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Shared facilities</h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {facilities.map((f) => (
+              <div key={f.id} className="p-4 rounded-xl border border-gray-700 bg-gray-800/50">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-white">{f.name}</span>
+                  <span className={`px-2 py-0.5 rounded text-xs ${f.status === 'occupied' ? 'bg-red-500/20 text-red-400' : 'bg-gray-600 text-gray-400'}`}>
+                    {f.status ?? 'available'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+      <section className="space-y-3">
+        <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Stages</h3>
+        {stages.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {stages.map((s) => (
+              <div key={s.id} className="p-4 rounded-xl border border-gray-700 bg-gray-800/50 flex items-center gap-3">
+                <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-500/20">
+                  <Box className="w-4 h-4 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="font-medium text-white">{s.name}</p>
+                  <p className="text-xs text-gray-500">{s.capacity != null ? `Cap. ${s.capacity}` : '—'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500">No stages yet. Add stages in Venue Settings.</p>
+        )}
+      </section>
+    </div>
+  )
+}
+
 export default function VenueDashboard({
   activeVenueId,
+  activeVenue,
+  venues = [],
   shows = [],
   loading,
   refetchShows,
+  refetchVenues,
+  setActiveVenueId,
 }) {
   const [activeTab, setActiveTab] = useState('overview')
+  const [stageView, setStageView] = useState(MACRO_VIEW_ID)
+  const [stageDropdownOpen, setStageDropdownOpen] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
   const [form, setForm] = useState(defaultEvent())
   const [saving, setSaving] = useState(false)
   const [created, setCreated] = useState(null)
+  // Venue settings form (synced from venue)
+  const [settingsForm, setSettingsForm] = useState({ name: '', capacity: '', address_street_1: '', address_street_2: '', address_city: '', address_state_region: '', address_postal_code: '', address_country: '', timezone: '' })
+  const [settingsSaving, setSettingsSaving] = useState(false)
+  const [settingsSaved, setSettingsSaved] = useState(false)
+  // Delete venue: 0 = hidden, 1 = first step, 2 = type name to confirm
+  const [deleteStep, setDeleteStep] = useState(0)
+  const [deleteConfirmName, setDeleteConfirmName] = useState('')
+  const [deleteSaving, setDeleteSaving] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
+  const [stagesVersion, setStagesVersion] = useState(0)
+
+  const stages = useStages(activeVenueId, [stagesVersion])
+  const venue = activeVenue ?? (activeVenueId ? venues.find((v) => v.id === activeVenueId) : null)
+  const currentStage = stageView !== MACRO_VIEW_ID ? stages.find((s) => s.id === stageView) : null
+  const stageDisplayName = stageView === MACRO_VIEW_ID ? 'Venue overview' : (currentStage?.name ?? 'Venue overview')
+  const showMacroView = stageView === MACRO_VIEW_ID && stages.length > 0
+
+  useEffect(() => {
+    setStageView(MACRO_VIEW_ID)
+  }, [activeVenueId])
+
+  // Sync venue settings form from current venue
+  useEffect(() => {
+    if (!venue) {
+      setSettingsForm({ name: '', capacity: '', address_street_1: '', address_street_2: '', address_city: '', address_state_region: '', address_postal_code: '', address_country: '', timezone: '' })
+      return
+    }
+    setSettingsForm({
+      name: venue.name ?? '',
+      capacity: venue.capacity != null ? String(venue.capacity) : '',
+      address_street_1: venue.address_street_1 ?? '',
+      address_street_2: venue.address_street_2 ?? '',
+      address_city: venue.address_city ?? '',
+      address_state_region: venue.address_state_region ?? '',
+      address_postal_code: venue.address_postal_code ?? '',
+      address_country: venue.address_country ?? '',
+      timezone: venue.timezone ?? '',
+    })
+    setDeleteStep(0)
+    setDeleteConfirmName('')
+    setDeleteError(null)
+  }, [venue?.id, venue?.name, venue?.capacity, venue?.address_street_1, venue?.address_street_2, venue?.address_city, venue?.address_state_region, venue?.address_postal_code, venue?.address_country, venue?.timezone])
+
+  const handleSaveSettings = async (e) => {
+    e.preventDefault()
+    if (!activeVenueId) return
+    setSettingsSaving(true)
+    setSettingsSaved(false)
+    try {
+      await updateVenue(activeVenueId, {
+        name: settingsForm.name?.trim() || null,
+        capacity: settingsForm.capacity === '' ? null : parseInt(settingsForm.capacity, 10),
+        address_street_1: settingsForm.address_street_1?.trim() || null,
+        address_street_2: settingsForm.address_street_2?.trim() || null,
+        address_city: settingsForm.address_city?.trim() || null,
+        address_state_region: settingsForm.address_state_region?.trim() || null,
+        address_postal_code: settingsForm.address_postal_code?.trim() || null,
+        address_country: settingsForm.address_country?.trim() || null,
+        timezone: settingsForm.timezone?.trim() || null,
+      })
+      await refetchVenues?.()
+      setSettingsSaved(true)
+      setTimeout(() => setSettingsSaved(false), 3000)
+    } finally {
+      setSettingsSaving(false)
+    }
+  }
+
+  const handleDeleteVenue = async () => {
+    if (!activeVenueId || deleteStep !== 2) return
+    const trimmed = (venue?.name ?? '').trim()
+    if (deleteConfirmName.trim() !== trimmed) {
+      setDeleteError('Name does not match. Type the venue name exactly to confirm.')
+      return
+    }
+    setDeleteSaving(true)
+    setDeleteError(null)
+    try {
+      await archiveVenue(activeVenueId)
+      await refetchVenues?.()
+      const remaining = venues.filter((v) => v.id !== activeVenueId)
+      setActiveVenueId?.(remaining[0]?.id ?? null)
+      setDeleteStep(0)
+      setDeleteConfirmName('')
+    } catch (err) {
+      setDeleteError(err?.message ?? 'Failed to remove venue.')
+    } finally {
+      setDeleteSaving(false)
+    }
+  }
 
   const today = new Date().toISOString().slice(0, 10)
   const activeCount = shows.filter((s) => s.date >= today).length
@@ -137,39 +317,80 @@ export default function VenueDashboard({
     <div className="space-y-6">
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-white tracking-tight">Control Room</h2>
-            <p className="text-sm text-gray-500 mt-0.5">Manage your venue, catalog, and events</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-2xl font-bold text-white tracking-tight">{stageDisplayName}</h2>
+            <div className="relative inline-block">
+              <button
+                type="button"
+                onClick={() => setStageDropdownOpen((o) => !o)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-600 bg-gray-800/80 text-gray-200 hover:bg-gray-700 text-sm font-normal"
+              >
+                {stageDisplayName}
+                <ChevronDown className="w-4 h-4 shrink-0" />
+              </button>
+              {stageDropdownOpen && (
+                <div className="absolute left-0 top-full mt-1 min-w-[200px] py-1 bg-[#0B0E14] border border-gray-700 rounded-lg shadow-xl z-50">
+                  <button
+                    type="button"
+                    onClick={() => { setStageView(MACRO_VIEW_ID); setStageDropdownOpen(false) }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm ${showMacroView ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                  >
+                    <LayoutDashboard className="w-4 h-4 shrink-0" />
+                    Venue overview
+                  </button>
+                  {stages.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => { setStageView(s.id); setStageDropdownOpen(false) }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm ${stageView === s.id ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                    >
+                      <Box className="w-4 h-4 shrink-0" />
+                      {s.name}
+                      {s.capacity != null && <span className="ml-auto text-xs text-gray-500">Cap. {s.capacity}</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 font-medium shrink-0"
-          >
-            <CalendarPlus className="w-4 h-4" />
-            Add Show
-          </button>
+          {!showMacroView && (
+            <button
+              type="button"
+              onClick={() => setShowAddForm(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 font-medium shrink-0"
+            >
+              <CalendarPlus className="w-4 h-4" />
+              Add Show
+            </button>
+          )}
         </div>
 
-        {/* Tab bar */}
-        <div className="flex flex-wrap items-center gap-2">
-          <button type="button" onClick={() => setActiveTab('overview')} className={tabListClass('overview')}>
-            <LayoutDashboard className="w-4 h-4" />
-            Overview
-          </button>
-          <button type="button" onClick={() => setActiveTab('logistics')} className={tabListClass('logistics')}>
-            <Truck className="w-4 h-4" />
-            Logistics
-          </button>
-          <button type="button" onClick={() => setActiveTab('venue-settings')} className={tabListClass('venue-settings')}>
-            <Settings className="w-4 h-4" />
-            Venue Settings
-          </button>
-        </div>
+        {showMacroView && venue ? (
+          <MacroVenueView venue={venue} stages={stages} />
+        ) : (
+          <>
+            {/* Tab bar */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={() => setActiveTab('overview')} className={tabListClass('overview')}>
+                <LayoutDashboard className="w-4 h-4" />
+                Overview
+              </button>
+              <button type="button" onClick={() => setActiveTab('logistics')} className={tabListClass('logistics')}>
+                <Truck className="w-4 h-4" />
+                Logistics
+              </button>
+              <button type="button" onClick={() => setActiveTab('venue-settings')} className={tabListClass('venue-settings')}>
+                <Settings className="w-4 h-4" />
+                Venue Settings
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Overview tab */}
-      {activeTab === 'overview' && (
+      {/* Tab content (only when a stage is selected, not Venue overview) */}
+      {!showMacroView && activeTab === 'overview' && (
         <div className="space-y-6">
           {statWidgets}
           {showAddForm && (
@@ -269,19 +490,254 @@ export default function VenueDashboard({
         </div>
       )}
 
-      {/* Venue Settings tab */}
-      {activeTab === 'venue-settings' && (
-        <div className="rounded-xl border border-gray-700 bg-gray-800/30 p-8 text-center">
-          <Settings className="w-12 h-12 mx-auto text-gray-500 mb-3" />
-          <h3 className="text-lg font-semibold text-white mb-1">Venue Settings</h3>
-          <p className="text-gray-500 text-sm max-w-md mx-auto">
-            Address, capacity, catalog, and green room options will be configurable here. Coming soon.
-          </p>
+      {!showMacroView && activeTab === 'venue-settings' && venue && (
+        <div className="space-y-6 pb-8">
+          {/* Venue details */}
+          <section className="rounded-xl border border-gray-700 border-emerald-500/10 bg-gray-800/30 overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-700 flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-500/20">
+                <Settings className="w-5 h-5 text-emerald-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white">Venue details</h3>
+                <p className="text-xs text-gray-500">Name, capacity, address & timezone</p>
+              </div>
+            </div>
+            <form onSubmit={handleSaveSettings} className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Venue name</label>
+                <input
+                  type="text"
+                  value={settingsForm.name}
+                  onChange={(e) => setSettingsForm((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="e.g. The Grand Hall"
+                  className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Capacity</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={settingsForm.capacity}
+                  onChange={(e) => setSettingsForm((f) => ({ ...f, capacity: e.target.value }))}
+                  placeholder="e.g. 500"
+                  className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Street address 1</label>
+                <input
+                  type="text"
+                  value={settingsForm.address_street_1}
+                  onChange={(e) => setSettingsForm((f) => ({ ...f, address_street_1: e.target.value }))}
+                  placeholder="Street and number"
+                  className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Street address 2 (optional)</label>
+                <input
+                  type="text"
+                  value={settingsForm.address_street_2}
+                  onChange={(e) => setSettingsForm((f) => ({ ...f, address_street_2: e.target.value }))}
+                  placeholder="Suite, unit, etc."
+                  className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-500"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">City</label>
+                  <input
+                    type="text"
+                    value={settingsForm.address_city}
+                    onChange={(e) => setSettingsForm((f) => ({ ...f, address_city: e.target.value }))}
+                    placeholder="City"
+                    className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">State / Region</label>
+                  <input
+                    type="text"
+                    value={settingsForm.address_state_region}
+                    onChange={(e) => setSettingsForm((f) => ({ ...f, address_state_region: e.target.value }))}
+                    placeholder="State or region"
+                    className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-500"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Postal code</label>
+                  <input
+                    type="text"
+                    value={settingsForm.address_postal_code}
+                    onChange={(e) => setSettingsForm((f) => ({ ...f, address_postal_code: e.target.value }))}
+                    placeholder="ZIP / Postal code"
+                    className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Country</label>
+                  <input
+                    type="text"
+                    value={settingsForm.address_country}
+                    onChange={(e) => setSettingsForm((f) => ({ ...f, address_country: e.target.value }))}
+                    placeholder="Country"
+                    className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Timezone</label>
+                <input
+                  type="text"
+                  value={settingsForm.timezone}
+                  onChange={(e) => setSettingsForm((f) => ({ ...f, timezone: e.target.value }))}
+                  placeholder="e.g. America/New_York"
+                  className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-500"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={settingsSaving}
+                  className="px-4 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 font-medium"
+                >
+                  {settingsSaving ? 'Saving…' : 'Save changes'}
+                </button>
+                {settingsSaved && <span className="text-sm text-emerald-400">Saved.</span>}
+              </div>
+            </form>
+          </section>
+
+          {/* Edit stages */}
+          <VenueStagesEditor
+            venueId={activeVenueId}
+            onStagesChange={() => setStagesVersion((v) => v + 1)}
+          />
+
+          {/* House Minimums, Catalog Manager, Green Room & Hospitality */}
+          <VenueHouseMinimums />
+          <VenueCatalogManager />
+          <VenueGreenRoomCatalog />
+
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => { setDeleteStep(1); setDeleteConfirmName(''); setDeleteError(null) }}
+              className="text-sm px-3 py-1.5 rounded-lg border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-1.5"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete Venue
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Logistics tab */}
-      {activeTab === 'logistics' && (
+      {/* Delete venue confirmation modal - two steps */}
+      {deleteStep >= 1 && venue && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => {
+            if (deleteStep === 1) {
+              setDeleteStep(0)
+              setDeleteConfirmName('')
+              setDeleteError(null)
+            }
+          }}
+        >
+          <div
+            className={`bg-gray-900 border-2 rounded-lg p-6 max-w-md w-full ${deleteStep === 1 ? 'border-yellow-500/50' : 'border-red-500/50'}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {deleteStep === 1 ? (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <Trash2 className="w-6 h-6 text-yellow-500" />
+                    <h3 className="text-xl font-bold text-white">Delete Venue?</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setDeleteStep(0); setDeleteConfirmName(''); setDeleteError(null) }}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <p className="text-gray-300 mb-6">
+                  The venue will be permanently removed from your account. This cannot be undone or restored.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDeleteStep(2)}
+                    className="flex-1 px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 rounded-lg text-yellow-400 transition-all"
+                  >
+                    Yes, Continue
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setDeleteStep(0); setDeleteConfirmName(''); setDeleteError(null) }}
+                    className="flex-1 px-4 py-2 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded-lg text-gray-300 transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <Trash2 className="w-6 h-6 text-red-500" />
+                    <h3 className="text-xl font-bold text-red-400">Confirm deletion</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setDeleteStep(1); setDeleteConfirmName(''); setDeleteError(null) }}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <p className="text-gray-300 mb-3">
+                  Type the venue name <strong className="text-white">&quot;{venue.name}&quot;</strong> to confirm.
+                </p>
+                <input
+                  type="text"
+                  value={deleteConfirmName}
+                  onChange={(e) => { setDeleteConfirmName(e.target.value); setDeleteError(null) }}
+                  placeholder="Venue name"
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-500 mb-4"
+                  aria-label="Confirm venue name"
+                />
+                {deleteError && <p className="text-red-400 text-sm mb-3">{deleteError}</p>}
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleDeleteVenue}
+                    disabled={deleteSaving || deleteConfirmName.trim() !== (venue?.name ?? '').trim()}
+                    className="flex-1 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg text-red-400 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {deleteSaving ? 'Removing…' : 'Delete Venue'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setDeleteStep(1); setDeleteConfirmName(''); setDeleteError(null) }}
+                    className="flex-1 px-4 py-2 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 rounded-lg text-gray-300"
+                  >
+                    Back
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!showMacroView && activeTab === 'logistics' && (
         <div className="space-y-6">
           {statWidgets}
           <div className="rounded-xl border border-gray-700 bg-gray-800/30 overflow-hidden">

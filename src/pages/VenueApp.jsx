@@ -10,6 +10,7 @@ import CreateVenueModal from '../components/venue/CreateVenueModal'
 import VenueSignIn from '../components/venue/VenueSignIn'
 import VenueDashboard from '../components/venue/VenueDashboard'
 import VenueDashboardSkeleton from '../components/venue/VenueDashboardSkeleton'
+import { VenueCatalogProvider } from '../context/VenueCatalogContext'
 import { formatOperationError } from '../lib/formatVenueError'
 import { Building2, Plus } from 'lucide-react'
 
@@ -104,12 +105,18 @@ export default function VenueApp() {
 
         {!loading && venues.length > 0 && currentView === 'venue' && (
           <div className="container mx-auto px-4 py-6">
-            <VenueDashboard
-              activeVenueId={activeVenueId}
-              shows={shows}
-              loading={showsLoading && !!activeVenueId}
-              refetchShows={refetchShows}
-            />
+            <VenueCatalogProvider>
+              <VenueDashboard
+                activeVenueId={activeVenueId}
+                activeVenue={activeVenue}
+                venues={venues}
+                shows={shows}
+                loading={showsLoading && !!activeVenueId}
+                refetchShows={refetchShows}
+                refetchVenues={refetchVenues}
+                setActiveVenueId={setActiveVenueId}
+              />
+            </VenueCatalogProvider>
           </div>
         )}
 

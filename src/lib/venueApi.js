@@ -112,3 +112,48 @@ export async function createVenue(input) {
   }
   return data
 }
+
+/**
+ * Update venue. Partial updates supported.
+ * @param {string} venueId
+ * @param {Object} input
+ * @returns {Promise<Venue|null>}
+ */
+export async function updateVenue(venueId, input) {
+  if (!supabase) return null
+  const payload = {}
+  if (input.name !== undefined) payload.name = input.name
+  if (input.capacity !== undefined) payload.capacity = input.capacity ?? null
+  if (input.address !== undefined) payload.address = input.address?.trim() || null
+  if (input.address_street_1 !== undefined) payload.address_street_1 = input.address_street_1?.trim() || null
+  if (input.address_street_2 !== undefined) payload.address_street_2 = input.address_street_2?.trim() || null
+  if (input.address_city !== undefined) payload.address_city = input.address_city?.trim() || null
+  if (input.address_state_region !== undefined) payload.address_state_region = input.address_state_region?.trim() || null
+  if (input.address_postal_code !== undefined) payload.address_postal_code = input.address_postal_code?.trim() || null
+  if (input.address_country !== undefined) payload.address_country = input.address_country?.trim() || null
+  if (input.timezone !== undefined) payload.timezone = input.timezone?.trim() || null
+  if (input.contact_info !== undefined) payload.contact_info = input.contact_info
+
+  const { data, error } = await supabase
+    .from('venues')
+    .update(payload)
+    .eq('id', venueId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+/**
+ * Soft delete: set deleted_at so venue disappears from app; SoundPath retains data.
+ * @param {string} venueId
+ * @returns {Promise<void>}
+ */
+export async function archiveVenue(venueId) {
+  if (!supabase) return
+  const { error } = await supabase
+    .from('venues')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', venueId)
+  if (error) throw error
+}

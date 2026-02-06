@@ -100,14 +100,17 @@ export default function VenueHeader({
               <p className="text-xs text-gray-500">Event Management</p>
             </div>
 
-            {/* Venue switcher */}
+            {/* Venue selector */}
             {showVenueSwitcher && (
-              <div className="relative" ref={venueRef}>
-                <button
-                  type="button"
-                  onClick={() => setVenueDropdownOpen((o) => !o)}
-                  className="flex items-center gap-2 min-w-[140px] justify-between px-3 py-2 rounded-lg border border-gray-600 bg-gray-800/80 hover:bg-gray-700 text-left text-sm text-gray-200"
-                >
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500 hidden sm:inline">Venue</span>
+                <div className="relative" ref={venueRef}>
+                  <button
+                    type="button"
+                    onClick={() => setVenueDropdownOpen((o) => !o)}
+                    className="flex items-center gap-2 min-w-[140px] justify-between px-3 py-2 rounded-lg border border-gray-600 bg-gray-800/80 hover:bg-gray-700 text-left text-sm text-gray-200"
+                    aria-label="Select venue"
+                  >
                   <span className="truncate">
                     {activeVenue?.name ?? (venues.length === 0 ? 'No venue' : 'Select venue')}
                   </span>
@@ -153,6 +156,7 @@ export default function VenueHeader({
                     )}
                   </motion.div>
                 )}
+                </div>
               </div>
             )}
           </div>
