@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,20 +10,31 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { computeSettlement } from "@/lib/settlement-calc"
 import type { Event } from "@/components/event-context"
-import { Calculator, CheckCircle2, DollarSign, FileText } from "lucide-react"
+import { Calculator, CheckCircle2, DollarSign } from "lucide-react"
 
 interface ShowSettlementCardProps {
   event: Event
   onSave: (updates: Partial<Event>) => Promise<unknown>
 }
 
+function toInputValue(n: number | null): string {
+  return n == null ? "" : String(n)
+}
+
 export function ShowSettlementCard({ event, onSave }: ShowSettlementCardProps) {
   const [notes, setNotes] = useState(event.settlementNotes ?? "")
   const [busy, setBusy] = useState(false)
   const [savingFields, setSavingFields] = useState(false)
-  const guaranteeRef = useRef<HTMLInputElement>(null)
-  const doorSplitRef = useRef<HTMLInputElement>(null)
-  const ticketRevenueRef = useRef<HTMLInputElement>(null)
+  const [guaranteeInput, setGuaranteeInput] = useState(toInputValue(event.guarantee ?? null))
+  const [doorSplitInput, setDoorSplitInput] = useState(toInputValue(event.doorSplitPct ?? null))
+  const [ticketRevenueInput, setTicketRevenueInput] = useState(toInputValue(event.ticketRevenue ?? null))
+
+  // Sync inputs when event data changes (e.g. after save or load)
+  useEffect(() => {
+    setGuaranteeInput(toInputValue(event.guarantee ?? null))
+    setDoorSplitInput(toInputValue(event.doorSplitPct ?? null))
+    setTicketRevenueInput(toInputValue(event.ticketRevenue ?? null))
+  }, [event.guarantee, event.doorSplitPct, event.ticketRevenue])
 
   const guarantee = event.guarantee ?? null
   const doorSplitPct = event.doorSplitPct ?? null
@@ -95,13 +106,13 @@ export function ShowSettlementCard({ event, onSave }: ShowSettlementCardProps) {
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">Guarantee ($)</Label>
             <Input
-              ref={guaranteeRef}
               type="number"
               min={0}
               step={1}
-              value={guarantee ?? ""}
+              value={guaranteeInput}
+              onChange={(e) => setGuaranteeInput(e.target.value)}
               onBlur={() => {
-                const v = guaranteeRef.current?.value.trim() ?? ""
+                const v = guaranteeInput.trim()
                 const n = v === "" ? null : Number(v) || 0
                 if (n !== guarantee) saveFields({ guarantee: n })
               }}
@@ -113,14 +124,14 @@ export function ShowSettlementCard({ event, onSave }: ShowSettlementCardProps) {
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">Door split (%)</Label>
             <Input
-              ref={doorSplitRef}
               type="number"
               min={0}
               max={100}
               step={1}
-              value={doorSplitPct ?? ""}
+              value={doorSplitInput}
+              onChange={(e) => setDoorSplitInput(e.target.value)}
               onBlur={() => {
-                const v = doorSplitRef.current?.value.trim() ?? ""
+                const v = doorSplitInput.trim()
                 const n = v === "" ? null : Number(v) || 0
                 if (n !== doorSplitPct) saveFields({ doorSplitPct: n })
               }}
@@ -132,13 +143,13 @@ export function ShowSettlementCard({ event, onSave }: ShowSettlementCardProps) {
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">Ticket revenue ($)</Label>
             <Input
-              ref={ticketRevenueRef}
               type="number"
               min={0}
               step={1}
-              value={ticketRevenue ?? ""}
+              value={ticketRevenueInput}
+              onChange={(e) => setTicketRevenueInput(e.target.value)}
               onBlur={() => {
-                const v = ticketRevenueRef.current?.value.trim() ?? ""
+                const v = ticketRevenueInput.trim()
                 const n = v === "" ? null : Number(v) || 0
                 if (n !== ticketRevenue) saveFields({ ticketRevenue: n })
               }}

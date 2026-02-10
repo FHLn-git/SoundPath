@@ -542,8 +542,8 @@ export function MasterEventView({ event, onBack, onEdit, onViewLinkedOffer }: Ma
       </div>
 
       {/* Assets (Phase 6) – riders, contracts, posters for this show */}
-      {activeVenueId && (
-        <VenueAssetsCard venueId={activeVenueId} showId={event.id} />
+      {activeVenue?.id && (
+        <VenueAssetsCard venueId={activeVenue.id} showId={event.id} />
       )}
 
       {/* Special Requests */}

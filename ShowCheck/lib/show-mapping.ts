@@ -73,7 +73,6 @@ export function eventToShowRow(
     date: event.date,
     status: event.status ?? "draft",
     contract_status: "pending",
-    payout_status: "pending",
     load_in: event.loadIn ? uiTimeToDb(event.loadIn) : null,
     soundcheck: event.soundcheck ? uiTimeToDb(event.soundcheck) : null,
     doors: event.doors ? uiTimeToDb(event.doors) : null,
