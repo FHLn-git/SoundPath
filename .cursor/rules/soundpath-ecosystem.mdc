@@ -1,0 +1,14 @@
+---
+description: SoundPath is the ecosystem; Label/Venue/Artist are primary tools, not "the main app"
+alwaysApply: true
+---
+
+# SoundPath Ecosystem Model
+
+**Do not describe SoundPath as label-centric. Label is not the main app.**
+
+- **SoundPath** = The ecosystem and wrapper/middleware for the whole product. It is the "main app" that hosts everything—like Google is the platform, not "Google Docs with other stuff."
+- **Primary tools (equals):** Label, Venue, Artist. Three sub-apps, same standing.
+- **Subtools:** Sign, Splits, Vault. They support the primary tools; they are not the main product.
+
+One Vercel project, one site, one ecosystem. When discussing architecture, routing, or "the main app," the main app is the SoundPath wrapper—not Label. We built Label first and have pivoted to the ecosystem; treat the codebase and product as ecosystem-first.

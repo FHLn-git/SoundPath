@@ -30,6 +30,9 @@ export function showRowToEvent(row: ShowRow): Event {
     bands: Array.isArray(row.bands) ? row.bands : [],
     wizardCompleted: row.status !== "draft",
     specialRequests: row.special_requests ?? "",
+    productionApprovalStatus: row.production_approval_status ?? undefined,
+    hospitalityApprovalStatus: row.hospitality_approval_status ?? undefined,
+    scheduleApprovalStatus: row.schedule_approval_status ?? undefined,
   }
 }
 
@@ -54,5 +57,8 @@ export function eventToShowRow(
     green_room_items: event.greenRoomItems ?? [],
     bands: event.bands ?? [],
     special_requests: event.specialRequests ?? null,
+    production_approval_status: event.productionApprovalStatus ?? undefined,
+    hospitality_approval_status: event.hospitalityApprovalStatus ?? undefined,
+    schedule_approval_status: event.scheduleApprovalStatus ?? undefined,
   }
 }

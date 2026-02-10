@@ -33,6 +33,7 @@ export function showRowToEvent(row) {
     id: row.id,
     name: row.name,
     date: row.date,
+    venue_id: row.venue_id,
     loadIn: dbTimeToUi(row.load_in),
     soundcheck: dbTimeToUi(row.soundcheck),
     doors: dbTimeToUi(row.doors),
@@ -44,6 +45,9 @@ export function showRowToEvent(row) {
     bands: Array.isArray(row.bands) ? row.bands : [],
     wizardCompleted: row.status !== 'draft',
     specialRequests: row.special_requests ?? '',
+    productionApprovalStatus: row.production_approval_status ?? null,
+    hospitalityApprovalStatus: row.hospitality_approval_status ?? null,
+    scheduleApprovalStatus: row.schedule_approval_status ?? null,
   }
 }
 
@@ -71,6 +75,9 @@ export function eventToShowRow(event, venueId) {
     green_room_items: event.greenRoomItems ?? [],
     bands: event.bands ?? [],
     special_requests: event.specialRequests ?? null,
+    production_approval_status: event.productionApprovalStatus ?? null,
+    hospitality_approval_status: event.hospitalityApprovalStatus ?? null,
+    schedule_approval_status: event.scheduleApprovalStatus ?? null,
   }
 }
 
@@ -101,17 +108,77 @@ export async function upsertShow(venueId, event) {
         green_room_items: row.green_room_items,
         bands: row.bands,
         special_requests: row.special_requests,
+        production_approval_status: row.production_approval_status,
+        hospitality_approval_status: row.hospitality_approval_status,
+        schedule_approval_status: row.schedule_approval_status,
       })
       .eq('id', event.id)
       .select()
       .single()
     if (error) throw error
-    return data ? { ...event, id: data.id } : null
+    return data ? showRowToEvent(data) : null
   }
   const { data, error } = await supabase.from('shows').insert(row).select().single()
   if (error) throw error
   if (!data) return null
-  return { ...event, id: data.id }
+  return showRowToEvent(data)
+}
+
+/**
+ * Approve one section (Production, Hospitality, Schedule). Venue only.
+ * @param {string} showId
+ * @param {'production'|'hospitality'|'schedule'} section
+ * @returns {Promise<Object|null>}
+ */
+export async function approveShowSection(showId, section) {
+  if (!supabase) return null
+  const col = section === 'production' ? 'production_approval_status' : section === 'hospitality' ? 'hospitality_approval_status' : 'schedule_approval_status'
+  const { data, error } = await supabase.from('shows').update({ [col]: 'CONFIRMED' }).eq('id', showId).select().single()
+  if (error) throw error
+  return data ? showRowToEvent(data) : null
+}
+
+/**
+ * Create show invitation; returns token for invite link. Venue only.
+ * @param {string} showId
+ * @param {string} email
+ * @returns {Promise<{id: string, token: string}|{error: string}>}
+ */
+export async function createShowInvitation(showId, email) {
+  if (!supabase) return { error: 'Not configured' }
+  const { data, error } = await supabase.rpc('create_show_invitation', { p_show_id: showId, p_email: email.trim().toLowerCase() })
+  if (error) return { error: error.message }
+  const r = data
+  if (r?.error) return { error: r.error }
+  if (r?.id && r?.token) return { id: r.id, token: r.token }
+  return { error: 'Invalid response' }
+}
+
+/**
+ * Accept show invitation (call when authenticated; email must match invite).
+ * @param {string} token
+ * @returns {Promise<{show_id: string}|{error: string}>}
+ */
+export async function acceptShowInvitation(token) {
+  if (!supabase) return { error: 'Not configured' }
+  const { data, error } = await supabase.rpc('accept_show_invitation', { p_token: token })
+  if (error) return { error: error.message }
+  const r = data
+  if (r?.error) return { error: r.error }
+  if (r?.show_id) return { show_id: r.show_id }
+  return { error: 'Invalid response' }
+}
+
+/**
+ * Get invitation email by token (anon) for sign-up prefill.
+ * @param {string} token
+ * @returns {Promise<{email: string}|null>}
+ */
+export async function getShowInvitationEmailByToken(token) {
+  if (!supabase) return null
+  const { data, error } = await supabase.rpc('get_show_invitation_email_by_token', { p_token: token })
+  if (error || !data?.email) return null
+  return { email: data.email }
 }
 
 /**

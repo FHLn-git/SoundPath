@@ -1,10 +1,13 @@
 /**
- * Venue – in-app experience. One SoundPath app: same build, same auth, same Supabase.
- * No iframe. Renders Venue UI directly so one deploy works.
+ * Venue – SoundPath Venue app.
+ * When VITE_VENUE_APP_URL is set (or in dev we default to ShowCheck on :3001),
+ * we load the new Venue app (ShowCheck) in an iframe. Otherwise we show the legacy dashboard.
+ * Same auth/Supabase: iframe is same-origin or receives session via cookie when possible.
  */
 import { useState } from 'react'
 import { useVenue } from '../hooks/useVenue'
 import { useShows } from '../hooks/useShows'
+import { useVenueNotifications } from '../hooks/useVenueNotifications'
 import VenueHeader from '../components/venue/VenueHeader'
 import CreateVenueModal from '../components/venue/CreateVenueModal'
 import VenueSignIn from '../components/venue/VenueSignIn'
@@ -14,9 +17,21 @@ import { VenueCatalogProvider } from '../context/VenueCatalogContext'
 import { formatOperationError } from '../lib/formatVenueError'
 import { Building2, Plus } from 'lucide-react'
 
+const DEFAULT_VENUE_APP_URL_DEV = 'http://localhost:3001'
+
+function getVenueAppUrl() {
+  const env = import.meta.env.VITE_VENUE_APP_URL
+  if (env && String(env).trim() !== '') return String(env).trim()
+  if (import.meta.env.DEV) return DEFAULT_VENUE_APP_URL_DEV
+  return null
+}
+
 export default function VenueApp() {
   const [currentView, setCurrentView] = useState('venue')
   const [createVenueOpen, setCreateVenueOpen] = useState(false)
+
+  const venueAppUrl = getVenueAppUrl()
+  const useNewVenue = !!venueAppUrl
 
   const {
     userId,
@@ -30,13 +45,29 @@ export default function VenueApp() {
   } = useVenue()
 
   const { shows, loading: showsLoading, refetch: refetchShows } = useShows(activeVenueId)
+  const { notifications, unreadCount: unreadNotificationCount, markAsRead: onMarkNotificationRead, markAllAsRead: onMarkAllNotificationsRead } = useVenueNotifications(activeVenueId)
 
   const handleVenueCreated = async (venueId) => {
     setActiveVenueId(venueId)
     await refetchVenues()
   }
 
-  // Not signed in – same Supabase session as Label; show sign-in so user uses one account
+  // New Venue (ShowCheck) in iframe – full viewport; ShowCheck has its own header and auth
+  if (useNewVenue) {
+    return (
+      <div className="venue-app-theme fixed inset-0 flex flex-col bg-[#0B0E14]">
+        <iframe
+          src={venueAppUrl}
+          title="SoundPath Venue"
+          className="w-full flex-1 border-0"
+          allow="same-origin"
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+      </div>
+    )
+  }
+
+  // Legacy Venue (in-app): same Supabase session
   if (!venueLoading && !userId) {
     return (
       <div className="venue-app-theme fixed inset-0 flex flex-col bg-gray-950">
@@ -45,7 +76,6 @@ export default function VenueApp() {
     )
   }
 
-  // Venue fetch error
   if (venueError) {
     const message = formatOperationError(venueError, {
       operation: 'Load venues',
@@ -72,6 +102,10 @@ export default function VenueApp() {
         activeVenue={activeVenue}
         onVenueSelect={setActiveVenueId}
         onOpenCreateVenue={() => setCreateVenueOpen(true)}
+        notifications={notifications}
+        unreadNotificationCount={unreadNotificationCount}
+        onMarkNotificationRead={onMarkNotificationRead}
+        onMarkAllNotificationsRead={onMarkAllNotificationsRead}
       />
 
       <main className="flex-1 overflow-auto">
@@ -122,8 +156,11 @@ export default function VenueApp() {
 
         {!loading && venues.length > 0 && currentView === 'promoter' && (
           <div className="container mx-auto px-4 py-6">
-            <div className="rounded-xl border border-gray-700 bg-gray-800/30 p-8 text-center text-gray-500">
-              Promoter Portal – coming soon. Use Venue Admin to manage shows.
+            <div className="rounded-xl border border-gray-700 bg-gray-800/30 p-8 text-center">
+              <p className="text-gray-500 mb-4">View and manage all your invited shows in one place.</p>
+              <a href={window.location.pathname.startsWith('/app/') ? '/app/portal/promoter' : '/portal/promoter'} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500 text-white font-medium hover:bg-emerald-600">
+                Open Promoter Portal
+              </a>
             </div>
           </div>
         )}

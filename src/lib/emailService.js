@@ -7,7 +7,8 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 // Send email via Resend API (through Supabase Edge Function)
-export const sendEmail = async ({ to, subject, html, text }) => {
+// Optional `from` (e.g. 'invite@soundpath.app') overrides the edge function default
+export const sendEmail = async ({ to, subject, html, text, from: fromAddress }) => {
   // Try to use Resend via Edge Function first
   if (SUPABASE_URL && SUPABASE_ANON_KEY) {
     try {
@@ -24,6 +25,8 @@ export const sendEmail = async ({ to, subject, html, text }) => {
       }
 
       let errorData = null
+      const body = { to, subject, html, text }
+      if (fromAddress) body.from = fromAddress
       const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
         method: 'POST',
         headers: {
@@ -32,12 +35,7 @@ export const sendEmail = async ({ to, subject, html, text }) => {
           apikey: SUPABASE_ANON_KEY,
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({
-          to,
-          subject,
-          html,
-          text,
-        }),
+        body: JSON.stringify(body),
       })
 
       if (!response.ok) {
@@ -281,6 +279,89 @@ Your SoundPath subscription for ${organizationName} has expired.
 Reactivate: ${reactivateUrl}
     `.trim(),
   }),
+
+  showInvitation: ({ inviteUrl, showName, venueName, date }) => ({
+    subject: `You're invited to advance: ${showName} at ${venueName}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .button { display: inline-block; padding: 12px 24px; background-color: #10b981; color: white; text-decoration: none; border-radius: 6px; margin: 10px 0; }
+            .info-box { background-color: #ecfdf5; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>Show advance invitation</h1>
+            <p>You've been invited to collaborate on the advance for:</p>
+            <div class="info-box">
+              <p><strong>${showName}</strong></p>
+              <p>${venueName} · ${date}</p>
+            </div>
+            <p>Set a password or sign in to access the advance and work with the venue.</p>
+            <a href="${inviteUrl}" class="button">Accept &amp; open advance</a>
+            <p style="color: #666; font-size: 14px; margin-top: 24px;">If you didn't expect this, you can ignore this email.</p>
+          </div>
+        </body>
+      </html>
+    `,
+    text: `Show advance invitation\n\n${showName} at ${venueName} (${date}).\n\nAccept and open advance: ${inviteUrl}`.trim(),
+  }),
+
+  advanceUpdated: ({ showName, venueName, advanceUrl }) => ({
+    subject: `Advance updated: ${showName}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .button { display: inline-block; padding: 12px 24px; background-color: #f59e0b; color: white; text-decoration: none; border-radius: 6px; margin: 10px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>Advance updated</h1>
+            <p>The promoter has updated the advance for <strong>${showName}</strong> at ${venueName}.</p>
+            <p>Review and approve when ready.</p>
+            <a href="${advanceUrl}" class="button">Review advance</a>
+          </div>
+        </body>
+      </html>
+    `,
+    text: `Advance updated: ${showName} at ${venueName}. Review: ${advanceUrl}`.trim(),
+  }),
+
+  advanceConfirmed: ({ showName, venueName, date, recipientRole }) => ({
+    subject: `Advance confirmed: ${showName}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .success { background-color: #ecfdf5; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>Advance confirmed</h1>
+            <p>The advance for <strong>${showName}</strong> at ${venueName} (${date}) has been confirmed${recipientRole === 'promoter' ? ' by the venue' : ''}.</p>
+            <div class="success"><p>You're all set. Settlement and reports will be available after the show.</p></div>
+          </div>
+        </body>
+      </html>
+    `,
+    text: `Advance confirmed: ${showName} at ${venueName} (${date}).`.trim(),
+  }),
 }
 
 // Helper to send team invite email
@@ -331,4 +412,23 @@ export const sendTrialEndingEmail = async ({
     to: email,
     ...template,
   })
+}
+
+// --- Promoter / Venue advance emails ---
+
+const INVITE_FROM_EMAIL = 'invite@soundpath.app'
+
+export const sendShowInvitationEmail = async ({ to, inviteUrl, showName, venueName, date }) => {
+  const template = emailTemplates.showInvitation({ inviteUrl, showName, venueName, date })
+  return await sendEmail({ to, from: INVITE_FROM_EMAIL, ...template })
+}
+
+export const sendAdvanceUpdatedEmail = async ({ to, showName, venueName, advanceUrl }) => {
+  const template = emailTemplates.advanceUpdated({ showName, venueName, advanceUrl })
+  return await sendEmail({ to, ...template })
+}
+
+export const sendAdvanceConfirmedEmail = async ({ to, showName, venueName, date, recipientRole = 'promoter' }) => {
+  const template = emailTemplates.advanceConfirmed({ showName, venueName, date, recipientRole })
+  return await sendEmail({ to, ...template })
 }

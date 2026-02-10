@@ -3,8 +3,9 @@
  * Title shows stage name or "Venue overview" with a switcher; header dropdown is venue selector.
  */
 import { useState, useEffect } from 'react'
-import { CalendarPlus, Calendar, Clock, CheckCircle2, LayoutDashboard, Settings, Truck, AlertCircle, ChevronDown, Box, Trash2, X } from 'lucide-react'
-import { upsertShow } from '../../lib/showApi'
+import { CalendarPlus, Calendar, Clock, CheckCircle2, LayoutDashboard, Settings, Truck, AlertCircle, ChevronDown, Box, Trash2, X, UserPlus, Check } from 'lucide-react'
+import { upsertShow, createShowInvitation, approveShowSection } from '../../lib/showApi'
+import { sendShowInvitationEmail, sendAdvanceConfirmedEmail } from '../../lib/emailService'
 import { updateVenue, archiveVenue } from '../../lib/venueApi'
 import { supabase } from '../../lib/supabaseClient'
 import VenueHouseMinimums from './VenueHouseMinimums'
@@ -143,6 +144,11 @@ export default function VenueDashboard({
   const [deleteSaving, setDeleteSaving] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
   const [stagesVersion, setStagesVersion] = useState(0)
+  const [inviteShowId, setInviteShowId] = useState(null)
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteSending, setInviteSending] = useState(false)
+  const [inviteError, setInviteError] = useState(null)
+  const [approvingSection, setApprovingSection] = useState(null)
 
   const stages = useStages(activeVenueId, [stagesVersion])
   const venue = activeVenue ?? (activeVenueId ? venues.find((v) => v.id === activeVenueId) : null)
@@ -228,6 +234,62 @@ export default function VenueDashboard({
   const activeCount = shows.filter((s) => s.date >= today).length
   const confirmedCount = shows.filter((s) => s.status === 'confirmed').length
   const draftsCount = shows.filter((s) => s.status === 'draft').length
+
+  const showTileStatus = (show) => {
+    const anyPending = show.productionApprovalStatus === 'PENDING_APPROVAL' || show.hospitalityApprovalStatus === 'PENDING_APPROVAL' || show.scheduleApprovalStatus === 'PENDING_APPROVAL'
+    if (show.status === 'completed') return { label: 'Completed', className: 'bg-gray-500/20 text-gray-400' }
+    if ((show.status === 'confirmed' || show.status === 'pending-approval') && anyPending) return { label: 'Pending approval', className: 'bg-amber-500/20 text-amber-400' }
+    if (show.status === 'confirmed') return { label: 'Confirmed', className: 'bg-green-500/20 text-green-400' }
+    if (show.status === 'pending-approval') return { label: 'Pending approval', className: 'bg-amber-500/20 text-amber-400' }
+    return { label: 'Draft', className: 'bg-gray-600 text-gray-400' }
+  }
+
+  const handleInvitePromoter = async (e) => {
+    e.preventDefault()
+    if (!inviteShowId || !inviteEmail?.trim()) return
+    setInviteSending(true)
+    setInviteError(null)
+    try {
+      const result = await createShowInvitation(inviteShowId, inviteEmail.trim())
+      if (result.error) throw new Error(result.error)
+      const origin = window.location.origin
+      const path = window.location.pathname.startsWith('/app/') ? '/app/portal/promoter/accept' : '/portal/promoter/accept'
+      const inviteUrl = `${origin}${path}?token=${result.token}`
+      const show = shows.find((s) => s.id === inviteShowId)
+      const dateStr = show?.date ? new Date(show.date).toLocaleDateString('en-US') : ''
+      await sendShowInvitationEmail({
+        to: inviteEmail.trim(),
+        inviteUrl,
+        showName: show?.name ?? 'Show',
+        venueName: venue?.name ?? 'Venue',
+        date: dateStr,
+      })
+      setInviteShowId(null)
+      setInviteEmail('')
+    } catch (err) {
+      setInviteError(err.message || 'Failed to send invitation')
+    } finally {
+      setInviteSending(false)
+    }
+  }
+
+  const handleApproveSection = async (showId, section) => {
+    setApprovingSection(`${showId}-${section}`)
+    try {
+      await approveShowSection(showId, section)
+      await refetchShows?.()
+      const show = shows.find((s) => s.id === showId)
+      if (show && venue && supabase) {
+        const { data: invites } = await supabase.from('show_invitations').select('email').eq('show_id', showId).eq('status', 'accepted')
+        const dateStr = show.date ? new Date(show.date).toLocaleDateString('en-US') : ''
+        invites?.forEach((inv) => {
+          sendAdvanceConfirmedEmail({ to: inv.email, showName: show.name, venueName: venue.name, date: dateStr, recipientRole: 'promoter' }).catch(() => {})
+        })
+      }
+    } finally {
+      setApprovingSection(null)
+    }
+  }
 
   const handleAddShow = async (e) => {
     e.preventDefault()
@@ -461,29 +523,56 @@ export default function VenueDashboard({
               </div>
             ) : (
               <ul className="divide-y divide-gray-700">
-                {shows.map((show) => (
-                  <li key={show.id} className="px-4 py-3 flex items-center justify-between gap-4 hover:bg-gray-800/50">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-700 text-gray-400 shrink-0">
-                        <Clock className="w-4 h-4" />
+                {shows.map((show) => {
+                  const status = showTileStatus(show)
+                  const prodPending = show.productionApprovalStatus === 'PENDING_APPROVAL'
+                  const hospPending = show.hospitalityApprovalStatus === 'PENDING_APPROVAL'
+                  const schedPending = show.scheduleApprovalStatus === 'PENDING_APPROVAL'
+                  return (
+                    <li key={show.id} className="px-4 py-3 flex items-center justify-between gap-4 hover:bg-gray-800/50 flex-wrap">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-700 text-gray-400 shrink-0">
+                          <Clock className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium text-white truncate">{show.name}</p>
+                          <p className="text-sm text-gray-500">
+                            {new Date(show.date).toLocaleDateString()}
+                            {show.doors ? ` · Doors ${formatTime(show.doors)}` : ''}
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-white truncate">{show.name}</p>
-                        <p className="text-sm text-gray-500">
-                          {new Date(show.date).toLocaleDateString()}
-                          {show.doors ? ` · Doors ${formatTime(show.doors)}` : ''}
-                        </p>
+                      <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                        {(prodPending || hospPending || schedPending) && (
+                          <span className="flex items-center gap-1 text-xs text-amber-400">
+                            {prodPending && (
+                              <button type="button" onClick={() => handleApproveSection(show.id, 'production')} disabled={approvingSection !== null} className="px-1.5 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 disabled:opacity-50">
+                                {approvingSection === `${show.id}-production` ? '…' : <Check className="w-3 h-3" />}
+                              </button>
+                            )}
+                            {hospPending && (
+                              <button type="button" onClick={() => handleApproveSection(show.id, 'hospitality')} disabled={approvingSection !== null} className="px-1.5 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 disabled:opacity-50">
+                                {approvingSection === `${show.id}-hospitality` ? '…' : <Check className="w-3 h-3" />}
+                              </button>
+                            )}
+                            {schedPending && (
+                              <button type="button" onClick={() => handleApproveSection(show.id, 'schedule')} disabled={approvingSection !== null} className="px-1.5 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 disabled:opacity-50">
+                                {approvingSection === `${show.id}-schedule` ? '…' : <Check className="w-3 h-3" />}
+                              </button>
+                            )}
+                            <span className="text-amber-400/80">Approve</span>
+                          </span>
+                        )}
+                        <button type="button" onClick={() => { setInviteShowId(show.id); setInviteEmail(''); setInviteError(null) }} className="text-xs text-gray-400 hover:text-white flex items-center gap-1">
+                          <UserPlus className="w-3.5 h-3.5" /> Invite promoter
+                        </button>
+                        <span className={`shrink-0 px-2 py-0.5 rounded text-xs font-medium ${status.className}`}>
+                          {status.label}
+                        </span>
                       </div>
-                    </div>
-                    <span
-                      className={`shrink-0 px-2 py-0.5 rounded text-xs font-medium ${
-                        show.status === 'confirmed' ? 'bg-green-500/20 text-green-400' : show.status === 'pending-approval' ? 'bg-amber-500/20 text-amber-400' : 'bg-gray-600 text-gray-400'
-                      }`}
-                    >
-                      {show.status}
-                    </span>
-                  </li>
-                ))}
+                    </li>
+                  )
+                })}
               </ul>
             )}
           </div>
@@ -752,16 +841,14 @@ export default function VenueDashboard({
                   <p className="text-sm">No events scheduled</p>
                 </div>
               ) : (
-                shows.map((show) => (
+                shows.map((show) => {
+                  const status = showTileStatus(show)
+                  return (
                   <div key={show.id} className="p-4 rounded-lg border border-gray-700 bg-gray-800/50 hover:border-gray-600 transition-colors">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-medium text-white">{show.name}</h4>
-                      <span
-                        className={`shrink-0 px-2 py-0.5 rounded text-xs font-medium ${
-                          show.status === 'confirmed' ? 'bg-green-500/20 text-green-400' : 'bg-gray-600 text-gray-400'
-                        }`}
-                      >
-                        {show.status === 'confirmed' ? 'Confirmed' : 'Draft'}
+                      <span className={`shrink-0 px-2 py-0.5 rounded text-xs font-medium ${status.className}`}>
+                        {status.label}
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 mb-3">
@@ -790,9 +877,44 @@ export default function VenueDashboard({
                       </div>
                     </div>
                   </div>
-                ))
+                  )
+                })
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invite promoter modal */}
+      {inviteShowId && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => { setInviteShowId(null); setInviteError(null) }}>
+          <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 max-w-sm w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">Invite promoter</h3>
+              <button type="button" onClick={() => { setInviteShowId(null); setInviteError(null) }} className="text-gray-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mb-3">
+              {shows.find((s) => s.id === inviteShowId)?.name} · {shows.find((s) => s.id === inviteShowId)?.date ? new Date(shows.find((s) => s.id === inviteShowId).date).toLocaleDateString() : ''}
+            </p>
+            <form onSubmit={handleInvitePromoter} className="space-y-3">
+              <input
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder="promoter@example.com"
+                className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-500"
+                required
+              />
+              {inviteError && <p className="text-red-400 text-sm">{inviteError}</p>}
+              <div className="flex gap-2">
+                <button type="button" onClick={() => { setInviteShowId(null); setInviteError(null) }} className="flex-1 px-3 py-2 rounded-lg border border-gray-600 text-gray-400 hover:bg-gray-800">Cancel</button>
+                <button type="submit" disabled={inviteSending} className="flex-1 px-3 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50">
+                  {inviteSending ? 'Sending…' : 'Send invitation'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -29,6 +29,8 @@ export interface Band {
   isHeadliner?: boolean
 }
 
+export type SectionApprovalStatus = "CONFIRMED" | "PENDING_APPROVAL"
+
 export interface Event {
   id: string
   name: string
@@ -38,12 +40,15 @@ export interface Event {
   doors: string
   curfew: string
   loadOut: string
-  status: "draft" | "confirmed" | "pending-approval"
+  status: "draft" | "confirmed" | "pending-approval" | "completed"
   selectedItems: string[]
   greenRoomItems: { id: string; quantity: number }[]
   bands: Band[]
   wizardCompleted: boolean
   specialRequests?: string
+  productionApprovalStatus?: SectionApprovalStatus | null
+  hospitalityApprovalStatus?: SectionApprovalStatus | null
+  scheduleApprovalStatus?: SectionApprovalStatus | null
 }
 
 export interface EventProviderProps {

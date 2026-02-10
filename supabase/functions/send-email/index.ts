@@ -73,10 +73,11 @@ serve(async (req) => {
     }
 
     // Get Resend from email (default to onboarding@resend.dev for testing)
-    const resendFromEmail = Deno.env.get('RESEND_FROM_EMAIL') || 'onboarding@resend.dev'
+    const defaultFrom = Deno.env.get('RESEND_FROM_EMAIL') || 'onboarding@resend.dev'
 
-    // Get request body
-    const { to, subject, html, text } = await req.json()
+    // Get request body (optional 'from' overrides default, e.g. invite@soundpath.app for invites)
+    const { to, subject, html, text, from: requestFrom } = await req.json()
+    const resendFromEmail = requestFrom && typeof requestFrom === 'string' ? requestFrom : defaultFrom
 
     // Validate required fields
     if (!to || !subject) {

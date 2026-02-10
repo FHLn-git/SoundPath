@@ -3,7 +3,7 @@
  * In-app navigation (Link) so one SPA, one sign-in.
  */
 import { Link } from 'react-router-dom'
-import { Building2, Music, ChevronDown, Plus, Grid3X3, FileSignature, Archive, GitBranch } from 'lucide-react'
+import { Building2, Music, ChevronDown, Plus, Grid3X3, FileSignature, Archive, GitBranch, Bell } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { formatVenueAddressLine } from '../../lib/venueApi'
@@ -22,9 +22,14 @@ export default function VenueHeader({
   activeVenue,
   onVenueSelect,
   onOpenCreateVenue,
+  notifications = [],
+  unreadNotificationCount = 0,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
 }) {
   const [venueDropdownOpen, setVenueDropdownOpen] = useState(false)
   const [appDropdownOpen, setAppDropdownOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const venueRef = useRef(null)
   const appRef = useRef(null)
 
@@ -32,6 +37,7 @@ export default function VenueHeader({
     const close = (e) => {
       if (!venueRef.current?.contains(e.target)) setVenueDropdownOpen(false)
       if (!appRef.current?.contains(e.target)) setAppDropdownOpen(false)
+    if (!e.target.closest('[data-notifications-dropdown]')) setNotificationsOpen(false)
     }
     window.addEventListener('click', close)
     return () => window.removeEventListener('click', close)
@@ -187,7 +193,56 @@ export default function VenueHeader({
             </button>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" data-notifications-dropdown>
+            {/* Notifications bell */}
+            {activeVenue && (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setNotificationsOpen((o) => !o)}
+                  className="relative flex items-center justify-center h-10 w-10 rounded-lg border border-gray-600 bg-gray-800/80 hover:bg-gray-700 text-gray-300"
+                  aria-label="Notifications"
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadNotificationCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-medium text-white">
+                      {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                    </span>
+                  )}
+                </button>
+                {notificationsOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute right-0 top-full mt-1 w-80 max-h-[320px] overflow-auto py-2 bg-[#0B0E14] border border-gray-700 rounded-lg shadow-xl z-50"
+                  >
+                    <div className="px-3 py-1.5 flex items-center justify-between border-b border-gray-700">
+                      <span className="text-xs font-medium text-gray-500 uppercase">Notifications</span>
+                      {unreadNotificationCount > 0 && (
+                        <button type="button" onClick={() => { onMarkAllNotificationsRead?.(); setNotificationsOpen(false) }} className="text-xs text-emerald-500 hover:text-emerald-400">
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+                    {notifications.length === 0 ? (
+                      <p className="px-3 py-4 text-sm text-gray-500">No notifications</p>
+                    ) : (
+                      notifications.slice(0, 20).map((n) => (
+                        <button
+                          key={n.id}
+                          type="button"
+                          onClick={() => { onMarkNotificationRead?.(n.id); if (n.show_id) setNotificationsOpen(false) }}
+                          className={`w-full px-3 py-2.5 text-left text-sm transition-colors ${n.read_at ? 'text-gray-500' : 'text-gray-200 bg-gray-800/50'}`}
+                        >
+                          <p className="font-medium truncate">{n.title}</p>
+                          <p className="text-xs text-gray-500 truncate mt-0.5">{n.body}</p>
+                        </button>
+                      ))
+                    )}
+                  </motion.div>
+                )}
+              </div>
+            )}
             {activeVenue ? (
               <>
                 <div className="hidden md:flex flex-col items-end">

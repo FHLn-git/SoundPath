@@ -125,6 +125,9 @@ const ComingSoonApp = lazy(() => import('./pages/ComingSoonApp'))
 const VenueApp = lazy(() => import('./pages/VenueApp'))
 const AppSelector = lazy(() => import('./pages/AppSelector'))
 const AuthContinue = lazy(() => import('./pages/AuthContinue'))
+const PromoterAcceptInvite = lazy(() => import('./pages/PromoterAcceptInvite'))
+const PromoterPortalPage = lazy(() => import('./pages/PromoterPortalPage'))
+const PromoterShowAdvancePage = lazy(() => import('./pages/PromoterShowAdvancePage'))
 const MarketingLayout = lazy(() => import('./marketing/MarketingLayout'))
 const SolutionPage = lazy(() => import('./marketing/pages/SolutionPage'))
 const ProductPage = lazy(() => import('./marketing/pages/ProductPage'))
@@ -304,6 +307,10 @@ function AppContent() {
             {/* Auth handoff: Label app receives tokens from app selector and sets session */}
             <Route path="/auth/continue" element={<AuthContinue />} />
 
+            {/* Promoter portal: accept invite (public so invite link works for new users) */}
+            <Route path="/portal/promoter/accept" element={<PromoterAcceptInvite />} />
+            <Route path="/app/portal/promoter/accept" element={<PromoterAcceptInvite />} />
+
             {/* Marketing ecosystem: home + solutions, products, pricing, resources (shared MarketingLayout + MegaNav) */}
             <Route element={<MarketingLayout />}>
               <Route
@@ -385,6 +392,12 @@ function AppContent() {
                 <Route path="/app/venue" element={<ErrorBoundary resetKey="/app/venue"><VenueApp /></ErrorBoundary>} />
                 <Route path="/app/artist" element={<ComingSoonApp appName="Artist" />} />
 
+                {/* Promoter portal (dashboard lite + advance view) */}
+                <Route path="/portal/promoter" element={<PromoterPortalPage />} />
+                <Route path="/portal/promoter/show/:showId" element={<PromoterShowAdvancePage />} />
+                <Route path="/app/portal/promoter" element={<PromoterPortalPage />} />
+                <Route path="/app/portal/promoter/show/:showId" element={<PromoterShowAdvancePage />} />
+
                 {/* Label app routes (main domain: /app/label/*) */}
                 <Route path="/app/label/launchpad" element={<ErrorBoundary><Launchpad /></ErrorBoundary>} />
                 <Route path="/app/label/labels/:orgId" element={!memberships || memberships.length === 0 ? <Navigate to={`${labelBase()}/launchpad`} /> : <LabelDashboardGuard />} />
@@ -415,10 +428,14 @@ function AppContent() {
                 <Route path="*" element={<NotFound />} />
               </>
             ) : user ? (
-              // User is authenticated but staffProfile is still loading/failed once.
-              // Keep the current path and show nothing here so we don't redirect to '/'
-              // and lose the original deep-link (/app/label/launchpad).
-              <Route path="*" element={null} />
+              // User authenticated but no staffProfile (e.g. promoter-only): allow promoter portal
+              <>
+                <Route path="/portal/promoter" element={<PromoterPortalPage />} />
+                <Route path="/portal/promoter/show/:showId" element={<PromoterShowAdvancePage />} />
+                <Route path="/app/portal/promoter" element={<PromoterPortalPage />} />
+                <Route path="/app/portal/promoter/show/:showId" element={<PromoterShowAdvancePage />} />
+                <Route path="*" element={null} />
+              </>
             ) : (
               <Route path="*" element={<Navigate to="/" />} />
             )}

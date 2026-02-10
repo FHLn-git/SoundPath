@@ -1,0 +1,15 @@
+---
+description: When planning or expanding SoundPath, use the roadmap and ask the user when you don't know exactly what to do.
+alwaysApply: true
+---
+
+# SoundPath Roadmap and Expansion
+
+When planning features, sequencing work, or expanding the app (Venue pipeline, utility apps, Artist, Agent, Educator, Network, billing), refer to **`docs/SOUNDPATH_ROADMAP.md`** for:
+
+- Venue pipeline (idea → reporting, promoter coordination, Splits handoff)
+- Utility-app strategy (Sign, Splits, Vault) and integration points
+- App vision detail (Sign, Vault, Splits, Artist, Network)
+- Phased priorities and future expansion
+
+**Ask the user questions when you don't know exactly what to do.** Do not guess on prioritization, target users, billing impact, or product intent. If the roadmap or task is ambiguous, ask before implementing. Prefer one or two clear questions over making assumptions that might not match their vision.
